@@ -1,12 +1,13 @@
-script_dir=$(dirname "$0")
-management_path=$(realpath "$script_dir/utils/management.py")
+run_script_path="$(pwd)/run.py"
+
+echo "$management_path"
 
 # Bash Aliases to run scripts mroe easy
-alias iexp='python $management_path --init_exp'
-alias irun='python $management_path --init_run'
-alias cpconf='python $management_path --copy_conf'
-alias train='python $management_path --train'
-alias evaluate='python $management_path --evaluate'
+alias iexp='python $run_script_path --init_exp'
+alias irun='python $run_script_path --init_run'
+alias cpconf='python $run_script_path --copy_conf'
+alias train='python $run_script_path --train'
+alias evaluate='python $run_script_path --evaluate'
 
 
 # Set environment variables with the experiment/run name for easier access
