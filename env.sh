@@ -21,5 +21,5 @@ function setrun() {
 function setup() {
     echo "------ Experiment Environment Setup ------"
     echo "  Current experiment ---> $CURRENT_EXP"
-    echo "  Current run ---> $CURRENT_RUN"
+    echo "  Current run        ---> $CURRENT_RUN"
 }
