@@ -28,7 +28,6 @@ def hyperparameter_tuning(exp_name, run_name):
 
 
 if __name__ == '__main__':
-    import ipdb; ipdb.set_trace()
 
     argparser = argparse.ArgumentParser()
 
@@ -41,6 +40,8 @@ if __name__ == '__main__':
     argparser.add_argument('--init_run', action='store_true', default=False, help='Initialize a new run')
 
     argparser.add_argument('--copy_conf', action='store_true', default=False, help='Load a configuration file to run')
+
+    argparser.add_argument('--clear_logs', action='store_true', default=False, help='Clear the logs of a given run')
 
     # Hyperparameters 
     argparser.add_argument('-exp', type=str, default=None, help='Experiment name')
@@ -66,6 +67,11 @@ if __name__ == '__main__':
         run_name = args.run if args.run is not None else os.environ.get('CURRENT_RUN')
         config_name = args.conf if args.conf is not None else os.environ.get('CURRENT_CONFIG')
         utils.load_config(exp_name, run_name, config_name)
+    if args.clear_logs:
+        assert (args.exp is not None or 'CURRENT_EXP' in os.environ) and (args.run is not None or 'CURRENT_RUN' in os.environ) and args.conf is not None, 'Please provide an experiment and run name and the name of the config file'
+        exp_name = args.exp if args.exp is not None else os.environ.get('CURRENT_EXP')
+        run_name = args.run if args.run is not None else os.environ.get('CURRENT_RUN')
+        utils.clear_logs(exp_name, run_name)
 
     if args.tuning:
         assert (args.exp is not None or 'CURRENT_EXP' in os.environ) and (args.run is not None or 'CURRENT_RUN' in os.environ), 'Please provide an experiment and run name'
@@ -85,4 +91,3 @@ if __name__ == '__main__':
         run_name = args.run if args.run is not None else os.environ.get('CURRENT_RUN')
         evaluation(exp_name, run_name)
     
-

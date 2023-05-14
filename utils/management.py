@@ -53,14 +53,32 @@ def load_config_to_run(config_name, exp_name, run_name):
     config = load_config(config_name)
     save_config(config, exp_name, run_name)
 
+def load_config_from_run(exp_name, run_name):
+    path = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json')
+    if not os.path.exists(path):
+        print('Config file does not exist')
+        return None
+    with open(path, 'r') as f:
+        config = json.load(f)
+    return config
+
 def load_config(config_name):
     with open(os.path.join(os.getcwd(), 'config', config_name+".json"), 'r') as f:
         config = json.load(f)
     return config
 
 def save_config(config, exp_name, run_name):
-    with open(os.path.join(os.getcwd(), exp_name, run_name), 'w') as f:
+    with open(os.path.join(os.getcwd(), 'experiments', exp_name, run_name), 'w') as f:
         json.dump(config, f, indent=4)
+
+def load_config_from_run(exp_name, run_name):
+    path = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json')
+    if not os.path.exists(path):
+        print('Config file does not exist')
+        return None
+    with open(path, 'r') as f:
+        config = json.load(f)
+    return config
 
 ###--- Data ---###
 
