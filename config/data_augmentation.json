@@ -1,0 +1,50 @@
+[
+    {
+        "type": "mixup",
+        "alpha": 1.0,
+        "prob": 0.5,
+        "beta": 1.0,
+        "num_classes": 2,
+        "train": true,
+        "eval": false
+    },
+    {
+        "type": "random_rotation",
+        "degrees": 5,
+        "train": true,
+        "eval": false
+    },
+    {
+        "type": "random_horizontal_flip",
+        "prob": 0.3,
+        "train": true,
+        "eval": false
+    },
+    {
+        "type": "color_jitter",
+        "brightness": 0.4,
+        "contrast": 0.4,
+        "saturation": 0.3,
+        "hue": 0.0,
+        "train": true,
+        "eval": false
+    },
+    {
+        "type": "gaussian_blur",
+        "kernel_size": [
+            5,
+            5
+        ],
+        "sigma": [
+            0.1,
+            2.0
+        ],
+        "train": true,
+        "eval": false
+    },
+    {
+        "type": "normalize",
+        "train": true,
+        "eval": true
+    }
+]

@@ -1,0 +1,105 @@
+{
+    "layers": [
+        {
+            "type": "ConvNext",
+            "size": "large",
+            "remove_layer": 1,
+            "weights": "DEFAULT"
+        },
+        {
+            "type": "flatten"
+        },
+
+        {
+            "type": "linear",
+            "in_features": 1536,
+            "out_features": 512
+        },
+        {
+            "type": "relu"
+        },
+        {
+            "type": "linear",
+            "in_features": 512,
+            "out_features": 37
+        }
+    ],
+    "batch_size": 64,
+    "num_epochs": 20,
+    "num_iterations": 62,
+    "learning_rate": 3e-04,
+    "random_seed": 22,
+    "save_start": 5,
+    "save_frequency": 2,    
+    "pre_processing": [
+        {
+            "type": "normalize",
+            "train": true,
+            "eval": true
+        }
+    ],
+    "evaluation": {
+        "metrics": [
+            "accuracy"
+        ],
+        "frequency": 1
+    },
+    "dataset": {
+        "name": "oxfordpets",
+        "train_size": 3680,
+        "val_size": 0,
+        "test_size": 3669,
+        "train_shuffle": true,
+        "eval_shuffle": false,
+        "drop_last": true,
+        "classes": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36
+        ]
+    },
+    "scheduler": {
+        "epoch_scheduler": {
+            "type": "exponential",
+            "gamma": 0.85
+        },
+        "iteration_scheduler": null
+    },
+    "optimizer": {
+        "type": "Adam"
+    }
+}

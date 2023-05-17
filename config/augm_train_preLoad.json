@@ -1,0 +1,24 @@
+[
+    {
+        "type": "toTensor",
+        "train": true,
+        "eval": true
+    },
+    {
+        "type": "random_resized_crop",
+        "size": [
+            224,
+            224
+        ],
+        "scale": [
+            0.08,
+            1.0
+        ],
+        "ratio": [
+            0.75,
+            1.3333
+        ],
+        "train": true,
+        "eval": false
+    }
+]

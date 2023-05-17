@@ -1,7 +1,13 @@
 import os
 import shutil
 
+import torch
+
 import json
+
+###--- Experiment Management Scripts ---###
+# These functions handle all interaction from outside with the experiments
+# We can simply initialize experiments, load and save configs, and load model checkpoints
 
 ###--- Experiments Directory ---###
 
@@ -53,14 +59,48 @@ def load_config_to_run(config_name, exp_name, run_name):
     config = load_config(config_name)
     save_config(config, exp_name, run_name)
 
+def load_config_from_run(exp_name, run_name):
+    path = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json')
+    if not os.path.exists(path):
+        print('Config file does not exist')
+        return None
+    with open(path, 'r') as f:
+        config = json.load(f)
+    return config
+
 def load_config(config_name):
     with open(os.path.join(os.getcwd(), 'config', config_name+".json"), 'r') as f:
         config = json.load(f)
     return config
 
 def save_config(config, exp_name, run_name):
-    with open(os.path.join(os.getcwd(), exp_name, run_name), 'w') as f:
+    with open(os.path.join(os.getcwd(), 'experiments', exp_name, run_name), 'w') as f:
         json.dump(config, f, indent=4)
+
+def load_config_from_run(exp_name, run_name):
+    path = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json')
+    if not os.path.exists(path):
+        print('Config file does not exist')
+        return None
+    with open(path, 'r') as f:
+        config = json.load(f)
+        
+    return config
+
+###--- Checkpoint Loading ---###
+
+def load_model_from_checkpoint(exp_name, run_name, model, epoch, optimizer=None):
+    cp_dir = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'checkpoints', f'checkpoint_{epoch}.pth')
+    try:
+        cp_data = torch.load(cp_dir)
+        model.load_state_dict(cp_data['model_state_dict'])
+        if optimizer is not None:
+            optimizer.load_state_dict(cp_data['optimizer_state_dict'])
+    except:
+        print(f'Checkpoint could not been load from: {cp_dir}')
+        return
+    print(f'Model checkpoint was load from: {cp_dir}')
+    
 
 ###--- Data ---###
 

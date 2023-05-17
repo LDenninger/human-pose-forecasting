@@ -1,0 +1,21 @@
+[
+    {
+        "type": "toTensor",
+        "train": true,
+        "eval": true
+    },
+    {
+        "type": "dynamic_center_crop",
+        "train": false,
+        "eval": true
+    },
+    {
+        "type": "resize",
+        "size": [
+            224,
+            224
+        ],
+        "train": false,
+        "eval": true
+    }
+]

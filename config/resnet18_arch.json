@@ -1,0 +1,20 @@
+[
+    {
+        "type": "ResNet",
+        "size": 18,
+        "remove_layer": 1,
+        "weights": "DEFAULT"
+    },
+    {
+        "type": "flatten"
+    },
+    {
+        "type": "dropout",
+        "prob": 0.3
+    },
+    {
+        "type": "linear",
+        "in_features": 512,
+        "out_features": 2
+    }
+]
