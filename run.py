@@ -378,4 +378,3 @@ if __name__ == '__main__':
             run_name = [args.run] if args.run is not None else [os.environ.get('CURRENT_RUN')]
         evaluation(exp_name, run_name)
     
-

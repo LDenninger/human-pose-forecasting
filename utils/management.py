@@ -100,6 +100,8 @@ def load_model_from_checkpoint(exp_name, run_name, model, epoch, optimizer=None)
         print(f'Checkpoint could not been load from: {cp_dir}')
         return
     print(f'Model checkpoint was load from: {cp_dir}')
+
+    
     
 
 ###--- Data ---###
