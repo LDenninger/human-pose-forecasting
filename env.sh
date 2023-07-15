@@ -5,7 +5,7 @@ exp_path="$(pwd)/experiments"
 alias iexp='python $run_script_path --init_exp'
 alias irun='python $run_script_path --init_run'
 alias cpconf='python $run_script_path --copy_conf'
-alias cllog='python $run_script_path --'
+alias cllog='python $run_script_path --clear_logs'
 alias train='python $run_script_path --train'
 alias evaluate='python $run_script_path --evaluate'
 
