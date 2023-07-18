@@ -8,6 +8,11 @@ import numpy as np
 from .meta_info import SKELETON_H36M_MODEL, BASELINE_FKL_IND, SKELETON_H36M_BONE_LENGTH, SKELETON_H36M_PARENT_IDS, H36M_NAMES
 
 class SkeletonModel32(nn.Module):
+    """
+        Fully differentiable 3D skeleton model used in the Human3.6M dataset.
+        The module takes the angles provided by the dataset and implements the forwards kinematics in a fully differentiable manner.
+        The single joint positions and angles are written explicitly for better readability.
+    """
 
     def __init__(self, device='cpu'):
         super(SkeletonModel32, self).__init__()
@@ -105,6 +110,11 @@ class SkeletonModel32(nn.Module):
         
 
     def forward_kinematics(self, x: torch.Tensor):
+        """
+            Uses the pre-defined kinematic chain and computes the transformation 
+            from the hip joint to each other joint of the skeleton model.
+            Positions and angles of each joint are overwritten.
+        """
         
         for id, (cur_frame, par_frame) in self.fkm_computation_order.items():
             
@@ -117,11 +127,30 @@ class SkeletonModel32(nn.Module):
 
 
     def forward(self, x: torch.Tensor, format: str = 'ds_angle') -> torch.Tensor:
+        """
+            The type of forward pass is defined by the format argument defining the input data.
+
+            Arguments:
+                x (torch.Tensor): the input data
+                format (str, optional): the format of the input data. Possible keys: ['ds_angle']
+
+        """
+        assert format in ['ds_angle'], 'Unknown data format'
         if format == 'ds_angle':
             self._set_joint_angles_from_dataset(x)
             self.forward_kinematics(x)
 
     def get_joint_positions(self, incl_names = False):
+        """
+            Get the joint positions previously computed by the forward kinematics.
+
+            Arguments:
+                incl_names (bool, optional): whether to include the names of the joints in the output
+            
+            Return:
+                positions:  If incl_names is True: dictionary of form {joint_name: joint_position}
+                            Else: torch.Tensor of shape (num_joints, 3)
+        """
         if incl_names:
             positions = {}
             positions['hip'] = self.hip_pos
@@ -142,6 +171,12 @@ class SkeletonModel32(nn.Module):
         return self._get_joint_angles_dsFormat()
 
     def _set_joint_angles_from_dataset(self, joint_angles: torch.Tensor):
+        """
+            Set the joint angles according to the dataset.
+
+            TODO: Fix assignment.
+        
+        """
         
         self.hip_pos = self.offset[0] + joint_angles[[0, 1, 2]]# root
         self.hip_angle = p3dTransforms.axis_angle_to_matrix(joint_angles[           [4, 5, 6]])
