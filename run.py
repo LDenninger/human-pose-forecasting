@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 
 import seaborn as sn
 
+from tests import test_data_loading
+
 
 ###--- Run Information ---###
 # These list of runs can be used to run multiple trainings sequentially.
@@ -33,6 +35,8 @@ EPOCHS = []
 
 ###--- Hyperparameter Tuning ---###
 
+###--- Testing ---###
+
 
 
 
@@ -45,6 +49,9 @@ if __name__ == '__main__':
     argparser.add_argument('--train', action='store_true', default=False, help='Train the model')
     argparser.add_argument('--evaluate', action='store_true', default=False, help='Evaluate the model')
     argparser.add_argument('--tuning', action='store_true', default=False, help='Tune the hyperparameters')
+
+    # Testing flags
+    argparser.add_argument('--test_data', action='store_true', default=False, help='Test the model')
 
     argparser.add_argument('--augm_study', action='store_true', default=False, help='Run the augmentation study')
     argparser.add_argument('--opt_study', action='store_true', default=False, help='Run the augmentation study')
@@ -92,6 +99,9 @@ if __name__ == '__main__':
         exp_name = args.exp if args.exp is not None else os.environ.get('CURRENT_EXP')
         run_name = args.run if args.run is not None else os.environ.get('CURRENT_RUN')
         utils.clear_logs(exp_name, run_name)
+
+    if args.test_data:
+        test_data_loading()
 
     if args.train:
         assert ((args.exp is not None or 'CURRENT_EXP' in os.environ) and (args.run is not None or 'CURRENT_RUN' in os.environ)) or (len(EXPERIMENT_NAMES)!=0 and len(RUN_NAMES)!=0), 'Please provide an experiment and run name'
