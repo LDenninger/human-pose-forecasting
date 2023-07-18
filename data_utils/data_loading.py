@@ -42,10 +42,20 @@ def load_data(person_id: list = None, action_str: list = None, sub_action_id: li
         Load the data from the Human3.6M dataset.
 
         The data is stored in the following format:
-        [                                   # List of all action sequence
-            [                               # List of joint angles at each timestep
-                np.array / torch.Tensor     # Joint angles either as numpy arrays or torch tensors
+        [                                           # List of all action sequence
+            [                                       # List of joint angles at each timestep
+                np.array(99) / torch.Tensor(99)     # Joint angles either as numpy arrays or torch tensors
             ]
+        ]
+
+        The meta_dir is in the following format:
+        [                                           # List of meta information about each action sequence              
+            {
+                'person_id': int,
+                'action_str': str,
+                'sub_action_id': int,
+                'length': int
+            }
         ]
 
         Arguments:
@@ -67,9 +77,9 @@ def load_data(person_id: list = None, action_str: list = None, sub_action_id: li
 
     meta_dir = []
     data = []
+    print('Loading Human3.6M data...')
     if show_progress:
         progress_bar = tqdm(total=len(person_id) * len(action_str) * len(sub_action_id))
-    
     for p_id in person_id:
         for a_str in action_str:
             for s_id in sub_action_id:
