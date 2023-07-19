@@ -32,3 +32,4 @@ def visualize_skeleton(position_data, skeleton_structure, title_text = ''):
     ax = fig.add_subplot(111, projection='3d')
     animation = FuncAnimation(fig, update, frames=len(position_data), interval=100)
     plt.show()
+
