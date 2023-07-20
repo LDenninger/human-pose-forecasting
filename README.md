@@ -38,3 +38,7 @@ Train a model: `train -exp [exp. name] -run [run name]` <br/>
     * Use some kind of angular loss
     * Adversial loss
 2. Predicting directly rotation matrix does not lead to numerical instabilities?? Possible SVD afterwards?
+3. Test efficiency for embedded systems
+    * Optimize inference with TensorRT and run on embedded system
+    * Jetson AGX Nano?
+    * How far can we watch in the future in real-time ?

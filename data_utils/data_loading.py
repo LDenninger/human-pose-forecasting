@@ -37,7 +37,7 @@ def read_file(person_id: int, action_str: str, sub_action_id: int = None, return
                     data.append(np.array([float(x) for x in line]))
     return data
 
-def load_data(person_id: list = None, action_str: list = None, sub_action_id: list = None, return_tensor=False, show_progress=True):
+def load_data(person_id: list = None, action_str: list = None, sub_action_id: list = None, return_tensor=False, show_progress=True, return_reverse_meta=False):
     """
         Load the data from the Human3.6M dataset.
 
@@ -76,10 +76,12 @@ def load_data(person_id: list = None, action_str: list = None, sub_action_id: li
         sub_action_id = [1,2]
 
     meta_dir = []
+    reverse_meta_dir = {}
     data = []
     print('Loading Human3.6M data...')
     if show_progress:
         progress_bar = tqdm(total=len(person_id) * len(action_str) * len(sub_action_id))
+    seq_index = 0
     for p_id in person_id:
         for a_str in action_str:
             for s_id in sub_action_id:
@@ -93,10 +95,18 @@ def load_data(person_id: list = None, action_str: list = None, sub_action_id: li
                 }
                 data.append(new_data)
                 meta_dir.append(meta_info)
+                if p_id not in reverse_meta_dir.keys():
+                    reverse_meta_dir[p_id] = {}
+                if a_str not in reverse_meta_dir[p_id].keys():
+                    reverse_meta_dir[p_id][a_str] = {}
+                reverse_meta_dir[p_id][a_str][s_id] = seq_index
+                seq_index += 1
                 if show_progress:
                     progress_bar.update(1)
     if show_progress:
         progress_bar.close()
+    if return_reverse_meta:
+        return data, meta_dir, reverse_meta_dir
     
     return data, meta_dir
 
