@@ -16,7 +16,7 @@ The complete project was run in a conda environment. Here we share the setup:
 Before running any commands it is advised to source our small environment to enable shortcuts for experiment management: `source env.sh`
 
 ## Testing
-We implemented different testing class to test and demonstrate the different components of our project:
+We implemented different testing class to test and demonstrate the different components of our project: <br/>
 Test and inspect the data: `python run.py --test_data` <br/>
 Test and inspect the skeleton model against the baseline from MotionMixer: `python run.py --test_sk32` <br/>
 
