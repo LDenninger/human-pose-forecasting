@@ -82,11 +82,14 @@ class PoseVisualizer(QOpenGLWidget):
 
         self.viewpoint = self.config.viewpoint
         self.camera_distance = self.config.camera_distance
+        self.default_rotation = self.config.default_rotation
 
         # View interactions
         self.last_pos = None
-        self.x_rotation = 0
-        self.y_rotation = 0
+        self.x_rotation = self.default_rotation[0]
+        self.y_rotation = self.default_rotation[1]
+        self.z_rotation = self.default_rotation[2]
+        self.update_rate = 0.01
 
         return
     
@@ -109,6 +112,7 @@ class PoseVisualizer(QOpenGLWidget):
         glTranslatef(0.0, 0.0, -self.camera_distance)
         glRotatef(self.x_rotation, 1.0, 0.0, 0.0)
         glRotatef(self.y_rotation, 0.0, 1.0, 0.0)
+        glRotatef(self.z_rotation, 0.0, 0.0, 1.0)
 
         self.draw_coordinate_frame()
 
@@ -179,16 +183,17 @@ class PoseVisualizer(QOpenGLWidget):
             glLineWidth(3.0)
             glBegin(GL_LINES)
             glColor3f(1.0, 0.0, 0.0)  # X-axis (red)
+            glVertex3f(self.origin[0], self.origin[1], self.origin[2])
             glVertex3f(self.axis_limits[0], self.origin[1], self.origin[2])
-            glVertex3f(self.axis_limits[1], self.origin[1], self.origin[2])
+
 
             glColor3f(0.0, 1.0, 0.0)  # Y-axis (green)
-            glVertex3f(self.origin[0], self.axis_limits[0], self.origin[2])
+            glVertex3f(self.origin[0], self.origin[1], self.origin[2])
             glVertex3f(self.origin[0], self.axis_limits[1], self.origin[2])
-
+            
             glColor3f(0.0, 0.0, 1.0)  # Z-axis (blue)
-            glVertex3f(self.origin[0], self.origin[1], self.axis_limits[0])
-            glVertex3f(self.origin[0], self.origin[1], self.axis_limits[1])
+            glVertex3f(self.origin[0], self.origin[1], self.origin[2])
+            glVertex3f(self.origin[0], self.origin[1], self.axis_limits[2])
             glEnd()
 
             # X-axis ticks and labels
@@ -234,8 +239,10 @@ class PoseVisualizer(QOpenGLWidget):
             dx = event.position().x() - self.last_pos.x()
             dy = event.position().y() - self.last_pos.y()
 
-            self.x_rotation += dy
-            self.y_rotation += dx
+            self.x_rotation += self.update_rate*dy
+            self.x_rotation %= 360
+            self.y_rotation += self.update_rate*dx
+            self.y_rotation %= 360
 
             self.update()
 
@@ -264,4 +271,17 @@ class PoseVisualizer(QOpenGLWidget):
             self.initialize_skeleton(sk_name)
         self.update()
 
-            
+    @pyqtSlot()
+    def rotateX(self, angle):
+        self.x_rotation = angle
+        self.update()
+    
+    @pyqtSlot()
+    def rotateY(self, angle):
+        self.y_rotation = angle
+        self.update()
+    
+    @pyqtSlot()
+    def rotateZ(self, angle):
+        self.z_rotation = angle
+        self.update()

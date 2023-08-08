@@ -29,6 +29,8 @@ class Config(QObject):
     axis_limits = [5.0, 5.0, 5.0]
     num_ticks: int = 10
     viewpoint: list = [0.0, 0.0]
+    default_rotation = [0,-45,-45]
+    rotation_add = [0,0,0]
     camera_distance: float = 0.0
     
     annotate_joints = False

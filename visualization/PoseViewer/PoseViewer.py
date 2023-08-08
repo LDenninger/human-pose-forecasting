@@ -10,7 +10,7 @@ import os
 from pathlib import Path as P
 
 from blackboard import Data, Config, Player
-from resources import AnimatedToggle, ConfigEdit
+from resources import AnimatedToggle, ConfigEdit, ConfigEntrySwitch, ConfigEntrySlider, ConfigEntryEdit
 from GLVisualizer import PoseVisualizer
 
 
@@ -25,59 +25,43 @@ class ConfigWidget(QWidget):
     def build_widget(self):
         main_layout = QVBoxLayout()
         self.visualization_settings = QGroupBox("Visualization Settings")
-        settings_layout = QGridLayout()
+        settings_layout = QVBoxLayout()
 
         # Set visualization settings ui
-        self.interval_label, self.interval_edit = self.get_edit("Interval", default=self.config.interval)
-        self.interval_edit.setObjectName("interval")
-        self.interval_edit.returnPressed.connect(lambda: self.config.change_config({'interval_slider': self.interval_edit.text()}))
-        settings_layout.addWidget(self.interval_label, 0, 0)
-        settings_layout.addWidget(self.interval_edit, 0, 1)
+        self.interval_config = ConfigEntryEdit("interval", default=self.config.interval)
+        self.interval_config.valueUpdated.connect(lambda: self.config.change_config({'interval': self.interval_config.getValue()}))
+        settings_layout.addWidget(self.interval_config)
 
-        self.annotate_joints_label, self.annotate_joints_switch = self.get_switch("Annotate joints", default=self.config.annotate_joints)
-        self.annotate_joints_switch.setObjectName("annotate_joints")
-        self.annotate_joints_switch.stateChanged.connect(lambda: self.config.change_config({'annotate_joints_switch': not self.config.annotate_joints}))
-        settings_layout.addWidget(self.annotate_joints_label, 1, 0)
-        settings_layout.addWidget(self.annotate_joints_switch, 1, 1)
+        self.show_joints_config = ConfigEntrySwitch("show_joints", default=self.config.show_joints)
+        self.show_joints_config.valueUpdated.connect(lambda: self.config.change_config({'show_joints': self.show_joints_config.getValue()}))
+        settings_layout.addWidget(self.show_joints_config)
 
-        self.show_bones_label, self.show_bones_switch = self.get_switch("Show bones", default=self.config.show_bones)
-        self.show_bones_switch.setObjectName("show_bones")
-        self.show_bones_switch.stateChanged.connect(lambda: self.config.change_config({'show_bones': not self.config.show_bones}))
-        settings_layout.addWidget(self.show_bones_label, 2, 0)
-        settings_layout.addWidget(self.show_bones_switch, 2, 1)
+        self.joint_dot_radius_config = ConfigEntryEdit("joint_dot_radius", default=self.config.joint_dot_radius)
+        self.joint_dot_radius_config.valueUpdated.connect(lambda: self.config.change_config({'joint_dot_radius': self.joint_dot_radius_config.getValue()}))
+        settings_layout.addWidget(self.joint_dot_radius_config)
 
-        self.show_joints_label, self.show_joints_switch = self.get_switch("Show joints", default=self.config.show_joints)
-        self.show_joints_switch.setObjectName("show_joints")
-        self.show_joints_switch.stateChanged.connect(lambda: self.config.change_config({'show_joints': not self.config.show_joints}))
-        settings_layout.addWidget(self.show_joints_label, 3, 0)
-        settings_layout.addWidget(self.show_joints_switch, 3, 1)
+        self.show_bones_config = ConfigEntrySwitch("show_bones", default=self.config.show_bones)
+        self.show_bones_config.valueUpdated.connect(lambda: self.config.change_config({'show_bones': self.show_bones_config.getValue()}))
+        settings_layout.addWidget(self.show_bones_config)
 
-        self.show_frames_label, self.show_frames_switch = self.get_switch("Show frames", default=self.config.show_frames)
-        self.show_frames_switch.setObjectName("show_frames")
-        self.show_frames_switch.stateChanged.connect(lambda: self.config.change_config({'show_frames': not self.config.show_frames}))
-        settings_layout.addWidget(self.show_frames_label, 4, 0)
-        settings_layout.addWidget(self.show_frames_switch, 4, 1)
+        self.bone_width_config = ConfigEntryEdit("bone_width", default=self.config.bone_width)
+        self.bone_width_config.valueUpdated.connect(lambda: self.config.change_config({'bone_width': self.bone_width_config.getValue()}))
+        settings_layout.addWidget(self.bone_width_config)
 
-        self.center_at_hip_label, self.center_at_hip_switch = self.get_switch("Center at hip", default=self.config.center_at_hip)
-        self.center_at_hip_switch.setObjectName("center_at_hip")
-        self.center_at_hip_switch.stateChanged.connect(lambda: self.config.change_config({'center_at_hip': not self.config.center_at_hip}))
-        settings_layout.addWidget(self.center_at_hip_label, 5, 0)
-        settings_layout.addWidget(self.center_at_hip_switch, 5, 1)
+        self.center_at_hip_config = ConfigEntrySwitch("center_at_hip", default=self.config.center_at_hip)
+        self.center_at_hip_config.valueUpdated.connect(lambda: self.config.change_config({'center_at_hip': self.center_at_hip_config.getValue()}))
+        settings_layout.addWidget(self.center_at_hip_config)
 
-        self.joint_dot_radius_label, self.joint_dot_radius_edit = self.get_edit("Joint dot radius", default=self.config.joint_dot_radius)
-        self.joint_dot_radius_edit.setObjectName("joint_dot_radius")
-        self.joint_dot_radius_edit.returnPressed.connect(lambda: self.config.change_config({'joint_dot_radius': self.joint_dot_radius_edit.text()}))
-        settings_layout.addWidget(self.joint_dot_radius_label, 6, 0)
-        settings_layout.addWidget(self.joint_dot_radius_edit, 6, 1)
+        self.paint_coordinate_frame_config = ConfigEntrySwitch("paint_coordinate_frame", default=self.config.show_frames)
+        self.paint_coordinate_frame_config.valueUpdated.connect(lambda: self.config.change_config({'paint_coordinate_frame': self.show_frames_config.getValue()}))
+        settings_layout.addWidget(self.show_frames_config)
 
-        self.bone_width_label, self.bone_width_edit = self.get_edit("Bone width", default=self.config.bone_width)
-        self.bone_width_edit.setObjectName("bone_width")
-        self.bone_width_edit.returnPressed.connect(lambda: self.config.change_config({'bone_width': self.bone_width_edit.text()}))
-        settings_layout.addWidget(self.bone_width_label, 7, 0)
-        settings_layout.addWidget(self.bone_width_edit, 7, 1)
+        self.x_rotation_view = ConfigEntrySlider("x_rotation_view", default=self.config.default_rotation[0])
+        self.x_rotation_view.valueUpdated.connect(lambda: self)
 
         self.visualization_settings.setLayout(settings_layout)
         main_layout.addWidget(self.visualization_settings)
+
 
         # Set data settings ui
         self.data_settings = QGroupBox("Data Settings (disabled)")
