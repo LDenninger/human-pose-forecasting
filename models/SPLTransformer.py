@@ -210,6 +210,9 @@ class SpatialAttention(nn.Module):
 
 
 class SpatioTemporalAttentionBlock(nn.Module):
+    """
+        Module representing a single Spatial-Temporal Attention Block following: https://arxiv.org/pdf/2004.08692.pdf
+    """
     def __init__(
                     self,
                      emb_dim: int,
@@ -231,6 +234,7 @@ class SpatioTemporalAttentionBlock(nn.Module):
         self.register_buffer('temporal_dropout', torch.Tensor(temporal_dropout))
         self.register_buffer('spatial_dropout', torch.Tensor(spatial_dropout))
         self.register_buffer('ff_dropout', torch.Tensor(ff_dropout))
+        self.full_return = full_return
         # Define used modules
         self.temporalAttention = TemporalAttention(emb_dim, num_emb, temporal_heads)
         self.spatialAttention = SpatialAttention(emb_dim, num_emb, spatial_heads)
@@ -261,13 +265,11 @@ class SpatioTemporalAttentionBlock(nn.Module):
         spatialAttentionOut = self.spatialAttention(x, mask=mask_spat) # shape: [batch_size, num_joints, seq_len, emb_dim]
         if self.spatialDropout is not None:
             spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
-        spatialAttentionOut = self.layerNorm(x + spatialAttentionOut)
         temporalAttentionOut = self.temporalAttention(x, mask=mask_temp)
         if self.temporalDropout is not None:
             temporalAttentionOut = self.temporalDropout(temporalAttentionOut)
-        temporalAttentionOut = self.layerNorm(x+temporalAttentionOut)
         # Add spatial and temporal attention
-        attnOut = spatialAttentionOut + temporalAttentionOut # shape: [batch_size, num_joints, seq_len, emb_dim]
+        attnOut = self.layerNorm(x + spatialAttentionOut) + self.layerNorm(x+temporalAttentionOut) # shape: [batch_size, num_joints, seq_len, emb_dim]
         # Point-wise feed-forward layer (point-wise w.r.t. the joints)
         # TODO: Implement this more efficiently by defining projection by hand
         for i in self.num_emb:
@@ -275,6 +277,8 @@ class SpatioTemporalAttentionBlock(nn.Module):
             if self.ffDropout is not None:
                 ffOut = self.ffDropout(ffOut)
             attnOut[:,i] = self.layerNorm(attnOut[:,i] + ffOut)
+        if self.full_return:
+            return attnOut, temporalAttentionOut, spatialAttentionOut
         
         return attnOut
         

@@ -3,7 +3,7 @@ import torch.nn as nn
 import numpy as np
 
 
-class PositionalEncoding(nn.Module):
+class PositionalEncodingSinusoidal(nn.Module):
     """
         Positional encoding according to "Attention Is All You Need" (https://arxiv.org/pdf/1706.03762.pdf)
     
