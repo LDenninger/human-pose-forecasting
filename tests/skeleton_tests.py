@@ -14,9 +14,10 @@ def test_skeleton32_model():
         baseline_position_list = []
 
         for i in range(seq.shape[0]):
+            #import ipdb; ipdb.set_trace()
             skeleton(seq[i])
             joint_positions = skeleton.get_joint_positions(incl_names=True)
-
+            #import ipdb; ipdb.set_trace()
             baseline_positions, baseline_out = baseline_forward_kinematics(angles=seq[i])
             baseline_positions = convert_baseline_representation(baseline_positions)
 

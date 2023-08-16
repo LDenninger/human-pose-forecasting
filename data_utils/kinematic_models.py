@@ -8,11 +8,10 @@ import numpy as np
 from .meta_info import SKELETON_H36M_MODEL, BASELINE_FKL_IND, SKELETON_H36M_BONE_LENGTH, SKELETON_H36M_PARENT_IDS, H36M_NAMES
 
 """
-    TODO: Fix the forward kinematics. This module can probably be simplified.
+    TODO: 
     The order of the raw joint data is rather unclear. There are different solutions:
-        1. https://github.com/MotionMLP/MotionMixer/blob/main/h36m/utils/forward_kinematics.py
+        1. https://github.com/MotionMLP/MotionMixer/blob/main/h36m/utils/forward_kinematics.py (we used this one)
         2. https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/forward_kinematics.py
-    And none of them work...
 
 
 """
@@ -220,118 +219,72 @@ class SkeletonModel32(nn.Module):
         
         """
         
-        #self.hip_pos = self.offset[0] + joint_angles[[0, 1, 2]]# root
-        #self.hip_angle = axis_angle_to_matrix(joint_angles[               [3, 4, 5]])
-        #self.rHip_angle = axis_angle_to_matrix(joint_angles[              [6, 7, 8]])# right leg
-        #self.rKnee_angle = axis_angle_to_matrix(joint_angles[             [9, 10, 11]])
-        #self.rAnkle_angle = axis_angle_to_matrix(joint_angles[            [12, 13, 14]])
-        #self.rToe_angle = axis_angle_to_matrix(joint_angles[              [15, 16, 17]])
-        #self.lHip_angle = axis_angle_to_matrix(joint_angles[              [21, 22, 23]])# left leg
-        #self.lKnee_angle = axis_angle_to_matrix(joint_angles[             [24, 25, 26]])
-        #self.lAnkle_angle = axis_angle_to_matrix(joint_angles[            [27, 28, 29]])
-        #self.lToe_angle = axis_angle_to_matrix(joint_angles[              [30, 31, 32]])
-        #self.spine_angle = axis_angle_to_matrix(joint_angles[             [33, 34, 35]])# torso
-        #self.spine1_angle = axis_angle_to_matrix(joint_angles[            [36, 37, 38]])
-        #self.thorax_angle = axis_angle_to_matrix(joint_angles[            [39, 40, 41]])
-        #self.neck_angle = axis_angle_to_matrix(joint_angles[              [42, 43, 44]])
-        #self.lShoulderAnchor_angle = axis_angle_to_matrix(joint_angles[   [51, 52, 53]])# left arm
-        #self.lShoulder_angle = axis_angle_to_matrix(joint_angles[         [54, 55, 56]])
-        #self.lElbow_angle = axis_angle_to_matrix(joint_angles[            [57, 58, 59]])
-        #self.lWrist_angle = axis_angle_to_matrix(joint_angles[            [60, 61, 62]])
-        #self.rShoulderAnchor_angle = axis_angle_to_matrix(joint_angles[   [75, 76, 77]])# right arm
-        #self.rShoulder_angle = axis_angle_to_matrix(joint_angles[         [78, 79, 80]])
-        #self.rElbow_angle = axis_angle_to_matrix(joint_angles[            [81, 82, 83]])
-        #self.rWrist_angle = axis_angle_to_matrix(joint_angles[            [84, 85, 86]])
-
         self.hip_pos = self.offset[0] + joint_angles[[0, 1, 2]]# root
-        self.hip_angle = axis_angle_to_matrix(joint_angles[               [5, 6, 4]])
-        self.rHip_angle = axis_angle_to_matrix(joint_angles[              [8, 9, 7]])# right leg
-        self.rKnee_angle = axis_angle_to_matrix(joint_angles[             [11, 12, 10]])
-        self.rAnkle_angle = axis_angle_to_matrix(joint_angles[            [14, 15, 13]])
-        self.rToe_angle = axis_angle_to_matrix(joint_angles[              [17, 18, 16]])
-        self.lHip_angle = axis_angle_to_matrix(joint_angles[              [20, 21, 19]])# left leg
-        self.lKnee_angle = axis_angle_to_matrix(joint_angles[             [23, 24, 22]])
-        self.lAnkle_angle = axis_angle_to_matrix(joint_angles[            [26, 27, 25]])
-        self.lToe_angle = axis_angle_to_matrix(joint_angles[              [29, 30, 28]])
-        self.spine_angle = axis_angle_to_matrix(joint_angles[             [32, 33, 31]])# torso
-        self.spine1_angle = axis_angle_to_matrix(joint_angles[            [35, 36, 34]])
-        self.thorax_angle = axis_angle_to_matrix(joint_angles[            [38, 39, 37]])
-        self.neck_angle = axis_angle_to_matrix(joint_angles[              [41, 42, 40]])
-        self.lShoulderAnchor_angle = axis_angle_to_matrix(joint_angles[   [44, 45, 43]])# left arm
-        self.lShoulder_angle = axis_angle_to_matrix(joint_angles[         [47, 48, 46]])
-        self.lElbow_angle = axis_angle_to_matrix(joint_angles[            [50, 51, 49]])
-        self.lWrist_angle = axis_angle_to_matrix(joint_angles[            [53, 54, 52]])
-        self.lThumb_angle = axis_angle_to_matrix(joint_angles[            [56, 57, 55]])
-        self.lWristEnd_angle = axis_angle_to_matrix(joint_angles[         [59, 60, 58]])
-        self.rShoulderAnchor_angle = axis_angle_to_matrix(joint_angles[   [62, 63, 61]])# right arm
-        self.rShoulder_angle = axis_angle_to_matrix(joint_angles[         [65, 66, 64]])
-        self.rElbow_angle = axis_angle_to_matrix(joint_angles[            [68, 69, 67]])
-        self.rWrist_angle = axis_angle_to_matrix(joint_angles[            [71, 72, 70]])
-        self.rThumb_angle = axis_angle_to_matrix(joint_angles[            [74, 75, 73]])
-        self.rWristEnd_angle = axis_angle_to_matrix(joint_angles[         [77, 78, 76]])
-
-        #self.hip_pos = self.offset[0] + joint_angles[[0, 1, 2]]# root
-        #self.hip_angle =                torch.from_numpy(expmap2rotmat(joint_angles[[5, 6, 4]].numpy())).float()
-        #self.rHip_angle =               torch.from_numpy(expmap2rotmat(joint_angles[[8, 9, 7]].numpy())).float()# right leg
-        #self.rKnee_angle =              torch.from_numpy(expmap2rotmat(joint_angles[[11, 12, 10]].numpy())).float()
-        #self.rAnkle_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[14, 15, 13]].numpy())).float()
-        #self.rToe_angle =               torch.from_numpy(expmap2rotmat(joint_angles[[17, 18, 16]].numpy())).float()
-        #self.lHip_angle =               torch.from_numpy(expmap2rotmat(joint_angles[[20, 21, 19]].numpy())).float()# left leg
-        #self.lKnee_angle =              torch.from_numpy(expmap2rotmat(joint_angles[[23, 24, 22]].numpy())).float()
-        #self.lAnkle_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[26, 27, 25]].numpy())).float()
-        #self.lToe_angle =               torch.from_numpy(expmap2rotmat(joint_angles[[29, 30, 28]].numpy())).float()
-        #self.spine_angle =              torch.from_numpy(expmap2rotmat(joint_angles[[32, 33, 31]].numpy())).float()# torso
-        #self.spine1_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[35, 36, 34]].numpy())).float()
-        #self.thorax_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[38, 39, 37]].numpy())).float()
-        #self.neck_angle =               torch.from_numpy(expmap2rotmat(joint_angles[[41, 42, 40]].numpy())).float()
-        #self.lShoulderAnchor_angle =    torch.from_numpy(expmap2rotmat(joint_angles[[44, 45, 43]].numpy())).float()# left arm
-        #self.lShoulder_angle =          torch.from_numpy(expmap2rotmat(joint_angles[[47, 48, 46]].numpy())).float()
-        #self.lElbow_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[50, 51, 49]].numpy())).float()
-        #self.lWrist_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[53, 54, 52]].numpy())).float()
-        #self.lThumb_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[56, 57, 55]].numpy())).float()
-        #self.lWristEnd_angle =          torch.from_numpy(expmap2rotmat(joint_angles[[59, 60, 58]].numpy())).float()
-        #self.rShoulderAnchor_angle =    torch.from_numpy(expmap2rotmat(joint_angles[[62, 63, 61]].numpy())).float()# right arm
-        #self.rShoulder_angle =          torch.from_numpy(expmap2rotmat(joint_angles[[65, 66, 64]].numpy())).float()
-        #self.rElbow_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[68, 69, 67]].numpy())).float()
-        #self.rWrist_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[71, 72, 70]].numpy())).float()
-        #self.rThumb_angle =             torch.from_numpy(expmap2rotmat(joint_angles[[74, 75, 73]].numpy())).float()
-        #self.rWristEnd_angle =          torch.from_numpy(expmap2rotmat(joint_angles[[77, 78, 76]].numpy())).float()
+        self.hip_angle = axis_angle_to_matrix(joint_angles[               [3, 4, 5]])
+        self.rHip_angle = axis_angle_to_matrix(joint_angles[              [6, 7, 8]])# right leg
+        self.rKnee_angle = axis_angle_to_matrix(joint_angles[             [9, 10, 11]])
+        self.rAnkle_angle = axis_angle_to_matrix(joint_angles[            [12, 13, 14]])
+        self.rToe_angle = axis_angle_to_matrix(joint_angles[              [15, 16, 17]])
+        self.lHip_angle = axis_angle_to_matrix(joint_angles[              [21, 22, 23]])# left leg
+        self.lKnee_angle = axis_angle_to_matrix(joint_angles[             [24, 25, 26]])
+        self.lAnkle_angle = axis_angle_to_matrix(joint_angles[            [27, 28, 29]])
+        self.lToe_angle = axis_angle_to_matrix(joint_angles[              [30, 31, 32]])
+        self.spine_angle = axis_angle_to_matrix(joint_angles[             [36, 37, 38]])# torso
+        self.spine1_angle = axis_angle_to_matrix(joint_angles[            [39, 40, 41]])
+        self.thorax_angle = axis_angle_to_matrix(joint_angles[            [42, 43, 44]])
+        self.neck_angle = axis_angle_to_matrix(joint_angles[              [45, 46, 47]])
+        self.lShoulderAnchor_angle = axis_angle_to_matrix(joint_angles[   [51, 52, 53]])# left arm
+        self.lShoulder_angle = axis_angle_to_matrix(joint_angles[         [54, 55, 56]])
+        self.lElbow_angle = axis_angle_to_matrix(joint_angles[            [57, 58, 59]])
+        self.lWrist_angle = axis_angle_to_matrix(joint_angles[            [60, 61, 62]])
+        self.lThumb_angle = axis_angle_to_matrix(joint_angles[            [63, 64, 65]])
+        self.lWristEnd_angle = axis_angle_to_matrix(joint_angles[         [69, 70, 71]])
+        self.rShoulderAnchor_angle = axis_angle_to_matrix(joint_angles[   [75, 76, 77]])# right arm
+        self.rShoulder_angle = axis_angle_to_matrix(joint_angles[         [78, 79, 80]])
+        self.rElbow_angle = axis_angle_to_matrix(joint_angles[            [81, 82, 83]])
+        self.rWrist_angle = axis_angle_to_matrix(joint_angles[            [84, 85, 86]])
+        self.rThumb_angle = axis_angle_to_matrix(joint_angles[            [87, 88, 89]])
+        self.rWristEnd_angle = axis_angle_to_matrix(joint_angles[         [93, 94, 95]])
 
 
     def _get_joint_angles_dsFormat(self):
         joint_angles = torch.zeros(99)
         joint_angles[[0, 1, 2]] = self.hip_pos - self.offset[0]
-        joint_angles[[4, 5, 6]] = p3dTransforms.matrix_to_axis_angle(self.hip_angle)
 
-        joint_angles[[7, 8, 9]] = p3dTransforms.matrix_to_axis_angle(self.rHip_angle)
-        joint_angles[[10, 11, 12]] = p3dTransforms.matrix_to_axis_angle(self.rKnee_angle)
-        joint_angles[[13, 14, 15]] = p3dTransforms.matrix_to_axis_angle(self.rAnkle_angle)
-        joint_angles[[16, 17, 18]] = p3dTransforms.matrix_to_axis_angle(self.rToe_angle)
+        # right leg
+        joint_angles[[6, 7, 8]] = p3dTransforms.matrix_to_axis_angle(self.rHip_angle)
+        joint_angles[[9, 10, 11]] = p3dTransforms.matrix_to_axis_angle(self.rKnee_angle)
+        joint_angles[[12, 13, 14]] = p3dTransforms.matrix_to_axis_angle(self.rAnkle_angle)
+        joint_angles[[15, 16, 17]] = p3dTransforms.matrix_to_axis_angle(self.rToe_angle)
+
         # left leg
-        joint_angles[[19, 20, 21]] = p3dTransforms.matrix_to_axis_angle(self.lHip_angle)
-        joint_angles[[22, 23, 24]] = p3dTransforms.matrix_to_axis_angle(self.lKnee_angle)
-        joint_angles[[25, 26, 27]] = p3dTransforms.matrix_to_axis_angle(self.lAnkle_angle)
-        joint_angles[[28, 29, 30]] = p3dTransforms.matrix_to_axis_angle(self.lToe_angle)
+        joint_angles[[21, 22, 23]] = p3dTransforms.matrix_to_axis_angle(self.lHip_angle)
+        joint_angles[[24, 25, 26]] = p3dTransforms.matrix_to_axis_angle(self.lKnee_angle)
+        joint_angles[[27, 28, 29]] = p3dTransforms.matrix_to_axis_angle(self.lAnkle_angle)
+        joint_angles[[30, 31, 32]] = p3dTransforms.matrix_to_axis_angle(self.lToe_angle)
+
         # torso
-        joint_angles[[31, 32, 33]] = p3dTransforms.matrix_to_axis_angle(self.spine_angle)
-        joint_angles[[34, 35, 36]] = p3dTransforms.matrix_to_axis_angle(self.spine1_angle)
-        joint_angles[[37, 38, 39]] = p3dTransforms.matrix_to_axis_angle(self.thorax_angle)
-        joint_angles[[40, 41, 42]] = p3dTransforms.matrix_to_axis_angle(self.neck_angle)
+        joint_angles[[36, 37, 38]] = p3dTransforms.matrix_to_axis_angle(self.spine_angle)
+        joint_angles[[39, 40, 41]] = p3dTransforms.matrix_to_axis_angle(self.spine1_angle)
+        joint_angles[[42, 43, 44]] = p3dTransforms.matrix_to_axis_angle(self.thorax_angle)
+        joint_angles[[45, 46, 47]] = p3dTransforms.matrix_to_axis_angle(self.neck_angle)
+
         # left arm
-        joint_angles[[43, 44, 45]] = p3dTransforms.matrix_to_axis_angle(self.lShoulderAnchor_angle)
-        joint_angles[[46, 47, 48]] = p3dTransforms.matrix_to_axis_angle(self.lShoulder_angle)
-        joint_angles[[49, 50, 51]] = p3dTransforms.matrix_to_axis_angle(self.lElbow_angle)
-        joint_angles[[52, 53, 54]] = p3dTransforms.matrix_to_axis_angle(self.lWrist_angle)
-        joint_angles[[55, 56, 57]] = p3dTransforms.matrix_to_axis_angle(self.lThumb_angle)
-        joint_angles[[58, 59, 60]] = p3dTransforms.matrix_to_axis_angle(self.lWristEnd_angle)
+        joint_angles[[51, 52, 53]] = p3dTransforms.matrix_to_axis_angle(self.lShoulderAnchor_angle)
+        joint_angles[[54, 55, 56]] = p3dTransforms.matrix_to_axis_angle(self.lShoulder_angle)
+        joint_angles[[57, 58, 59]] = p3dTransforms.matrix_to_axis_angle(self.lElbow_angle)
+        joint_angles[[60, 61, 62]] = p3dTransforms.matrix_to_axis_angle(self.lWrist_angle)
+        joint_angles[[63, 64, 65]] = p3dTransforms.matrix_to_axis_angle(self.lThumb_angle)
+        joint_angles[[69, 70, 71]] = p3dTransforms.matrix_to_axis_angle(self.lWristEnd_angle)
 
         # right arm
-        joint_angles[[61, 62, 63]] = p3dTransforms.matrix_to_axis_angle(self.rShoulderAnchor_angle)
-        joint_angles[[64, 65, 66]] = p3dTransforms.matrix_to_axis_angle(self.rShoulder_angle)
-        joint_angles[[67, 68, 69]] = p3dTransforms.matrix_to_axis_angle(self.rElbow_angle)
-        joint_angles[[70, 71, 72]] = p3dTransforms.matrix_to_axis_angle(self.rWrist_angle)
-        joint_angles[[73, 74, 75]] = p3dTransforms.matrix_to_axis_angle(self.lThumb_angle)
-        joint_angles[[76, 77, 78]] = p3dTransforms.matrix_to_axis_angle(self.lWristEnd_angle)
+        joint_angles[[75, 76, 77]] = p3dTransforms.matrix_to_axis_angle(self.rShoulderAnchor_angle)
+        joint_angles[[78, 79, 80]] = p3dTransforms.matrix_to_axis_angle(self.rShoulder_angle)
+        joint_angles[[81, 82, 83]] = p3dTransforms.matrix_to_axis_angle(self.rElbow_angle)
+        joint_angles[[84, 85, 86]] = p3dTransforms.matrix_to_axis_angle(self.rWrist_angle)
+        joint_angles[[87, 88, 89]] = p3dTransforms.matrix_to_axis_angle(self.rThumb_angle)
+        joint_angles[[93, 94, 95]] = p3dTransforms.matrix_to_axis_angle(self.rWristEnd_angle)
+
 
 
         return joint_angles
