@@ -83,3 +83,34 @@ def test_transformer():
     ipdb.set_trace()
     output = motion_predictor(test_tensor)
 
+#####===== High-Level Processing Function Tests =====#####
+
+def test_multiHeadTemporalMMM():
+
+    batch_size = 8
+    num_heads = 4
+    num_emb = 32
+    seq_len = 10
+    emb_dim = 16
+    proj_dim = 4
+
+    X = torch.randn((batch_size,num_emb,seq_len,emb_dim)) 
+    W = torch.randn((num_heads,num_emb,emb_dim,proj_dim)) 
+    import ipdb; ipdb.set_trace()
+    # Compute goal output using for loops
+    goal_output = torch.zeros((batch_size,num_heads,num_emb,seq_len,proj_dim))
+    for bs in range(batch_size):
+        for head in range(num_heads):
+            for emb in range(num_emb):
+                goal_output[bs, head, emb] = X[bs, emb] @ W[head, emb]
+
+    # Compute the output using our function
+    test_output = multiHeadTemporalMMM(X, W)
+    all_close = torch.allclose(test_output, goal_output, atol=1e-03)
+    import ipdb; ipdb.set_trace()
+    print(f'Goal and test output equal: {all_close}')
+    
+    
+
+
+

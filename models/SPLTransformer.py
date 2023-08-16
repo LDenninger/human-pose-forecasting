@@ -49,6 +49,7 @@ class MaskedLinear(nn.Module):
 # TODO: Time these function on CPU/GPU. The backend implementation of the Einstein sum can be tricky dependent on how and in which order the batch dimensions are processed.
 #  ---> https://davideliu.com/2022/02/20/speed-benchmark-einsum-vs-matmul-in-xl-attention/
 # TODO: How it is done right now, the permutation probably causes an overhead...
+# TODO: We have to double-check if these matrix multiplications actually do what we want.
 
 def multiHeadTemporalMMM(mat1: torch.Tensor, mat2: torch.Tensor) -> torch.Tensor:
     """ Multi-Head Multi-Matrix Multiplication
