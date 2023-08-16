@@ -225,4 +225,4 @@ def visualize_skeletons(skeleton_structure, data):
     
 
 if __name__ == '__main__':
-    main()
+    main()self.
