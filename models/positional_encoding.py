@@ -9,7 +9,7 @@ class PositionalEncodingSinusoidal(nn.Module):
     
     """
     def __init__(self, dim_hidden, n_position):
-        
+        super(PositionalEncodingSinusoidal, self).__init__()
         # Pre-compute sin and cos tables for positional encoding
         # Generate wave lengths for encoding
         sin_table = np.array([[position / np.power(10000, 2 * (hid_j // 2) / dim_hidden) for hid_j in range(dim_hidden)] for position in range(n_position)])

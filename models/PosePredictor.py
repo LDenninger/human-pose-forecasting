@@ -19,7 +19,7 @@ class PosePredictor(nn.Module):
     def __init__(self,
                     positionalEncodingType: str,
                      transformerType: str,
-                      transformerConfig: TransformerConfigBase, 
+                      transformerConfig: dict, 
                        num_joints: int,
                         seq_len: int,
                          num_blocks: int,
@@ -27,6 +27,8 @@ class PosePredictor(nn.Module):
                            joint_dim: int,
                             input_dropout: float = 0.0,
                     ):
+        import ipdb; ipdb.set_trace()
+        
         super(PosePredictor, self).__init__()
         # Build the model 
         # Initial linear layer for embedding each joint into the embedding space
@@ -40,9 +42,11 @@ class PosePredictor(nn.Module):
         # Final decoding layer to retrieve the original joint representation
         self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
         # Save some general parameters
-        self.register_buffer('num_joints', num_joints)
-        self.register_buffer('seq_len', seq_len)
-        self.register_buffer('num_blocks', num_blocks)
+
+        self.num_joints = num_joints
+        self.seq_len = seq_len
+        self.num_blocks = num_blocks
+        self.emb_dim = emb_dim
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -52,14 +56,16 @@ class PosePredictor(nn.Module):
 
             TODO: Make dimensions consistent across all modules to decrease amount of permutations etc.
         """
+        import ipdb; ipdb.set_trace()
+
         # Preperation
         bs = x.shape[0]
-        out = torch.copy(x)
         # Joint embedding
-        out = torch.flatten(out, start_dim=0, end_dim=1) # flatten to create a batch dimension
+        out = torch.flatten(x, start_dim=0, end_dim=1) # flatten to create a batch dimension
+        jointEncoding = torch.FloatTensor(bs*self.seq_len, self.num_joints, self.emb_dim).to(x.device)
         for i in range(self.num_joints):
-            out[:, i] = self.jointEncoding[i](out[:, i])
-        out = out.view(bs, self.seq_len, self.num_joints, -1) # unflatten to previous shape
+            jointEncoding[:, i] = self.jointEncoding[i](out[:, i])
+        out = jointEncoding.view(bs, self.seq_len, self.num_joints, -1) # unflatten to previous shape
         # Temporal positional encoding
         out = self.positionalEncoding(torch.flatten(out, start_dim=-2, end_dim=-1))
         out = out.view(bs, self.seq_len, self.num_joints, -1)
@@ -79,18 +85,18 @@ class PosePredictor(nn.Module):
     def _resolve_transformer(self, 
                                 type: str, 
                                  num_joints: int, 
-                                  emb_dim:int, 
-                                   config: TransformerConfigBase) -> nn.Module:
-        assert type in ['spl', 'vanilla']
+                                  emb_dim: int, 
+                                   config: dict) -> nn.Module:
+        assert type in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
         if type =='spl':
             return SpatioTemporalAttentionBlock(
                         emb_dim = emb_dim,
                         num_emb = num_joints,
-                        temporal_heads = config.TEMPORAL_HEADS,
-                        spatial_heads = config.SPATIAL_HEADS,
-                        temporal_dropout=config.TEMPORAL_DROPOUT,
-                        spatial_dropout=config.SPATIAL_DROPOUT,
-                        ff_dropout=config.FF_DROPOUT,
+                        temporal_heads = config['TEMPORAL_HEADS'],
+                        spatial_heads = config['SPATIAL_HEADS'],
+                        temporal_dropout=config['TEMPORAL_DROPOUT'],
+                        spatial_dropout=config['SPATIAL_DROPOUT'],
+                        ff_dropout=config['FF_DROPOUT'],
             )
         elif type == 'vanilla':
             return nn.Transformer
@@ -98,8 +104,8 @@ class PosePredictor(nn.Module):
             raise NotImplementedError(f'Transformer type not implemented: {type}')
     
     def _resolve_positional_encoding(self, type: str, emb_dim: int, seq_len: int) -> nn.Module:
-        assert type in ['sinusoidal', 'learned']
-        if type =='sinusoidal':
+        assert type in ['sin', 'learned'], 'Please provide a valid positional encoding type [sin, learned].'
+        if type =='sin':
             return PositionalEncodingSinusoidal(
                         dim_hidden = emb_dim,
                         n_position = seq_len

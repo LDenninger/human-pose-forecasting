@@ -107,7 +107,6 @@ def getConfig(config_path: str) -> Config:
         return json.load(f)
 
 def getConfigFromDict(config_dict: dict) -> Config:
-    import ipdb; ipdb.set_trace()
     configObj = Config()
     for key, value in config_dict.items():
         setattr(configObj, key, value)

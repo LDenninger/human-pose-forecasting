@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 import seaborn as sn
 
-from tests import test_data_loading, test_skeleton32_model, test_transformer
+from tests import test_data_loading, test_skeleton32_model, test_transformer, test_processing_functions
 
 
 ###--- Run Information ---###
@@ -54,6 +54,7 @@ if __name__ == '__main__':
     argparser.add_argument('--test_data', action='store_true', default=False, help='Test the model')
     argparser.add_argument('--test_sk32', action='store_true', default=False, help='Test the Skeleton32 model')
     argparser.add_argument('--test_model', action='store_true', default=False, help='Test the Skeleton32 model')
+    argparser.add_argument('--test_comp', action='store_true', default=False, help='Test the high-level computation functions of the model')
 
 
     argparser.add_argument('--augm_study', action='store_true', default=False, help='Run the augmentation study')
@@ -109,6 +110,8 @@ if __name__ == '__main__':
         test_skeleton32_model()
     if args.test_model:
         test_transformer()
+    if args.test_comp:
+        test_processing_functions()
 
     if args.train:
         assert ((args.exp is not None or 'CURRENT_EXP' in os.environ) and (args.run is not None or 'CURRENT_RUN' in os.environ)) or (len(EXPERIMENT_NAMES)!=0 and len(RUN_NAMES)!=0), 'Please provide an experiment and run name'

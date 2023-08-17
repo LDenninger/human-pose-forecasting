@@ -336,7 +336,6 @@ class Logger(object):
     def log_image(self, name: str, image: Union[torch.Tensor, np.array], step: Optional[int]=None) -> None:
         """
             Log images to WandB.
-        
         """
         assert len(image.shape) in [3, 4], "Please provide images of shape [H, W, C], [B, H, W, C], [C, H, W] or [B, C, H, W]"
         if torch.is_tensor(image):
