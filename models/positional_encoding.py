@@ -20,5 +20,12 @@ class PositionalEncodingSinusoidal(nn.Module):
         self.register_buffer('positional_encoding', torch.FloatTensor(sin_table).unsqueeze(0))
 
     def forward(self, x):
-        return x + self.positional_encoding[:, :x.shape[0]].clone().detach()
+        """
+            Computes the positional encoding.
+
+            Arguments:
+                x: Input tensor, shape: [batch_size, seq_len, num_emb, emb_dim]
+        """
+        import ipdb; ipdb.set_trace()
+        return x + self.positional_encoding[:, :x.shape[1]].clone().detach()
     

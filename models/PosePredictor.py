@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from config import TransformerConfigBase
 
-from .SPLTransformer import SpatioTemporalAttentionBlock
+from .transformer import SpatioTemporalTransformer
 from .positional_encoding import PositionalEncodingSinusoidal
 
 #####====== Pose Predictor =====#####
@@ -37,7 +37,7 @@ class PosePredictor(nn.Module):
         self.positionalEncoding = self._resolve_positional_encoding(positionalEncodingType, emb_dim, seq_len)
         self.inputDropout = nn.Dropout(p=input_dropout)
         # Attention blocks
-        self.attnBlocks = [self._resolve_transformer(transformerType, num_joints, emb_dim, transformerConfig) for _ in range(num_blocks)]
+        self.attnBlocks = [self._resolve_transformer(transformerType, num_joints, emb_dim, seq_len, transformerConfig) for _ in range(num_blocks)]
         self.attnBlocks = nn.Sequential(*self.attnBlocks)
         # Final decoding layer to retrieve the original joint representation
         self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
@@ -85,13 +85,15 @@ class PosePredictor(nn.Module):
     def _resolve_transformer(self, 
                                 type: str, 
                                  num_joints: int, 
-                                  emb_dim: int, 
-                                   config: dict) -> nn.Module:
+                                  emb_dim: int,
+                                   seq_len: int,
+                                    config: dict) -> nn.Module:
         assert type in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
         if type =='spl':
-            return SpatioTemporalAttentionBlock(
+            return SpatioTemporalTransformer(
                         emb_dim = emb_dim,
                         num_emb = num_joints,
+                        seq_len = seq_len,
                         temporal_heads = config['TEMPORAL_HEADS'],
                         spatial_heads = config['SPATIAL_HEADS'],
                         temporal_dropout=config['TEMPORAL_DROPOUT'],
