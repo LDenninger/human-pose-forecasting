@@ -1,0 +1,55 @@
+{
+    "RANDOM_SEED": 42,
+    "BATCH_SIZE": 32,
+    "NUM_ITERATIONS": 1000000,
+    "SEQ_LENGTH": 75,
+    "MODEL": {
+        "TYPE": "baseline",
+        "NUM_BLOCKS": 8,
+        "INPUT_DROPOUT": 0.1,
+        "EMBEDDING_DIM": 64,
+        "POSITIONAL_ENCODING": {
+            "TYPE": "sin"
+        },
+        "TRANSFORMER": {
+            "TYPE": "spl",
+            "SPATIAL_HEADS": 4,
+            "TEMPORAL_HEADS": 4,
+            "SPATIAL_DROPOUT": 0.1,
+            "TEMPORAL_DROPOUT": 0.1,
+            "FF_DIMENSION": 128,
+            "FF_DROPOUT": 0.1,
+            "INPUT_DROPOUT": 0.1
+        }
+    },
+    "OPTIMIZER": {
+        "TYPE": "Adam",
+        "BETAS": [
+            0.9,
+            0.98
+        ],
+        "EPSILON": 1e-08
+    },
+    "LR_SCHEDULER": {
+        "TYPE": "baseline",
+        "WARMUP": 100000
+    },
+    "SKELETON": {
+        "TYPE": "h36m",
+        "NUM_JOINTS": 27
+    },
+    "JOINT_REPRESENTATION": {
+        "TYPE": "matrix",
+        "JOINT_DIM": 9
+    },
+    "DATASET": {
+        "NAME": "h36m",
+        "SEED_LENGTH": 75,
+        "TARGET_LENGTH": 1,
+        "DOWNSAMPLING_FACTOR": 4,
+        "SPACING": 0,
+        "TRAINING_SIZE": 1000,
+        "VALIDATION_SIZE": 1000,
+        "TEST_SIZE": 1000
+    }
+}

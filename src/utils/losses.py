@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from abc import abstractmethod
 
+######===== Base Module =====#####
+
 class LossBase(nn.Module):
 
     def __init__(self):
@@ -12,6 +14,7 @@ class LossBase(nn.Module):
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         pass
 
+#####===== Loss Modules =====#####
 
 class PerJointMSELoss(LossBase):
 
@@ -23,4 +26,3 @@ class PerJointMSELoss(LossBase):
         loss = torch.sum(loss, dim=-1) # Sum over all joints
         loss = torch.sum(loss, dim=-1) # sum over all timesteps
         return torch.mean(loss) # average over the batch
-

@@ -7,12 +7,14 @@ from .meta_info import TRAIN_SUBJECTS, TEST_SUBJECTS, DEBUG_SPLIT
 
 
 class H36MDataset(Dataset):
-    def __init__(self, sequence_length: int,
-                        down_sampling_factor: int=1,
-                            sequence_spacing: int=0,
-                                is_train=True):
+    def __init__(self, seed_length: int,
+                        target_length: int,
+                         down_sampling_factor: int=1,
+                          sequence_spacing: int=0,
+                           is_train=True):
 
-        self.sequence_length = sequence_length
+        self.seed_length = seed_length
+        self.target_length = target_length
         self.sequence_spacing = sequence_spacing
         self.down_sampling_factor = down_sampling_factor
 
@@ -36,7 +38,7 @@ class H36MDataset(Dataset):
 
     def __getitem__(self, x):
         seq_start = self.valid_indices[x]
-        sequence = torch.stack(self.data[seq_start:(seq_start + self.sequence_length)], dim=0)
+        sequence = torch.stack(self.data[seq_start:(seq_start + self.seed_length + self.target_length)], dim=0)
 
         return sequence, self.labels[x]
         

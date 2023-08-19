@@ -22,7 +22,7 @@ LOGGER = None
 
 #####===== Logging Decorators =====#####
 
-def log_on_exception(func):
+def log_function(func):
     """
         Decorator to catch a function in case of an exception and writing the output to a log file.
     """

@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-from config import TransformerConfigBase
-
 from .transformer import SpatioTemporalTransformer
 from .positional_encoding import PositionalEncodingSinusoidal
 
@@ -17,15 +15,14 @@ class PosePredictor(nn.Module):
     """
 
     def __init__(self,
-                    positionalEncodingType: str,
-                     transformerType: str,
-                      transformerConfig: dict, 
-                       num_joints: int,
-                        seq_len: int,
-                         num_blocks: int,
-                          emb_dim: int,
-                           joint_dim: int,
-                            input_dropout: float = 0.0,
+                    positional_encoding_config: dict,
+                     transformer_config: dict, 
+                      num_joints: int,
+                       seq_len: int,
+                        num_blocks: int,
+                         emb_dim: int,
+                          joint_dim: int,
+                           input_dropout: float = 0.0,
                     ) -> None:
         
         super(PosePredictor, self).__init__()
@@ -33,10 +30,10 @@ class PosePredictor(nn.Module):
         # Initial linear layer for embedding each joint into the embedding space
         self.jointEncoding = [nn.Linear(joint_dim, emb_dim) for _ in range(num_joints)]
         # Positional encoding on the joints
-        self.positionalEncoding = self._resolve_positional_encoding(positionalEncodingType, emb_dim, seq_len)
+        self.positionalEncoding = self._resolve_positional_encoding(positional_encoding_config, emb_dim, seq_len)
         self.inputDropout = nn.Dropout(p=input_dropout)
         # Attention blocks
-        self.attnBlocks = [self._resolve_transformer(transformerType, num_joints, emb_dim, seq_len, transformerConfig) for _ in range(num_blocks)]
+        self.attnBlocks = [self._resolve_transformer(transformer_config, num_joints, emb_dim, seq_len) for _ in range(num_blocks)]
         self.attnBlocks = nn.Sequential(*self.attnBlocks)
         # Final decoding layer to retrieve the original joint representation
         self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
@@ -83,13 +80,12 @@ class PosePredictor(nn.Module):
 
 
     def _resolve_transformer(self, 
-                                type: str, 
+                                config: dict,
                                  num_joints: int, 
                                   emb_dim: int,
-                                   seq_len: int,
-                                    config: dict) -> nn.Module:
-        assert type in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
-        if type =='spl':
+                                   seq_len: int) -> nn.Module:
+        assert config['TYPE'] in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
+        if config['TYPE'] =='spl':
             return SpatioTemporalTransformer(
                         emb_dim = emb_dim,
                         num_emb = num_joints,
@@ -100,14 +96,12 @@ class PosePredictor(nn.Module):
                         spatial_dropout=config['SPATIAL_DROPOUT'],
                         ff_dropout=config['FF_DROPOUT'],
             )
-        elif type == 'vanilla':
-            return nn.Transformer
         else:
             raise NotImplementedError(f'Transformer type not implemented: {type}')
     
-    def _resolve_positional_encoding(self, type: str, emb_dim: int, seq_len: int) -> nn.Module:
-        assert type in ['sin', 'learned'], 'Please provide a valid positional encoding type [sin, learned].'
-        if type =='sin':
+    def _resolve_positional_encoding(self, config: dict, emb_dim: int, seq_len: int) -> nn.Module:
+        assert config["TYPE"] in ['sin', 'learned'], 'Please provide a valid positional encoding type [sin, learned].'
+        if config["TYPE"] =='sin':
             return PositionalEncodingSinusoidal(
                         dim_hidden = emb_dim,
                         n_position = seq_len
