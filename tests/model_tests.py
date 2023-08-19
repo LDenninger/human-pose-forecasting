@@ -52,22 +52,21 @@ config_data = {
 }
 
 def test_transformer():
-    ipdb.set_trace()
     configuration = config_data
 
     test_tensor = torch.randn((configuration['BATCH_SIZE'], configuration['SEQ_LENGTH'], configuration['NUM_JOINTS'], configuration['JOINT_DIM']))
 
     print('Attention Block')
-    attn_block = SpatioTemporalAttentionBlock(
+    attn_block = SpatioTemporalTransformer(
                     emb_dim=configuration['EMBEDDING_DIM'],
                     num_emb=configuration['NUM_JOINTS'],
+                    seq_len=configuration['SEQ_LENGTH'],
                     temporal_heads=configuration['TRANSFORMER_CONFIG']['TEMPORAL_HEADS'],
                     spatial_heads=configuration['TRANSFORMER_CONFIG']['SPATIAL_HEADS'],
                     temporal_dropout=configuration['TRANSFORMER_CONFIG']['TEMPORAL_DROPOUT'],
                     spatial_dropout=configuration['TRANSFORMER_CONFIG']['SPATIAL_DROPOUT'],
                     ff_dropout=configuration['TRANSFORMER_CONFIG']['FF_DROPOUT'],
                 )
-    ipdb.set_trace()
 
     print('Motion Predictor')
     motion_predictor = PosePredictor(

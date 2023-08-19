@@ -26,8 +26,7 @@ class PosePredictor(nn.Module):
                           emb_dim: int,
                            joint_dim: int,
                             input_dropout: float = 0.0,
-                    ):
-        import ipdb; ipdb.set_trace()
+                    ) -> None:
         
         super(PosePredictor, self).__init__()
         # Build the model 
@@ -47,6 +46,7 @@ class PosePredictor(nn.Module):
         self.seq_len = seq_len
         self.num_blocks = num_blocks
         self.emb_dim = emb_dim
+        self.joint_dim = joint_dim
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -67,19 +67,19 @@ class PosePredictor(nn.Module):
             jointEncoding[:, i] = self.jointEncoding[i](out[:, i])
         out = jointEncoding.view(bs, self.seq_len, self.num_joints, -1) # unflatten to previous shape
         # Temporal positional encoding
-        out = self.positionalEncoding(torch.flatten(out, start_dim=-2, end_dim=-1))
-        out = out.view(bs, self.seq_len, self.num_joints, -1)
+        out = self.positionalEncoding(out)
         out = self.inputDropout(out)
         # Attention layers
         out = self.attnBlocks(out)
         # Final decoding to retrieve the original joint representation
-        out = torch.flatten(out, start_dim=0, end_dim=1) # flatten to create a batch dimension
+        import ipdb; ipdb.set_trace()
+        #out = torch.flatten(out, start_dim=0, end_dim=1) # flatten to create a batch dimension
+        jointPred = torch.FloatTensor(*out.shape[:-1],self.joint_dim).to(out.device)
         for i in range(self.num_joints):
-            out[:, i] = self.jointDecoding[i](out[:, i])
-        out = out.view(bs, self.seq_len, self.num_joints, -1) # unflatten to previous shape
+            jointPred[:,:,i] = self.jointDecoding[i](out[:,:, i])
         # Final residual connection
-        out = out + x
-        return out
+        jointPred = jointPred + x
+        return jointPred
 
 
     def _resolve_transformer(self, 

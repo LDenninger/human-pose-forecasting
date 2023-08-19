@@ -26,6 +26,5 @@ class PositionalEncodingSinusoidal(nn.Module):
             Arguments:
                 x: Input tensor, shape: [batch_size, seq_len, num_emb, emb_dim]
         """
-        import ipdb; ipdb.set_trace()
-        return x + self.positional_encoding[:, :x.shape[1]].clone().detach()
+        return x + self.positional_encoding[:, :x.shape[1]].unsqueeze(-2).clone().detach()
     

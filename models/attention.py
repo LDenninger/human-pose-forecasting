@@ -44,8 +44,8 @@ class AttentionBase(nn.Module):
             output: [..., num_tokens, token_dim]
         """
         shape = query.shape
-        query, key, value = query.view(-1, shape[-2], shape[-1]), key.view(-1, shape[-2], shape[-1]), value.view(-1, shape[-2], shape[-1])
-        attn = torch.bmm(query, torch.transpose(key, 1, 2)) / (self.token_dim ** -0.5) 
+        query, key, value = query.reshape(-1, shape[-2], shape[-1]), key.reshape(-1, shape[-2], shape[-1]), value.reshape(-1, shape[-2], shape[-1])
+        attn = torch.bmm(query, torch.transpose(key, 1, 2)) * (self.token_dim ** -0.5) 
         if self.mask is not None:
             attn = torch.einsum('bij,ij->bij', attn, self.mask)
         attn = torch.softmax(attn, dim=-1)
@@ -63,7 +63,7 @@ class AttentionBase(nn.Module):
             output: [..., num_heads, num_tokens, head_dim]
         """
         out = self.linear_embedding(x, W)
-        out = out.view(*out.shape[:-2], self.num_heads, self. self.head_dim)
+        out = out.view(*out.shape[:-1], self.num_heads, self.head_dim)
         out = torch.transpose(out, -3, -2)
         return out
     
@@ -76,6 +76,7 @@ class AttentionBase(nn.Module):
                 x [..., num_tokens, token_dim], W [num_tokens, token_dim]
             output: [..., num_tokens, token_dim]
         """
+
         shape = x.shape
         x = x.view(-1, shape[-2], shape[-1])
         out = torch.einsum('bij,jk->bik', x, W)
@@ -114,14 +115,14 @@ class TemporalAttention(AttentionBase):
                 x [batch_size, seq_len, num_joints, emb_dim]
         """
         x = x.permute(0, 2, 1, 3) # [batch_size, num_joints, seq_len, emb_dim]
-
         Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size, num_joints, num_tokens, token_dim]
         K = self.multi_head_linear_embedding(x, self.W_key)
         V = self.multi_head_linear_embedding(x, self.W_value)
-
-        attn_out = self.scaled_dot_product_attention(Q, K, V)
-
-        out = self.linear_embedding(attn_out, self.W_output) 
+        
+        out = self.scaled_dot_product_attention(Q, K, V)
+        out = torch.transpose(out, -3, -2)
+        out = torch.flatten(out, start_dim=-2, end_dim=-1)
+        out = self.linear_embedding(out, self.W_output) 
         out = out.permute(0, 2, 1, 3) 
 
         return out
@@ -136,6 +137,7 @@ class TemporalAttention(AttentionBase):
                 x [..., num_tokens, token_dim], W [num_emb, num_tokens, token_dim]
             output: [..., num_tokens, token_dim]
         """
+
         shape = x.shape
         x = x.view(-1, shape[-3], shape[-2], shape[-1])
         out = torch.einsum('bnij,njk->bnik', x, W)
@@ -170,11 +172,12 @@ class SpatialAttention(AttentionBase):
         K = self.multi_head_linear_embedding(x, self.W_key) # [batch_size, seq_len, num_heads, num_joints, head_dim]
         V = self.multi_head_linear_embedding(x, self.W_value) # [batch_size, seq_len, num_heads, num_joints, head_dim]
 
-        attn_out = self.scaled_dot_product_attention(Q, K, V)
+        out = self.scaled_dot_product_attention(Q, K, V)
+        out = torch.transpose(out, -3, -2)
+        out = torch.flatten(out, start_dim=-2, end_dim=-1)
+        out = self.linear_embedding(out, self.W_output)
 
-        out = self.linear_embedding(attn_out, self.W_output) 
-        out = out.permute(0, 2, 1, 3) 
-
+        return out
     
     def multi_head_query_embedding(self, x: torch.Tensor, W: torch.Tensor) -> torch.Tensor:
         """
@@ -186,7 +189,7 @@ class SpatialAttention(AttentionBase):
             output: [..., num_emb, num_tokens, token_dim]
         """
         out = self.query_embedding(x, W)
-        out = out.view(*out.shape[:-2], self.num_heads, self.head_dim)
+        out = out.view(*out.shape[:-1], self.num_heads, self.head_dim)
         out = torch.transpose(out, -3, -2)
         return out
     
@@ -194,9 +197,10 @@ class SpatialAttention(AttentionBase):
         """
             Embed the query using different embedding functions for each joint.
         """
+
         shape = x.shape
         x = x.view(-1,shape[-3], shape[-2], shape[-1])
-        out = torch.einsum('nik,bnjk->bni', torch.transpose(W, -2, -1), x) # shape [batch_size*seq_len, num_joints, token_dim]
+        out = torch.einsum('nik,bjnk->bjni', torch.transpose(W, -2, -1), x) # shape [batch_size*seq_len, num_joints, token_dim]
         out = out.view(*shape) # shape [batch_size, seq_len, num_joints, token_dim]
         return out
     

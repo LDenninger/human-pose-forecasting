@@ -1,5 +1,6 @@
 from .positional_encoding import PositionalEncodingSinusoidal
-from .transformer import TemporalAttention, SpatialAttention, SpatioTemporalAttentionBlock
+from .attention import TemporalAttention, SpatialAttention
+from .transformer import SpatioTemporalTransformer
 from .PosePredictor import PosePredictor
 
-from .transformer import multiHeadTemporalMMM, multiHeadSpatialMMM, multiHeadSpatialMMVM, multiWeightMMM
+from .utils import multiHeadTemporalMMM, multiHeadSpatialMMM, multiHeadSpatialMMVM, multiWeightMMM

@@ -67,31 +67,31 @@ class SpatioTemporalTransformer(nn.Module):
         
 
     
-    def forward(self, x, mask_temp=None, mask_spat=None):
+    def forward(self, x):
         """
             Forward function for the Spatial-Temporal Attention Block.
 
             Inputs:
-                x: input tensor, shape: [batch_size, num_joints, seq_len, emb_dim]
+                x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        import ipdb; ipdb.set_trace()
 
         # Compute spatial and temporal attention separately and update input
-        spatialAttentionOut = self.spatialAttention(x, mask=mask_spat) # shape: [batch_size, num_joints, seq_len, emb_dim]
+        spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
         if self.spatialDropout is not None:
             spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
-        temporalAttentionOut = self.temporalAttention(x, mask=mask_temp)
+        temporalAttentionOut = self.temporalAttention(x)
         if self.temporalDropout is not None:
             temporalAttentionOut = self.temporalDropout(temporalAttentionOut)
         # Add spatial and temporal attention
         attnOut = self.layerNorm(x + spatialAttentionOut) + self.layerNorm(x+temporalAttentionOut) # shape: [batch_size, num_joints, seq_len, emb_dim]
         # Point-wise feed-forward layer (point-wise w.r.t. the joints)
         # TODO: Implement this more efficiently by defining projection by hand
-        for i in self.num_emb:
-            ffOut = self.pointWiseFF[i](attnOut[:,i])
+
+        for i in range(self.num_emb):
+            ffOut = self.pointWiseFF[i](attnOut[:,:,i])
             if self.ffDropout is not None:
                 ffOut = self.ffDropout(ffOut)
-            attnOut[:,i] = self.layerNorm(attnOut[:,i] + ffOut)
+            attnOut[:,:,i] = self.layerNorm(attnOut[:,:,i] + ffOut)
         if self.full_return:
             return attnOut, temporalAttentionOut, spatialAttentionOut
         
