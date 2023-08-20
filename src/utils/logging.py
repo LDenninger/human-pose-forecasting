@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union, Literal
 import traceback
-import datetime
+from datetime import datetime
 import os
 import git
 from pathlib import Path as P
@@ -115,7 +115,7 @@ def get_current_git_hash():
 
 #####===== Logging Functions =====#####
 
-@log_on_exception
+@log_function
 def log_architecture(model: nn.Module, save_path: str):
     """
     Printing architecture modules into a txt file
@@ -155,7 +155,7 @@ def log_module(module, save_path, append=True):
         f.write(str(module))
     return
 
-@log_on_exception
+@log_function
 def save_checkpoint(model, optimizer, scheduler, epoch, save_path, finished=False, savename=None):
     """
     Saving a checkpoint in the models directory of the experiment. This checkpoint
@@ -198,6 +198,12 @@ def save_checkpoint(model, optimizer, scheduler, epoch, save_path, finished=Fals
 
 class Logger(object):
 
+    def __init__(self) -> None:
+        """
+            Initialize the logger.
+        """
+        self.run_initialized = False
+
     def __init__(self, 
                   exp_name: str,
                    run_name: str,
@@ -216,7 +222,6 @@ class Logger(object):
                 run_name [str]: Name of the run within the experiment.
                 log_file_name Optional[str]: Name of the log file.
         """
-        wandb.login()
         ##-- Experiment Meta Data --##
         self.exp_name = exp_name
         self.run_name = run_name
@@ -231,7 +236,33 @@ class Logger(object):
         self.log_file_path = self.log_path / log_file_name
         self.vis_path = self.run_path / "visualization" if visualization_path is None else visualization_path
         self.checkpoint_path = self.run_path / "checkpoints" if checkpoint_path is None else checkpoint_path
+        self.run_initialized = True
 
+    def initialize(self,
+                    exp_name: str,
+                     run_name: str,
+                      log_to_file: Optional[bool]=True,
+                       log_file_name: Optional[str] = 'log.txt',
+                        log_internal: Optional[bool] = False,
+                         plot_path: Optional[str] = None,
+                          checkpoint_path: Optional[str] = None,
+                           log_path: Optional[str] = None,
+                            visualization_path: Optional[str] = None) -> None:
+        ##-- Experiment Meta Data --##
+        self.exp_name = exp_name
+        self.run_name = run_name
+        self.run_path = P('experiments') / self.exp_name / self.run_name
+        ##-- Logging Parameters --##
+        self.log_to_file = log_to_file
+        self.log_internal = log_internal
+        self._internal_log_dir = {}
+        ##-- Logging Paths --##
+        self.plot_path = self.run_path / "plots" if plot_path is None else plot_path
+        self.log_path = self.run_path / "logs" if log_path is None else log_path
+        self.log_file_path = self.log_path / log_file_name
+        self.vis_path = self.run_path / "visualization" if visualization_path is None else visualization_path
+        self.checkpoint_path = self.run_path / "checkpoints" if checkpoint_path is None else checkpoint_path
+        self.run_initialized = True
 
     def initialize_logging(self,
                               project_name: str,
@@ -240,8 +271,7 @@ class Logger(object):
                                  group: Optional[str]=None,
                                   job_type: Optional[str]=None,
                                    resume: Optional[Literal['allow','must','never','auto',None]]="allow",
-                                    mode: Optional[Literal['offline','online','disabled']]='online',
-                                     note: Optional[str]=None,
+                                    mode: Optional[Literal['offline','online','disabled']]='online'
                             ) -> None:
         """
             Initialize logging using WandB.
@@ -254,11 +284,11 @@ class Logger(object):
                 job_type Optional[str]: Type of the job to give extra information about the run.
                 resume Optional[Literal['allow','must','never','auto',None]]: Option to resume a previously logged run.
                 mode Optional[Literal['offline','online','disabled']]: Flag to determine if and where data is logged to.
-                note Optional[str]: Note to add to the run.
         
         """
+        wandb.login()
         self.run = wandb.init(
-                    project_name=project_name,
+                    project=project_name,
                     name=(self.exp_name+'/'+self.run_name),
                     entity=entity,
                     config=config,
@@ -266,10 +296,9 @@ class Logger(object):
                     job_type=job_type,
                     resume=resume,
                     mode=mode,
-                    note=note
         )
         log_str = 'WandB initialized\n'
-        log_str += f'project_name: {project_name}, entity: {entity}, group: {group}, job_type: {job_type}, resume: {resume}, mode: {mode}, note: {note}'
+        log_str += f'project_name: {project_name}, entity: {entity}, group: {group}, job_type: {job_type}, resume: {resume}, mode: {mode}'
         self.log_info(log_str, message_type="info")
         self.log_config(config)
 
@@ -454,3 +483,62 @@ class Logger(object):
 
     def _get_datetime(self) -> str:
         return datetime.today().strftime('%Y-%m-%d-%H:%M:%S')
+    
+#####===== Metric Tracker =====#####
+
+class MetricTracker:
+    def __init__(self):
+        self.metrics = {}
+        self.epoch = 1
+        self.iteration = 1
+
+    def step_iteration(self):
+        self.iteration += 1
+
+    def step_epoch(self):
+        self.epoch += 1
+
+    def log(self, metric_name: str, metric_value: float):
+        """ Log a metric value"""
+        if metric_name not in self.metrics.keys():
+            self.metrics[metric_name] = []
+        self.metrics[metric_name].append(metric_value)
+
+    def get_mean(self, metric_name: str = None) -> float:
+        """ Get the mean value of a metric """
+        if metric_name is None:
+            return {key: np.mean(values) for key, values in self.metrics.items()}
+        if metric_name not in self.metrics.keys():
+            print_(f'MetricTracker received an invalid metric name for retrieval {metric_name}')
+            return 0
+        return np.mean(self.metrics[metric_name])
+
+    def get_variance(self, metric_name: str = None) -> float:
+        """ Get the variance value of a metric """
+        if metric_name is None:
+            return {key: np.var(values) for key, values in self.metrics.items()}
+        if metric_name not in self.metrics.keys():
+            print_(f'MetricTracker received an invalid metric name for retrieval {metric_name}')
+            return 0
+        return np.var(self.metrics[metric_name])
+    
+    def get_median(self, metric_name: str = None) -> float:
+        """ Get the median value of a metric """
+        if metric_name is None:
+            return {key: np.median(values) for key, values in self.metrics.items()}
+        if metric_name not in self.metrics.keys():
+            print_(f'MetricTracker received an invalid metric name for retrieval {metric_name}')
+            return 0
+        return np.median(self.metrics[metric_name])
+
+    def reset(self, metric_name: str = None):
+        """
+            Reset a metric. If no metric name is provided, all metrics are resetted.
+        """
+        if metric_name is not None:
+            self.metrics[metric_name] = []
+        else:
+            self.metrics = {}
+    
+    
+

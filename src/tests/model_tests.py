@@ -4,7 +4,7 @@ import ipdb
 import numpy as np
 import os
 
-from models import *
+from ..models import *
 ######===== Test Data Structures and Parameters =====######
 
 config_data = {

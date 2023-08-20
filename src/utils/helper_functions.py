@@ -4,7 +4,7 @@ import torch.nn as nn
 import os
 from typing import Optional
 
-from data_utils import H36MDataset
+from ..data_utils import H36MDataset
 from .schedulers import SchedulerBase, SPLScheduler
 from .losses import LossBase, PerJointMSELoss
 
@@ -19,42 +19,42 @@ def set_random_seed(seed):
 # These functions are intended to minimize redundant code for initialization.
 
 def getScheduler(config: dict, optimizer: nn.Module, **kwargs) -> SchedulerBase:
-    if config["TYPE"] == 'baseline':
+    if config["type"] == 'baseline':
         assert "emb_size" in kwargs.keys(), 'Please provide the embedding size for the baseline scheduler.'
         return SPLScheduler(
             optimizer=optimizer,
             emb_size = kwargs.pop("emb_size"),
-            warmup = config["WARMUP"]
+            warmup = config["warmup"]
         )
     else:
-        raise NotImplementedError(f'Scheduler {config["TYPE"]} is not implemented.')
+        raise NotImplementedError(f'Scheduler {config["type"]} is not implemented.')
     
 def getLoss(config: dict, **kwargs) -> LossBase:
-    if config["TYPE"] =='mse':
+    if config["type"] =='mse':
         return PerJointMSELoss()
     else:
-        raise NotImplementedError(f'Loss {config["TYPE"]} is not implemented.')
+        raise NotImplementedError(f'Loss {config["type"]} is not implemented.')
 
 def getOptimizer(config: dict, model: nn.Module, **kwargs) -> nn.Module:
-    if config["TYPE"] == 'adam':
+    if config["type"] == 'Adam':
         return torch.optim.Adam(
             model.parameters(),
-            lr=config["LEARNING_RATE"],
-            betas=config["BETAS"],
-            eps=config['EPSILON']
+            lr=config["learning_rate"],
+            betas=config["betas"],
+            eps=config['epsilon']
         )
     else:
-        raise NotImplementedError(f'Optimizer {config["TYPE"]} is not implemented.')
+        raise NotImplementedError(f'Optimizer {config["type"]} is not implemented.')
 
 def getDataset(config: dict, is_train: Optional[bool] =True, **kwargs) -> torch.utils.data.Dataset:
-    if config["NAME"] == 'h36m':
+    if config["name"] == 'h36m':
         return H36MDataset(
-            seed_length=config["SEED_LENGTH"],
-            target_length=config["TARGET_LENGTH"],
-            down_sampling_factor=config["DOWNSAMPLING_FACTOR"],
-            sequence_spacing=config["SPACING"],
+            seed_length=config["seed_length"],
+            target_length=config["target_length"],
+            down_sampling_factor=config["downsampling_factor"],
+            sequence_spacing=config["spacing"],
             is_train=is_train
         )
     else:
-        raise NotImplementedError(f'Dataset {config["NAME"]} is not implemented.')
+        raise NotImplementedError(f'Dataset {config["name"]} is not implemented.')
     

@@ -9,8 +9,6 @@ from .positional_encoding import PositionalEncodingSinusoidal
 class PosePredictor(nn.Module):
     """
         This is a base for a pose predictor.
-        The modules used within the pose predictor are easy exchangable to enables
-        easier experimenting. 
     
     """
 
@@ -38,7 +36,6 @@ class PosePredictor(nn.Module):
         # Final decoding layer to retrieve the original joint representation
         self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
         # Save some general parameters
-
         self.num_joints = num_joints
         self.seq_len = seq_len
         self.num_blocks = num_blocks
@@ -84,24 +81,24 @@ class PosePredictor(nn.Module):
                                  num_joints: int, 
                                   emb_dim: int,
                                    seq_len: int) -> nn.Module:
-        assert config['TYPE'] in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
-        if config['TYPE'] =='spl':
+        assert config['type'] in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
+        if config['type'] =='spl':
             return SpatioTemporalTransformer(
                         emb_dim = emb_dim,
                         num_emb = num_joints,
                         seq_len = seq_len,
-                        temporal_heads = config['TEMPORAL_HEADS'],
-                        spatial_heads = config['SPATIAL_HEADS'],
-                        temporal_dropout=config['TEMPORAL_DROPOUT'],
-                        spatial_dropout=config['SPATIAL_DROPOUT'],
-                        ff_dropout=config['FF_DROPOUT'],
+                        temporal_heads = config['temporal_heads'],
+                        spatial_heads = config['spatial_heads'],
+                        temporal_dropout=config['temporal_dropout'],
+                        spatial_dropout=config['spatial_dropout'],
+                        ff_dropout=config['ff_dropout'],
             )
         else:
             raise NotImplementedError(f'Transformer type not implemented: {type}')
     
     def _resolve_positional_encoding(self, config: dict, emb_dim: int, seq_len: int) -> nn.Module:
-        assert config["TYPE"] in ['sin', 'learned'], 'Please provide a valid positional encoding type [sin, learned].'
-        if config["TYPE"] =='sin':
+        assert config["type"] in ['sin', 'learned'], 'Please provide a valid positional encoding type [sin, learned].'
+        if config["type"] =='sin':
             return PositionalEncodingSinusoidal(
                         dim_hidden = emb_dim,
                         n_position = seq_len

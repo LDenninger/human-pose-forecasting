@@ -5,3 +5,5 @@ data/*
 
 #experiments/*
 #!experiments/.gitkeep
+
+wandb/*

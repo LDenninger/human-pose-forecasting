@@ -5,7 +5,7 @@ import torch
 import copy
 import optuna
 
-import utils
+import src.utils as utils
 
 import torchgadgets as tg
 
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 import seaborn as sn
 
-from tests import test_data_loading, test_skeleton32_model, test_transformer, test_processing_functions
+from src.tests import test_data_loading, test_skeleton32_model, test_transformer, test_processing_functions
 
 
 ###--- Run Information ---###

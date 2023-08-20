@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
+import math
+import numpy as np
 from abc import abstractmethod
 """
     Schedulers used in this project.
 
 """
-
-
 
 #####===== Scheduler Modules =====#####
 
@@ -17,7 +17,7 @@ class SchedulerBase(nn.Module):
     def __init__(self, optimizer: nn.Module) -> None:
         super(SchedulerBase, self).__init__()
         self.optimizer = optimizer
-        self.register_parameter('learning_rate', torch.zero(1))
+        self.register_buffer('learning_rate', torch.zeros(1))
 
     def forward(self, step: int) -> None:
         """
@@ -55,7 +55,7 @@ class SPLScheduler(SchedulerBase):
         self.warmup = warmup
 
     def compute_learning_rate(self, step: int) -> None:
-        self.learning_rate = (self.emb_size ** -0.5) * torch.min(step ** -0.5, step * self.warmup ** -1.5)
+        self.learning_rate = torch.FloatTensor([(self.emb_size ** -0.5) * np.min(step ** -0.5, step * self.warmup ** -1.5)])
 
 
 

@@ -33,6 +33,9 @@
         ],
         "epsilon": 1e-08
     },
+    "loss": {
+        "type": "mse"
+    },
     "lr_scheduler": {
         "type": "baseline",
         "warmup": 100000

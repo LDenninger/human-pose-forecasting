@@ -1,6 +1,6 @@
 import torch
-from data_utils import SkeletonModel32, H36MDataset, H36M_SKELETON_STRUCTURE, baseline_forward_kinematics, convert_baseline_representation, expmap2rotmat, axis_angle_to_matrix
-from visualization import visualize_skeleton, compare_skeleton
+from ..data_utils import SkeletonModel32, H36MDataset, H36M_SKELETON_STRUCTURE, baseline_forward_kinematics, convert_baseline_representation, expmap2rotmat, axis_angle_to_matrix
+from ..visualization import visualize_skeleton, compare_skeleton
 import time
 
 def test_skeleton32_model():

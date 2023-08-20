@@ -5,7 +5,7 @@ import torch
 
 import json
 
-from .management import print_
+from .logging import print_
 
 ###--- Experiment Management Scripts ---###
 # These functions handle all interaction from outside with the experiments

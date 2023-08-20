@@ -25,3 +25,4 @@ function setup() {
     echo "  Current experiment ---> $CURRENT_EXP"
     echo "  Current run        ---> $CURRENT_RUN"
 }
+

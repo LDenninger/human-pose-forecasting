@@ -1,4 +1,4 @@
-from data_utils import *
+from ..data_utils import *
 import ipdb
 import numpy as np
 
