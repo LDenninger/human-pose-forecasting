@@ -188,7 +188,7 @@ class SpatialAttention(AttentionBase):
                 x [..., num_tokens, token_dim], W [num_emb, num_tokens, token_dim]
             output: [..., num_emb, num_tokens, token_dim]
         """
-        out = self.query_embedding(x, W)
+        out = self.query_embedding(x, W)    
         out = out.view(*out.shape[:-1], self.num_heads, self.head_dim)
         out = torch.transpose(out, -3, -2)
         return out

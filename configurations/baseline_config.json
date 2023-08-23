@@ -46,7 +46,7 @@
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": [],
+        "metrics": ["mse", "mae"],
         "frequency": 1
     },
     "dataset": {

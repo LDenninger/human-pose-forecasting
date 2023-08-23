@@ -9,7 +9,6 @@ from .models import PosePredictor
 
 @for_all_methods(log_function)
 class TrainerBaseline:
-
     def __init__(self,
                   experiment_name: str,
                   run_name: str,
@@ -37,6 +36,7 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
+
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -155,7 +155,6 @@ class TrainerBaseline:
                 self.evaluation_epoch()
             # Print out the epoch results
             self._print_epoch_results()
-
 
     def train_epoch(self) -> None:
         """
