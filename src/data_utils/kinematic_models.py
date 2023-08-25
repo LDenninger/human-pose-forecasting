@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import pytorch3d as p3d
-from pytorch3d import transforms as p3dTransforms
 from typing import Literal, Optional
 from abc import abstractmethod
 
@@ -40,6 +38,25 @@ def axis_angle_to_matrix(angle: torch.Tensor) -> torch.Tensor:
     S = S - torch.transpose(S, -2, -1)
     rot_mat = torch.repeat_interleave(torch.eye(3).unsqueeze(0), bs, dim=0) + torch.sin(theta)* S + (1-torch.cos(theta)) * (S@S)
     return rot_mat.squeeze()
+
+def matrix_to_axis_angle(rot_mat: torch.Tensor) -> torch.Tensor:
+    """
+        TODO: Implement this conversion.
+    """
+
+    return
+
+def matrix_to_quaternion(rot_mat: torch.Tensor) -> torch.Tensor:
+    """
+        TODO: Implement this conversion.
+    """
+    return
+
+def quaternion_to_matrix(rot_quat: torch.Tensor) -> torch.Tensor:
+    """
+        TODO: Implement this conversion.
+    """
+    return
 
 def _blank_processing(input: torch.Tensor):
     """
@@ -178,11 +195,11 @@ class SkeletonBase(nn.Module):
             Defines the appropriate conversion function from rotation matrix representation.
         """
         if representation == 'axis':
-            return p3dTransforms.matrix_to_axis_angle
+            return matrix_to_axis_angle
         elif representation == 'mat':
             return _blank_processing
         elif representation == 'quat':
-            return p3dTransforms.matrix_to_quaternion
+            return matrix_to_quaternion
         else:
             raise NotImplementedError()
     
@@ -195,7 +212,7 @@ class SkeletonBase(nn.Module):
         elif representation == 'mat':
             return _blank_processing
         elif representation == 'quat':
-            return p3dTransforms.quaternion_to_matrix
+            return quaternion_to_matrix
         else:
             raise NotImplementedError()
 
