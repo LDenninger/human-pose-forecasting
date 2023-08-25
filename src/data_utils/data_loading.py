@@ -45,7 +45,7 @@ def load_data(person_id: list = None, action_str: list = None, sub_action_id: li
         [                                           # List of all action sequence
             [                                       # List of joint angles at each timestep
                 np.array(99) / torch.Tensor(99)     # Joint angles either as numpy arrays or torch tensors
-            ]
+            ],...
         ]
 
         The meta_dir is in the following format:

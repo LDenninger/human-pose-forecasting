@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 import numpy as np
 
-from .meta_info import SKELETON_H36M_MODEL, BASELINE_FKL_IND, SKELETON_H36M_BONE_LENGTH, SKELETON_H36M_PARENT_IDS, H36M_NAMES
+from .meta_info import *
 
 """
 
@@ -190,7 +190,7 @@ class SkeletonBase(nn.Module):
             angle_dict['cur_frame'] = angle
         return angle_dict
 
-    def _get_from_mat_conversion(representation: Optional[Literal['axis', 'mat', 'quat']] = 'axis') -> function:
+    def _get_from_mat_conversion(representation: Optional[Literal['axis', 'mat', 'quat']] = 'axis'):
         """
             Defines the appropriate conversion function from rotation matrix representation.
         """
@@ -454,8 +454,8 @@ def expmap2rotmat(r):
     R = np.eye(3, 3) + np.sin(theta) * r0x + (1 - np.cos(theta)) * (r0x).dot(r0x);
     return R
 
-
-def baseline_forward_kinematics(angles, parent = SKELETON_H36M_PARENT_IDS, angle_indices = BASELINE_FKL_IND, offset = SKELETON_H36M_BONE_LENGTH):
+# TODO: parent data structure has do be put into meta_info again
+def baseline_forward_kinematics(angles, parent, angle_indices = BASELINE_FKL_IND, offset = H36M_BONE_LENGTH):
     """
         Convert joint angles and bone lenghts into the 3d points of a person.
 

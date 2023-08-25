@@ -55,7 +55,7 @@ class SPLScheduler(SchedulerBase):
         self.warmup = warmup
 
     def compute_learning_rate(self, step: int) -> None:
-        self.learning_rate = torch.FloatTensor([(self.emb_size ** -0.5) * np.min(step ** -0.5, step * self.warmup ** -1.5)])
+        self.learning_rate = torch.FloatTensor([(self.emb_size ** -0.5) * np.min([step ** -0.5, step * self.warmup ** -1.5])])
 
 
 

@@ -26,7 +26,10 @@ class PosePredictor(nn.Module):
         super(PosePredictor, self).__init__()
         # Build the model 
         # Initial linear layer for embedding each joint into the embedding space
-        self.jointEncoding = [nn.Linear(joint_dim, emb_dim) for _ in range(num_joints)]
+        self.register_parameter("W_enc", nn.Parameter(torch.FloatTensor(num_joints, emb_dim, joint_dim)))
+        self.register_parameter("b_enc", nn.Parameter(torch.FloatTensor(num_joints, emb_dim)))
+
+        #self.jointEncoding = [nn.Linear(joint_dim, emb_dim) for _ in range(num_joints)]
         # Positional encoding on the joints
         self.positionalEncoding = self._resolve_positional_encoding(positional_encoding_config, emb_dim, seq_len)
         self.inputDropout = nn.Dropout(p=input_dropout)
@@ -34,7 +37,9 @@ class PosePredictor(nn.Module):
         self.attnBlocks = [self._resolve_transformer(transformer_config, num_joints, emb_dim, seq_len) for _ in range(num_blocks)]
         self.attnBlocks = nn.Sequential(*self.attnBlocks)
         # Final decoding layer to retrieve the original joint representation
-        self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
+        self.register_parameter("W_dec", nn.Parameter(torch.FloatTensor(num_joints, joint_dim, emb_dim)))
+        self.register_parameter("b_dec", nn.Parameter(torch.FloatTensor(num_joints, joint_dim)))
+        #self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
         # Save some general parameters
         self.num_joints = num_joints
         self.seq_len = seq_len
@@ -55,26 +60,36 @@ class PosePredictor(nn.Module):
         # Preperation
         bs = x.shape[0]
         # Joint embedding
-        out = torch.flatten(x, start_dim=0, end_dim=1) # flatten to create a batch dimension
-        jointEncoding = torch.FloatTensor(bs*self.seq_len, self.num_joints, self.emb_dim).to(x.device)
-        for i in range(self.num_joints):
-            jointEncoding[:, i] = self.jointEncoding[i](out[:, i])
-        out = jointEncoding.view(bs, self.seq_len, self.num_joints, -1) # unflatten to previous shape
+        #out = torch.flatten(x, start_dim=0, end_dim=1) # flatten to create a batch dimension
+        out = torch.clone(x)
+        out = self.encode_joints(out)
+
         # Temporal positional encoding
         out = self.positionalEncoding(out)
         out = self.inputDropout(out)
         # Attention layers
         out = self.attnBlocks(out)
         # Final decoding to retrieve the original joint representation
-        import ipdb; ipdb.set_trace()
         #out = torch.flatten(out, start_dim=0, end_dim=1) # flatten to create a batch dimension
-        jointPred = torch.FloatTensor(*out.shape[:-1],self.joint_dim).to(out.device)
-        for i in range(self.num_joints):
-            jointPred[:,:,i] = self.jointDecoding[i](out[:,:, i])
+        out = self.decode_joints(out)
         # Final residual connection
         jointPred = jointPred + x
         return jointPred
 
+    def encode_joints(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Initial joint embedding.
+        """
+        import ipdb; ipdb.set_trace()
+        x = torch.einsum('njk,bsnk->bsnj', self.W_enc, x)
+        x += torch.einsum('nj,bsnj->bsnj', self.b_enc, x)
+
+    def decode_joints(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Final joint decoding into the original representation.
+        """
+        x = torch.einsum('njk,bsnj->bsnk', self.W_dec, x)
+        x += torch.einsum('nj,bsnk->bsnk', self.b_dec, x)
 
     def _resolve_transformer(self, 
                                 config: dict,

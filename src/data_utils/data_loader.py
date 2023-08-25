@@ -17,9 +17,10 @@ class H36MDataset(Dataset):
         self.target_length = target_length
         self.sequence_spacing = sequence_spacing
         self.down_sampling_factor = down_sampling_factor
+        import ipdb; ipdb.set_trace()
 
         if is_train:
-            self.data, self.meta_info = load_data(person_id = DEBUG_SPLIT, return_tensor=True)
+            self.data, self.meta_info = load_data(person_id = TRAIN_SUBJECTS, return_tensor=True)
         else:
             self.data, self.meta_info = load_data(person_id = TEST_SUBJECTS, return_tensor=True)
         if down_sampling_factor != 1:
@@ -37,6 +38,7 @@ class H36MDataset(Dataset):
 
 
     def __getitem__(self, x):
+        import ipdb; ipdb.set_trace()
         seq_start = self.valid_indices[x]
         sequence = torch.stack(self.data[seq_start:(seq_start + self.seed_length + self.target_length)], dim=0)
 
