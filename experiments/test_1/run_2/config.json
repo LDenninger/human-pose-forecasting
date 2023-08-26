@@ -41,15 +41,15 @@
         "warmup": 100000
     },
     "skeleton": {
-        "type": "h36m",
-        "num_joints": 27
+        "type": "s26",
+        "num_joints": 26
     },
     "joint_representation": {
-        "type": "matrix",
+        "type": "mat",
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": [],
+        "metrics": ["mse", "mae"],
         "frequency": 1
     },
     "dataset": {
