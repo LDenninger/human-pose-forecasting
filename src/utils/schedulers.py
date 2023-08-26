@@ -1,12 +1,15 @@
+"""
+    Modules to implement a learning rate scheduler for training.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 import torch.nn as nn
 import math
 import numpy as np
 from abc import abstractmethod
-"""
-    Schedulers used in this project.
 
-"""
 
 #####===== Scheduler Modules =====#####
 

@@ -1,3 +1,9 @@
+"""
+    Transformer blocks used in the pose predictor.
+    The used attention mechanisms are implemented in the file attention.py.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

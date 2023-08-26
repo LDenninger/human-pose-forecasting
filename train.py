@@ -17,6 +17,8 @@ from src.utils import print_
 def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, log: bool):
     """
         Run a training using the baseline trainer.
+
+        TODO: Implement checkpoint loading
     """
     # Initialize the trainer
     trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=0)
@@ -34,7 +36,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
-QUEUED = False
+QUEUED = False # Activate the usage of the training queue
 EXPERIMENT_NAMES = []
 RUN_NAMES = []
 

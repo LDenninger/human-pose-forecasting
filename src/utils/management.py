@@ -1,3 +1,15 @@
+"""
+    Functions that handle the complete communication with the local experiment directory.
+    The functionalities include:
+     - Loading and saving configs
+     - Loading and saving model checkpoints
+     - Initialising experiments
+     - Initialising and deleting runs
+     - Clear run data
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import os
 import shutil
 
@@ -14,6 +26,7 @@ from .logging import print_
 ###--- Experiments Directory ---###
 
 def create_experiment(experiment_name):
+    """ Create a new experiment in the experiments directory. """
     path = os.path.join(os.getcwd(), 'experiments', experiment_name)
     if os.path.exists(path):
         print_('Experiment directory already exists')
@@ -23,6 +36,7 @@ def create_experiment(experiment_name):
     return 1
 
 def create_run(experiment_name, run_name):
+    """ Create a new run in an existing experiment directory. """
     path = os.path.join(os.getcwd(), 'experiments', experiment_name, run_name)
     if os.path.exists(path):
         print_('Run directory already exists')
@@ -35,6 +49,7 @@ def create_run(experiment_name, run_name):
     return 1
 
 def clear_run(experiment_name, run_name):
+    """ Remove a run directory. """
     path = os.path.join(os.getcwd(), 'experiments', experiment_name, run_name)
     if not os.path.exists(path):
         print_('Run directory does not exist')
@@ -45,6 +60,7 @@ def clear_run(experiment_name, run_name):
     return 1
 
 def clear_logs(experiment_name, run_name):
+    """ Clear the local log files of a run. """
     path = os.path.join(os.getcwd(), 'experiments', experiment_name, run_name, 'logs')
     if not os.path.exists(path):
         print_('Logs directory does not exist')
@@ -58,10 +74,12 @@ def clear_logs(experiment_name, run_name):
 ###--- Configurations ---###
 
 def load_config_to_run(config_name, exp_name, run_name):
+    """ Load a configuration from the /configurations directory to a run."""
     config = load_config(config_name)
     save_config(config, exp_name, run_name)
 
 def load_config_from_run(exp_name, run_name):
+    """ Load the configuration from a run directory. """
     path = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json')
     if not os.path.exists(path):
         print_('Config file does not exist')
@@ -71,23 +89,16 @@ def load_config_from_run(exp_name, run_name):
     return config
 
 def load_config(config_name):
+    """ Load a configuration from the /configurations directory. """
     with open(os.path.join(os.getcwd(), 'configurations', config_name+".json"), 'r') as f:
         config = json.load(f)
     return config
 
 def save_config(config, exp_name, run_name):
+    """ Save a configuration to a run directory. """
     with open(os.path.join(os.getcwd(), 'experiments', exp_name, run_name), 'w') as f:
         json.dump(config, f, indent=4)
 
-def load_config_from_run(exp_name, run_name):
-    path = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json')
-    if not os.path.exists(path):
-        print_('Config file does not exist')
-        return None
-    with open(path, 'r') as f:
-        config = json.load(f)
-        
-    return config
 
 ###--- Checkpoint Loading ---###
 

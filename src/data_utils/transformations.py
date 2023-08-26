@@ -1,6 +1,8 @@
 """
     Functions to transform 3D data.
     Most functions are adapted from PyTorch3d: https://github.com/facebookresearch/pytorch3d
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
 """
 
 import torch

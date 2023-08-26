@@ -1,3 +1,8 @@
+"""
+    A class that can be used to debug and log stats of models.
+
+    Auhtor: Luis Denninger <l_denning@uni-bonn.de>
+"""
 import torch
 import ipdb
 

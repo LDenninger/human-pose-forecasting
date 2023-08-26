@@ -1,3 +1,12 @@
+"""
+    This module capsules the logging and complete communication with the WandB API.
+    It can be used for either logging or load previously logged data.
+
+    Some parts of the logging module were adapted from: https://github.com/angelvillar96/TemplaTorch
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+
+"""
 import wandb
 import numpy as np
 import json
@@ -10,13 +19,7 @@ import os
 import git
 from pathlib import Path as P
 
-"""
-    This module capsules the logging and complete communication with the WandB API.
-    It can be used for either logging or load previously logged data.
 
-    Author: Luis Denninger <l_denninger@uni-bonn.de>
-
-"""
 #####===== Logging Object =====#####
 LOGGER = None
 

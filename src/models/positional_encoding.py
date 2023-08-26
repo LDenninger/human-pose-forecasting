@@ -1,3 +1,8 @@
+"""
+    Modules to apply positional encoding to the inputs.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
 import torch
 import torch.nn as nn
 import numpy as np

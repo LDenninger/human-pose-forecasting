@@ -1,5 +1,10 @@
 """
-Contains tools for high-level timing.
+    Contains tools for high-level timing.
+    This currently does not cover asynchronous computation of CUDA kernels.
+
+    Adapted from: https://git.ais.uni-bonn.de/periyasa/handy_profile
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
 """
 
 import time

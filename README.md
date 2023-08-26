@@ -1,6 +1,26 @@
 # Human Pose Forecasting
-This projects aims at forecasting human poses with inspiraction from: https://arxiv.org/pdf/2004.08692.pdf
-This is the final project of the lab course "Vision Systyems" of the University of Bonn.
+This project aims at forecasting human poses with inspiration from: https://arxiv.org/pdf/2004.08692.pdf
+This is the final project of the lab course "Vision Systems" of the University of Bonn.
+
+## Project Structure
+
+    .
+    ├── ...
+    ├── configurations                  # Configurations files
+    ├── data                            # Dataset
+    ├── experiments                     # Experiment directory
+    ├── src                             # Python source files
+    │   ├── data_utils                  # Functions and modules for data processing
+    │   ├── evaluation                  # Functions and modules for the evaluation
+    │   ├── models                      # Torch models used within the project
+    │   ├── tests                       # Tests to demonstrate the correct behaviour
+    │   ├── utils                       # Utility functions
+    │   ├── visualization               # Visualization functions
+    │   └── training_baseline.py        # Trainer for the baseline model
+    ├── env.sh                          # Source file for the experiment environment
+    ├── keep_exp.sh                     # script to add .gitignore files into empty folders in the experiment directory
+    ├── run.py                          # General run file
+    └── ...
 
 ## Installation
 The complete project was run in a conda environment. Here we share the setup:

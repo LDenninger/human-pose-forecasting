@@ -1,3 +1,8 @@
+"""
+    Helper functions to reduce redundant code between different functions and modules.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
 import numpy as np
 import torch
 import torch.nn as nn
@@ -10,6 +15,7 @@ from .losses import LossBase, PerJointMSELoss
 
 #####===== Random Seed =====#####
 def set_random_seed(seed):
+    """ Set the random seed for reproducibility."""
     os.environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -51,6 +57,9 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
         Load a dataset using a run config.
 
         Arguments:
+            config (dict): The configuration dictionary of the dataset.
+            joint_representation (str): The representation of the joints.
+
     """
     if config["name"] == 'h36m':
         return H36MDataset(

@@ -1,11 +1,12 @@
-import numpy as np
-
 """
     This file holds all meta information about the dataset.
     Since there is very little low-level documentation, this file might give a deeper insight into the dataset.
     It also provides easier access to the datasets for other modules and functions.
 
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+
 """
+import numpy as np
 
 #####===== H36M General Information =====#####
 DATASET_PATH = 'data/h3.6m/dataset'

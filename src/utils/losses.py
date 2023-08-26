@@ -1,3 +1,8 @@
+"""
+    Modules that implement different losses on the joint representations.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

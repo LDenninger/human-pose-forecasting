@@ -1,3 +1,9 @@
+"""
+    Pose Predictor module which capsules the attention layers.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 import torch.nn as nn
 import math

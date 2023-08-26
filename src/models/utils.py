@@ -1,3 +1,9 @@
+"""
+    Functions to be used within models for easier processing.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

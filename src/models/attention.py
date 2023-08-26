@@ -1,7 +1,9 @@
 """
-    This files contains the used attention blocks.
+    This files contains the used attention mechanisms.
 
     We assume that the base shape of input vectors is [batch_size, seq_len, num_joints, emb_dim]
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
 
 """
 import torch
