@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import math
 
 from .transformer import SpatioTemporalTransformer
 from .positional_encoding import PositionalEncodingSinusoidal
@@ -46,6 +47,7 @@ class PosePredictor(nn.Module):
         self.num_blocks = num_blocks
         self.emb_dim = emb_dim
         self.joint_dim = joint_dim
+        self._reset_parameters()
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -56,11 +58,7 @@ class PosePredictor(nn.Module):
             TODO: Make dimensions consistent across all modules to decrease amount of permutations etc.
         """
         import ipdb; ipdb.set_trace()
-
-        # Preperation
-        bs = x.shape[0]
         # Joint embedding
-        #out = torch.flatten(x, start_dim=0, end_dim=1) # flatten to create a batch dimension
         out = torch.clone(x)
         out = self.encode_joints(out)
 
@@ -70,26 +68,26 @@ class PosePredictor(nn.Module):
         # Attention layers
         out = self.attnBlocks(out)
         # Final decoding to retrieve the original joint representation
-        #out = torch.flatten(out, start_dim=0, end_dim=1) # flatten to create a batch dimension
         out = self.decode_joints(out)
         # Final residual connection
-        jointPred = jointPred + x
-        return jointPred
+        out = out + x
+        return out
 
     def encode_joints(self, x: torch.Tensor) -> torch.Tensor:
         """
             Initial joint embedding.
         """
-        import ipdb; ipdb.set_trace()
         x = torch.einsum('njk,bsnk->bsnj', self.W_enc, x)
-        x += torch.einsum('nj,bsnj->bsnj', self.b_enc, x)
+        x = torch.einsum('nj,bsnj->bsnj', self.b_enc, x)
+        return x
 
     def decode_joints(self, x: torch.Tensor) -> torch.Tensor:
         """
             Final joint decoding into the original representation.
         """
-        x = torch.einsum('njk,bsnj->bsnk', self.W_dec, x)
-        x += torch.einsum('nj,bsnk->bsnk', self.b_dec, x)
+        x = torch.einsum('njk,bsnk->bsnj', self.W_dec, x)
+        x = torch.einsum('nj,bsnk->bsnk', self.b_dec, x)
+        return x
 
     def _resolve_transformer(self, 
                                 config: dict,
@@ -120,4 +118,19 @@ class PosePredictor(nn.Module):
             )
         else:
             raise NotImplementedError(f'Positional encoding type not implemented: {type}')
-        
+    
+    def _reset_parameters(self) -> None:
+        """
+            Reset the parameters of the enncoding and decoding layers.
+        """
+        # Setting a=sqrt(5) in kaiming_uniform is the same as initializing with
+        # uniform(-1/sqrt(in_features), 1/sqrt(in_features)). For details, see
+        # https://github.com/pytorch/pytorch/issues/57109
+        nn.init.kaiming_uniform_(self.W_enc, a=math.sqrt(5))
+        nn.init.kaiming_uniform_(self.W_dec, a=math.sqrt(5))
+        fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.W_enc)
+        bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+        nn.init.uniform_(self.b_enc, -bound, bound)
+        fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.W_dec)
+        bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+        nn.init.uniform_(self.b_dec, -bound, bound)

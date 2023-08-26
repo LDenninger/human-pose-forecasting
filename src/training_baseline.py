@@ -1,4 +1,5 @@
 import torch
+#torch.autograd.set_detect_anomaly(True)
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Optional
@@ -82,19 +83,29 @@ class TrainerBaseline:
 
     def load_data(self, train: bool = True, test: bool = True) -> None:
         if train:
-            dataset = getDataset(self.config['dataset'], is_train=True)
+            dataset = getDataset(
+                self.config['dataset'],
+                joint_representation = self.config['joint_representation']['type'],
+                skeleton_model = self.config['skeleton']['type'],
+                is_train=True
+            )
             self.train_loader = DataLoader(
                 dataset=dataset,
                 batch_size=self.config['batch_size'],
                 shuffle=True,
                 drop_last=True,
-                num_workers=self.num_threads
+                num_workers=self.num_threads,
             )
             self.len_train = len(self.train_loader)
             print_(f"Loaded {self.len_train} training samples")
 
         if test:
-            dataset = getDataset(self.config['dataset'], is_train=False)
+            dataset = getDataset(
+                self.config['dataset'],
+                joint_representation = self.config['joint_representation']['type'],
+                skeleton_model = self.config['skeleton']['type'],
+                is_train=False
+            )
             self.test_loader = DataLoader(
                 dataset=dataset,
                 batch_size=self.config['batch_size'],
@@ -165,7 +176,7 @@ class TrainerBaseline:
         progress_bar = tqdm(enumerate(self.train_loader), total=self.len_train)
         running_loss = 1.0
 
-        for batch_idx, (data, _) in progress_bar:
+        for batch_idx, data in progress_bar:
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
             # Update the learning rate according to the schedule

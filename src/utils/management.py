@@ -71,7 +71,7 @@ def load_config_from_run(exp_name, run_name):
     return config
 
 def load_config(config_name):
-    with open(os.path.join(os.getcwd(), 'config', config_name+".json"), 'r') as f:
+    with open(os.path.join(os.getcwd(), 'configurations', config_name+".json"), 'r') as f:
         config = json.load(f)
     return config
 

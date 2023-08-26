@@ -1,3 +1,9 @@
+"""
+    File to run the training for different models.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 import argparse
 import os
