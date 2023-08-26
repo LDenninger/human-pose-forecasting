@@ -19,7 +19,7 @@ DEBUG_SPLIT = [1,]
 
 #####===== H36M Skeleton Information =====#####
 # Number Joints: 32
-# Active Joints: 27
+# Active Joints: 26
 # Moving Joints: 17
 ###=== Joint Names ===###
 # The site joints are not used at all and are ignored throughout the project
@@ -97,11 +97,72 @@ H36M_ANGLE_INDICES = {
 }
 BASELINE_FKL_IND = np.split(np.arange(4, 100) - 1, 32)
 
+H36M_REDUCED_ANGLE_INDICES = {
+    0: 'hip',
+    1: 'rHip',
+    2: 'rKnee',
+    3: 'rAnkle',
+    4: 'rToe',
+    5: 'lHip',
+    6: 'lKnee',
+    7: 'lAnkle',
+    8: 'lToe',
+    9: 'spine',
+    10: 'spine1',
+    11: 'thorax',
+    12: 'neck',
+    13: 'head',
+    14: 'lShoulderAnchor',
+    15: 'lShoulder',
+    16: 'lElbow',
+    17: 'lWrist',
+    18: 'lThumb',
+    19: 'lWristEnd',
+    20: 'rShoulderAnchor',
+    21: 'rShoulder',
+    22: 'rElbow',
+    23: 'rWrist',
+    24: 'rThumb',
+    25: 'rWristEnd'
+}
+
+H36M_REVERSED_REDUCED_ANGLE_INDICES = {v:k for k, v in H36M_REDUCED_ANGLE_INDICES.items()}
+
+
 ###===== Skeleton Structure ===###
 # This is the skeleton structure defined within the H36M dataset
 # Format: {frame_id: (frame_name, parent_frame_name}, ...}
 
 H36M_SKELETON_STRUCTURE = {
+    0: ('hip', 'root'),
+    1: ('rHip', 'hip'),
+    2: ('rKnee', 'rHip'),
+    3: ('rAnkle', 'rKnee'),
+    4: ('rToe', 'rAnkle'),
+    6: ('lHip', 'hip'),
+    7: ('lKnee', 'lHip'),
+    8: ('lAnkle', 'lKnee'),
+    9: ('lToe', 'lAnkle'),
+    11: ('spine', 'hip'),
+    12: ('spine1', 'spine'),
+    13: ('thorax', 'spine1'),
+    14: ('neck', 'thorax'),
+    15: ('head', 'neck'),
+    16: ('lShoulderAnchor', 'spine1'),
+    17: ('lShoulder', 'lShoulderAnchor'),
+    18: ('lElbow', 'lShoulder'),
+    19: ('lWrist', 'lElbow'),
+    20: ('lThumb', 'lWrist'),
+    22: ('lWristEnd', 'lWrist'),
+    24: ('rShoulderAnchor', 'spine1'),
+    25: ('rShoulder', 'rShoulderAnchor'),
+    26: ('rElbow', 'rShoulder'),
+    27: ('rWrist', 'rElbow'),
+    28: ('rThumb', 'rWrist'),
+    30: ('rWristEnd', 'rWrist')
+}
+
+H36M_REDUCED_SKELETON_STRUCTURE = {
     0: ('hip', 'root'),
     1: ('rHip', 'hip'),
     2: ('rKnee', 'rHip'),
@@ -130,10 +191,11 @@ H36M_SKELETON_STRUCTURE = {
     26: ('rWristEnd', 'rWrist')
 }
 
+
+
 ###=== Bone Length ===###
 # Length of the limbs connecting the joints
 H36M_BONE_LENGTH = [0.000000,0.000000,0.000000,-132.948591,0.000000,0.000000,0.000000,-442.894612,0.000000,0.000000,-454.206447,0.000000,0.000000,0.000000,162.767078,0.000000,0.000000,74.999437,132.948826,0.000000,0.000000,0.000000,-442.894413,0.000000,0.000000,-454.206590,0.000000,0.000000,0.000000,162.767426,0.000000,0.000000,74.999948,0.000000,0.100000,0.000000,0.000000,233.383263,0.000000,0.000000,257.077681,0.000000,0.000000,121.134938,0.000000,0.000000,115.002227,0.000000,0.000000,257.077681,0.000000,0.000000,151.034226,0.000000,0.000000,278.882773,0.000000,0.000000,251.733451,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,99.999627,0.000000,100.000188,0.000000,0.000000,0.000000,0.000000,0.000000,257.077681,0.000000,0.000000,151.031437,0.000000,0.000000,278.892924,0.000000,0.000000,251.728680,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,99.999888,0.000000,137.499922,0.000000,0.000000,0.000000,0.000000]
-
 
 
 #####===== Additional Skeleton Definitions =====#####

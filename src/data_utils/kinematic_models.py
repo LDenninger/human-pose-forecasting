@@ -6,63 +6,13 @@ from abc import abstractmethod
 import numpy as np
 
 from .meta_info import *
+from .transformations import *
 
 """
 
 
 """
 #####===== Processing Functions =====#####
-def axis_angle_to_matrix(angle: torch.Tensor) -> torch.Tensor:
-    """
-        Converts a 3D axis angle to a 3x3 rotation matrix using the Rodrigues formula.
-        This is used as an alternative to the PyTorch3d implementation which converts the angles to quaternions as an intermediate step.
-
-        This function gives the same results as the implementation of expmap2rotmat()-function but different than the PyTorch3d implementation.
-        Arguments:
-            angle (torch.Tensor): The 3D axis angle to be converted. shape: [batch_size, 3]
-                --> The magnitude of rotation is determined by the norm of the axis angle.
-    """
-    if len(angle.shape) == 2:
-        bs = angle.shape[0]
-    elif len(angle.shape) == 1:
-        bs = 1
-        angle = angle.unsqueeze(0)
-    else:
-        raise ValueError("The input tensor must be either 2D or 1D.")
-    theta = torch.linalg.vector_norm(angle, dim=-1)
-    r_norm = torch.divide(angle, theta + torch.finfo(angle.dtype).eps)
-    S =  torch.zeros((bs, 3, 3)).to(angle.device)
-    S[:, 0, 1] = - r_norm[:, 2]
-    S[:, 0, 2] = r_norm[:, 1]
-    S[:, 1, 2] = - r_norm[:, 0]
-    S = S - torch.transpose(S, -2, -1)
-    rot_mat = torch.repeat_interleave(torch.eye(3).unsqueeze(0), bs, dim=0) + torch.sin(theta)* S + (1-torch.cos(theta)) * (S@S)
-    return rot_mat.squeeze()
-
-def matrix_to_axis_angle(rot_mat: torch.Tensor) -> torch.Tensor:
-    """
-        TODO: Implement this conversion.
-    """
-
-    return
-
-def matrix_to_quaternion(rot_mat: torch.Tensor) -> torch.Tensor:
-    """
-        TODO: Implement this conversion.
-    """
-    return
-
-def quaternion_to_matrix(rot_quat: torch.Tensor) -> torch.Tensor:
-    """
-        TODO: Implement this conversion.
-    """
-    return
-
-def _blank_processing(input: torch.Tensor):
-    """
-        A blank function to use as a placeholder.
-    """
-    return input
 
 
 
@@ -197,7 +147,7 @@ class SkeletonBase(nn.Module):
         if representation == 'axis':
             return matrix_to_axis_angle
         elif representation == 'mat':
-            return _blank_processing
+            return blank_processing
         elif representation == 'quat':
             return matrix_to_quaternion
         else:
@@ -208,9 +158,9 @@ class SkeletonBase(nn.Module):
             Defines the appropriate conversion to rotation matrix representation.
         """
         if representation == 'axis':
-            return axis_angle_to_matrix
+            return axis_angle_to_matrix_direct
         elif representation == 'mat':
-            return _blank_processing
+            return blank_processing
         elif representation == 'quat':
             return quaternion_to_matrix
         else:
@@ -260,91 +210,20 @@ class SkeletonModel32(SkeletonBase):
     def _init_skeleton(self):
         """
             Initialize a skeleton structure with 32 joints
+            Buffers registered:
+                For all active joints of the H36M dataset:
+                    {name}_pos: position of the joint w.r.t either hip or root
+                    {name}_angle: angle of the joint
+                    {name}_rot: rotation matrix of the joint w.r.t either hip or root
         
         """
+        for id, name in H36M_REDUCED_ANGLE_INDICES.items():
+            self.register_buffer(f'{name}_pos', torch.zeros(3).to(self.device))
+            self.register_buffer(f'{name}_angle', torch.zeros(3).to(self.device))
+            self.register_buffer(f'{name}_rot', torch.zeros(3).to(self.device))
 
-        self.register_buffer('root_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('hip_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('hip_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rHip_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rHip_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lHip_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lHip_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rKnee_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rKnee_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lKnee_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lKnee_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rAnkle_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rAnkle_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lAnkle_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lAnkle_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rToe_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rToe_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lToe_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lToe_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rShoulderAnchor_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rShoulderAnchor_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lShoulderAnchor_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lShoulderAnchor_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rShoulder_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rShoulder_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lShoulder_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lShoulder_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rElbow_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rElbow_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lElbow_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lElbow_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rWrist_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rWrist_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lWrist_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lWrist_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rThumb_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rThumb_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lThumb_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lThumb_angle', torch.eye(3).to(self.device))
-        self.register_buffer('rWristEnd_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('rWristEnd_angle', torch.eye(3).to(self.device))
-        self.register_buffer('lWristEnd_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('lWristEnd_angle', torch.eye(3).to(self.device))
-        self.register_buffer('neck_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('neck_angle', torch.eye(3).to(self.device))
-        self.register_buffer('spine_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('spine_angle', torch.eye(3).to(self.device))
-        self.register_buffer('spine1_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('spine1_angle', torch.eye(3).to(self.device))
-        self.register_buffer('thorax_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('thorax_angle', torch.eye(3).to(self.device))
-        self.register_buffer('head_pos', torch.zeros(3).to(self.device))
-        self.register_buffer('head_angle', torch.eye(3).to(self.device))
 
-        self.kinematic_chain = {
-            0: ('hip', 'root'),
-            1: ('rHip', 'hip'),
-            2: ('rKnee', 'rHip'),
-            3: ('rAnkle', 'rKnee'),
-            4: ('rToe', 'rAnkle'),
-            6: ('lHip', 'hip'),
-            7: ('lKnee', 'lHip'),
-            8: ('lAnkle', 'lKnee'),
-            9: ('lToe', 'lAnkle'),
-            11: ('spine', 'hip'),
-            12: ('spine1', 'spine'),
-            13: ('thorax', 'spine1'),
-            14: ('neck', 'thorax'),
-            15: ('head', 'neck'),
-            16: ('lShoulderAnchor', 'spine1'),
-            17: ('lShoulder', 'lShoulderAnchor'),
-            18: ('lElbow', 'lShoulder'),
-            19: ('lWrist', 'lElbow'),
-            20: ('lThumb', 'lWrist'),
-            22: ('lWristEnd', 'lWrist'),
-            24: ('rShoulderAnchor', 'spine1'),
-            25: ('rShoulder', 'rShoulderAnchor'),
-            26: ('rElbow', 'rShoulder'),
-            27: ('rWrist', 'rElbow'),
-            28: ('rThumb', 'rWrist'),
-            30: ('rWristEnd', 'rWrist')
-        }
+        self.kinematic_chain = H36M_SKELETON_STRUCTURE
     
     def _load_data_from_h36m(self, data: torch.Tensor):
         """
