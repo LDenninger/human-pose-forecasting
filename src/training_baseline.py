@@ -174,7 +174,6 @@ class TrainerBaseline:
             A single epoch of training.
             The training results are saved through the MetricTracker and later retrieved.
         """
-        import ipdb; ipdb.set_trace()
         self.model.train()
         progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
         running_loss = 1.0
@@ -187,7 +186,6 @@ class TrainerBaseline:
             self.scheduler(self.iteration)
             # Forward pass through the network
             output = self.model(seed_data)
-            import ipdb; ipdb.set_trace()
             # Compute loss using the target data
             loss = self.loss(output, target_data)
             # Backward pass through the network

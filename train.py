@@ -31,7 +31,6 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
     # Load the data
     trainer.load_data()
     # Train the model
-    import ipdb; ipdb.set_trace()
     trainer.train()
 
 #####===== Run Information =====#####
