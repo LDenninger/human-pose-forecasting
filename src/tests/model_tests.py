@@ -122,12 +122,12 @@ def test_pose_encoding_decoding():
     for bs in range(configuration['batch_size']):
         for seq in range(configuration['seq_length']):
             for joint in range(configuration['skeleton']['num_joints']):
-                encoding_target_output[bs, seq, joint] = W_enc[joint] @ encoding_test_tensor[bs,seq,joint] # + b_enc[joint]
+                encoding_target_output[bs, seq, joint] = W_enc[joint] @ encoding_test_tensor[bs,seq,joint] + b_enc[joint]
     # Compute the target output for the decoding
     for bs in range(configuration['batch_size']):
         for seq in range(configuration['seq_length']):
             for joint in range(configuration['skeleton']['num_joints']):
-                decoding_target_output[bs, seq, joint] = W_dec[joint] @ decoding_test_tensor[bs,seq,joint] # + b_dec[joint]
+                decoding_target_output[bs, seq, joint] = W_dec[joint] @ decoding_test_tensor[bs,seq,joint] + b_dec[joint]
     # Compute the output of the pose predictor
     encoding_model_output = motion_predictor.encode_joints(encoding_test_tensor)
     decoding_model_output = motion_predictor.decode_joints(decoding_test_tensor)

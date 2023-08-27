@@ -1,5 +1,5 @@
 import torch
-#torch.autograd.set_detect_anomaly(True)
+torch.autograd.set_detect_anomaly(True)
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Optional
@@ -96,8 +96,9 @@ class TrainerBaseline:
                 drop_last=True,
                 num_workers=self.num_threads,
             )
-            self.len_train = len(self.train_loader)
-            print_(f"Loaded {self.len_train} training samples")
+            self.num_iterations = self.config['num_iterations'] if self.config['num_iterations']!=-1 else len(self.train_loader)
+            p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
+            print_(p_str)
 
         if test:
             dataset = getDataset(
@@ -109,12 +110,14 @@ class TrainerBaseline:
             self.test_loader = DataLoader(
                 dataset=dataset,
                 batch_size=self.config['batch_size'],
-                shuffle=False,
-                drop_last=False,
+                shuffle=True,
+                drop_last=True,
                 num_workers=self.num_threads
             )
             self.len_test = len(self.test_loader)
-            print_(f"Loaded {self.len_test} test samples")
+            self.num_eval_iterations = self.config['num_iterations'] if self.config['num_iterations']!=-1 else len(self.test_loader)
+            p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
+            print_(p_str)
 
     def load_checkpoint(self, checkpoint: str):
         load_model_from_checkpoint(
@@ -173,7 +176,7 @@ class TrainerBaseline:
         """
         import ipdb; ipdb.set_trace()
         self.model.train()
-        progress_bar = tqdm(enumerate(self.train_loader), total=self.len_train)
+        progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
         running_loss = 1.0
 
         for batch_idx, data in progress_bar:
@@ -184,6 +187,7 @@ class TrainerBaseline:
             self.scheduler(self.iteration)
             # Forward pass through the network
             output = self.model(seed_data)
+            import ipdb; ipdb.set_trace()
             # Compute loss using the target data
             loss = self.loss(output, target_data)
             # Backward pass through the network
@@ -203,7 +207,7 @@ class TrainerBaseline:
             A single epoch of evaluation
         """
         self.model.eval()
-        progress_bar = tqdm(enumerate(self.test_loader), total=self.len_test)
+        progress_bar = tqdm(enumerate(self.test_loader), total=self.num_eval_iterations)
         running_loss = 1.0
 
         for batch_idx, data in progress_bar:

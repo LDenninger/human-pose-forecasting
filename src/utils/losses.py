@@ -27,7 +27,6 @@ class PerJointMSELoss(LossBase):
         super(PerJointMSELoss, self).__init__()
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        import ipdb; ipdb.set_trace()
         loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
         loss = torch.sum(loss, dim=-1) # Sum over rotation dimensions
         loss = torch.sqrt(loss) # mse over all rotation dimensions

@@ -10,6 +10,7 @@ import math
 
 from .transformer import SpatioTemporalTransformer
 from .positional_encoding import PositionalEncodingSinusoidal
+from .utils import PointWiseLinear
 
 #####====== Pose Predictor =====#####
 
@@ -33,8 +34,8 @@ class PosePredictor(nn.Module):
         super(PosePredictor, self).__init__()
         # Build the model 
         # Initial linear layer for embedding each joint into the embedding space
-        self.register_parameter("W_enc", nn.Parameter(torch.FloatTensor(num_joints, emb_dim, joint_dim)))
-        self.register_parameter("b_enc", nn.Parameter(torch.FloatTensor(num_joints, emb_dim)))
+
+        self.joint_encoder = PointWiseLinear(joint_dim, emb_dim, num_joints)
 
         #self.jointEncoding = [nn.Linear(joint_dim, emb_dim) for _ in range(num_joints)]
         # Positional encoding on the joints
@@ -44,8 +45,7 @@ class PosePredictor(nn.Module):
         self.attnBlocks = [self._resolve_transformer(transformer_config, num_joints, emb_dim, seq_len) for _ in range(num_blocks)]
         self.attnBlocks = nn.Sequential(*self.attnBlocks)
         # Final decoding layer to retrieve the original joint representation
-        self.register_parameter("W_dec", nn.Parameter(torch.FloatTensor(num_joints, joint_dim, emb_dim)))
-        self.register_parameter("b_dec", nn.Parameter(torch.FloatTensor(num_joints, joint_dim)))
+        self.joint_decoder = PointWiseLinear(emb_dim, joint_dim, num_joints)
         #self.jointDecoding = [nn.Linear(emb_dim, joint_dim) for _ in range(num_joints)]
         # Save some general parameters
         self.num_joints = num_joints
@@ -53,7 +53,6 @@ class PosePredictor(nn.Module):
         self.num_blocks = num_blocks
         self.emb_dim = emb_dim
         self.joint_dim = joint_dim
-        self._reset_parameters()
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -63,10 +62,9 @@ class PosePredictor(nn.Module):
 
             TODO: Make dimensions consistent across all modules to decrease amount of permutations etc.
         """
-        import ipdb; ipdb.set_trace()
         # Joint embedding
         out = torch.clone(x)
-        out = self.encode_joints(out)
+        out = self.joint_encoder(out)
 
         # Temporal positional encoding
         out = self.positionalEncoding(out)
@@ -74,7 +72,7 @@ class PosePredictor(nn.Module):
         # Attention layers
         out = self.attnBlocks(out)
         # Final decoding to retrieve the original joint representation
-        out = self.decode_joints(out)
+        out = self.joint_decoder(out)
         # Final residual connection
         out = out + x
         return out
@@ -84,7 +82,7 @@ class PosePredictor(nn.Module):
             Initial joint embedding.
         """
         x = torch.einsum('njk,bsnk->bsnj', self.W_enc, x)
-        x = torch.einsum('nj,bsnj->bsnj', self.b_enc, x)
+        x += self.b_enc.unsqueeze(0).unsqueeze(0)
         return x
 
     def decode_joints(self, x: torch.Tensor) -> torch.Tensor:
@@ -92,7 +90,7 @@ class PosePredictor(nn.Module):
             Final joint decoding into the original representation.
         """
         x = torch.einsum('njk,bsnk->bsnj', self.W_dec, x)
-        x = torch.einsum('nj,bsnk->bsnk', self.b_dec, x)
+        x += self.b_dec.unsqueeze(0).unsqueeze(0)
         return x
 
     def _resolve_transformer(self, 
@@ -104,6 +102,7 @@ class PosePredictor(nn.Module):
         if config['type'] =='spl':
             return SpatioTemporalTransformer(
                         emb_dim = emb_dim,
+                        ff_dim = config['ff_dimension'],
                         num_emb = num_joints,
                         seq_len = seq_len,
                         temporal_heads = config['temporal_heads'],
@@ -124,19 +123,3 @@ class PosePredictor(nn.Module):
             )
         else:
             raise NotImplementedError(f'Positional encoding type not implemented: {type}')
-    
-    def _reset_parameters(self) -> None:
-        """
-            Reset the parameters of the enncoding and decoding layers.
-        """
-        # Setting a=sqrt(5) in kaiming_uniform is the same as initializing with
-        # uniform(-1/sqrt(in_features), 1/sqrt(in_features)). For details, see
-        # https://github.com/pytorch/pytorch/issues/57109
-        nn.init.kaiming_uniform_(self.W_enc, a=math.sqrt(5))
-        nn.init.kaiming_uniform_(self.W_dec, a=math.sqrt(5))
-        fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.W_enc)
-        bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
-        nn.init.uniform_(self.b_enc, -bound, bound)
-        fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.W_dec)
-        bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
-        nn.init.uniform_(self.b_dec, -bound, bound)

@@ -10,7 +10,7 @@ import math
 import numpy as np
 from abc import abstractmethod
 
-
+from ..utils import print_
 #####===== Scheduler Modules =====#####
 
 class SchedulerBase(nn.Module):
@@ -43,8 +43,11 @@ class SchedulerBase(nn.Module):
             Updates the learning rate for all parameters groups at once.
             If the parameter groups have separate learning rates, this functions need to be reimplemented.
         """
+        if self.learning_rate is None:
+            print_('Learning rate has not been set yet.', 'warn')
+            return
         for param_group in self.optimizer.param_groups:
-            param_group['lr'] = self.learning_rate
+            param_group['lr'] = self.learning_rate.item()
 
 
 class SPLScheduler(SchedulerBase):
