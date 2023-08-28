@@ -20,11 +20,13 @@ class TrainerBaseline:
         self.exp_name = experiment_name
         self.run_name = run_name
         # Setup logging
-        self.logger = Logger(
+        self.logger = LOGGER
+        self.logger.initialize(
             exp_name=self.exp_name,
             run_name=self.run_name,
             log_internal=log_process_internal,
         )
+
         self.metric_tracker = MetricTracker()
         # Load the config for the run
         self.config = load_config_from_run(experiment_name, run_name)
@@ -69,6 +71,7 @@ class TrainerBaseline:
             joint_dim=self.config['joint_representation']['joint_dim'],
             input_dropout=self.config['model']['input_dropout']
         ).to(self.device)
+        self.logger.watch_model(self.model)
         print_(f"Initialized model")
 
     def initialize_optimization(self) -> bool:
@@ -129,6 +132,9 @@ class TrainerBaseline:
             scheduler=self.scheduler,
         )
     
+
+
+    
     ###=== Training Functions ===###
 
     def training_loop(self) -> bool:
@@ -176,9 +182,10 @@ class TrainerBaseline:
         """
         self.model.train()
         progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
-        running_loss = 1.0
 
         for batch_idx, data in progress_bar:
+            if batch_idx==self.num_iterations:
+                break
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
             # Update the learning rate according to the schedule
@@ -194,11 +201,19 @@ class TrainerBaseline:
             self.optimizer.step()
             # Update all the meta information
             self.iteration += 1
-            running_loss = 0.8*running_loss + 0.2*loss.item()
             # Update the metric tracker to track the metrics of a single epoch
             self.metric_tracker.log('train_loss', loss.item())
             self.metric_tracker.step_iteration()
-            progress_bar.set_description(f"Eval loss: {running_loss:.4f}")
+            # Update the logger
+            self.logger.log({
+                'train_loss': loss.item
+            }, step=self.iteration)
+            # Update the progress bar description
+            if batch_idx == 0:
+                running_loss = loss.item()
+            else:
+                running_loss = 0.8*running_loss + 0.2*loss.item()
+            progress_bar.set_description(f"Train loss: {running_loss:.4f}")
 
     def evaluation_epoch(self) -> None:
         """
@@ -206,9 +221,11 @@ class TrainerBaseline:
         """
         self.model.eval()
         progress_bar = tqdm(enumerate(self.test_loader), total=self.num_eval_iterations)
-        running_loss = 1.0
 
         for batch_idx, data in progress_bar:
+            if batch_idx==self.num_iterations:
+                break
+
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
             # Forward pass through the network
@@ -218,10 +235,18 @@ class TrainerBaseline:
             # Compute evaluation metrics
             # TODO: Implement evaluation object
 
-
             # Update all the meta information
             self.metric_tracker.log('test_loss', loss.item())
             self.metric_tracker.step_iteration()
+            # Update the logger
+            self.logger.log({
+                'eval_loss': loss.item
+            }, step=self.iteration)
+            # Update the progress bar description
+            if batch_idx == 0:
+                running_loss = loss.item()
+            else:
+                running_loss = 0.8*running_loss + 0.2*loss.item()
             progress_bar.set_description(f"Iter.: {self.iteration}, Loss: {running_loss:.4f}")
     
     ###=== Utility Functions ===###
@@ -241,6 +266,6 @@ class TrainerBaseline:
         metric_means = self.metric_tracker.get_mean()
         metric_vars = self.metric_tracker.get_variance()
         metric_names = [key.replace('_',' ') for key in metric_means.keys()]
-        pstr = f' Epoch {self.epoch}/{self.config["num_epochs"]}, Iteration: {self.iteration} Results:\n'
-        pstr += '\n '.join([f'{metric_names}: mean: {mean:.4f}, var: {var:.4f}' for mean, var in enumerate(zip(metric_means.values(), metric_vars.value()))])
+        pstr = f'Iterations completed: {self.iteration-1} Results:\n '
+        pstr += '\n '.join([f'{metric_names[i]}: mean: {mean:.4f}, var: {var:.4f}' for i, (mean, var) in enumerate(zip(list(metric_means.values()), list(metric_vars.values())))])
         print_(pstr, 'info')

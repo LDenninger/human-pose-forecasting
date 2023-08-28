@@ -2,8 +2,8 @@
     "random_seed": 42,
     "batch_size": 32,
     "num_epochs": 20,
-    "num_train_iterations": 1000,
-    "num_eval_iterations": 200,
+    "num_train_iterations": 20,
+    "num_eval_iterations": 20,
     "seq_length": 75,
     "model": {
         "type": "baseline",

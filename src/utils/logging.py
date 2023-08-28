@@ -20,9 +20,6 @@ import git
 from pathlib import Path as P
 
 
-#####===== Logging Object =====#####
-LOGGER = None
-
 #####===== Logging Decorators =====#####
 
 def log_function(func):
@@ -94,7 +91,6 @@ def print_(message, message_type="info"):
     """
     Overloads the print method so that the message is written both in logs file and console
     """
-
     print(message)
     if(LOGGER is not None):
         LOGGER.log_info(message, message_type)
@@ -201,15 +197,11 @@ def save_checkpoint(model, optimizer, scheduler, epoch, save_path, finished=Fals
 
 class Logger(object):
 
-    def __init__(self) -> None:
-        """
-            Initialize the logger.
-        """
-        self.run_initialized = False
+
 
     def __init__(self, 
-                  exp_name: str,
-                   run_name: str,
+                  exp_name: Optional[str] = None,
+                   run_name: Optional[str] = None,
                     log_to_file: Optional[bool]=True,
                      log_file_name: Optional[str] = 'log.txt',
                       log_internal: Optional[bool] = False,
@@ -225,23 +217,12 @@ class Logger(object):
                 run_name [str]: Name of the run within the experiment.
                 log_file_name Optional[str]: Name of the log file.
         """
-        ##-- Experiment Meta Data --##
-        self.exp_name = exp_name
-        self.run_name = run_name
-        self.run_path = P('experiments') / self.exp_name / self.run_name
-        ##-- Logging Parameters --##
-        self.log_to_file = log_to_file
-        self.log_internal = log_internal
-        self._internal_log_dir = {}
-        ##-- Logging Paths --##
-        self.plot_path = self.run_path / "plots" if plot_path is None else plot_path
-        self.log_path = self.run_path / "logs" if log_path is None else log_path
-        self.log_file_path = self.log_path / log_file_name
-        self.vis_path = self.run_path / "visualization" if visualization_path is None else visualization_path
-        self.checkpoint_path = self.run_path / "checkpoints" if checkpoint_path is None else checkpoint_path
-        self.run_initialized = True
-        ##-- Initialize Global Logger --##
-        LOGGER = self
+        if exp_name is not None and run_name is not None:
+            self.initialize(exp_name, run_name,log_to_file, log_file_name, log_internal, plot_path, checkpoint_path,log_path,visualization_path)
+            self.run_initialized = True
+        else:
+            self.run_initialized = False            
+
 
     def initialize(self,
                     exp_name: str,
@@ -260,6 +241,7 @@ class Logger(object):
         ##-- Logging Parameters --##
         self.log_to_file = log_to_file
         self.log_internal = log_internal
+        self.log_external = False
         self._internal_log_dir = {}
         ##-- Logging Paths --##
         self.plot_path = self.run_path / "plots" if plot_path is None else plot_path
@@ -302,10 +284,20 @@ class Logger(object):
                     resume=resume,
                     mode=mode,
         )
+        self.log_external = True
         log_str = 'WandB initialized\n'
         log_str += f'project_name: {project_name}, entity: {entity}, group: {group}, job_type: {job_type}, resume: {resume}, mode: {mode}'
         self.log_info(log_str, message_type="info")
         self.log_config(config)
+    
+    def watch_model(self, model: torch.nn.Module, log: Optional[Literal['gradients', 'parameters', 'all']] = "gradients"):
+        if not self.log_external:
+            print_('Cannot watch model without WandB', 'warn')
+            return
+        self.run.watch(
+            model,
+            log=log
+        )
 
     ###--- Data Retrieval Functions ---###
 
@@ -319,6 +311,8 @@ class Logger(object):
 
 
         """
+        if not self.run_initialized:
+            return
         assert name in ['log', 'plot', 'checkpoint', 'visualization'], "Please provide a valid directory type"
         if name is None:
             return self.run_path
@@ -339,6 +333,8 @@ class Logger(object):
                 name Optional[str]: Name of the metric to retrieve. If not provided, all logs are retrieved.
             
         """
+        if not self.run_initialized:
+            return
         if name is not None:
             if name in self._internal_log_dir.keys():
                 return self._internal_log_dir[name]
@@ -358,19 +354,24 @@ class Logger(object):
                 data [Dict[str, Any]]: Data to log of form: {metric_name: value, metric_name2: value2,...}
 
         """
-        if not self.log_to_file:
-            return
-        try:
-            self.run.log(data, step)
-        except Exception as e:
-            print('Logging failed: ', e)
+        import ipdb; ipdb.set_trace()
+        if not self.run_initialized:
             return False
+        
+        if self.log_external:
+            try:
+                self.run.log(data, step)
+            except Exception as e:
+                print('Logging failed: ', e)
+                return False
         return True
     
     def log_image(self, name: str, image: Union[torch.Tensor, np.array], step: Optional[int]=None) -> None:
         """
             Log images to WandB.
         """
+        if not self.run_initialized or not self.log_external:
+            return
         assert len(image.shape) in [3, 4], "Please provide images of shape [H, W, C], [B, H, W, C], [C, H, W] or [B, C, H, W]"
         if torch.is_tensor(image):
             image = image.detach().cpu().numpy()
@@ -380,9 +381,9 @@ class Logger(object):
             elif len(image.shape) == 4:
                 image = np.transpose(image, (0, 2, 3, 1))
         wandbImage = wandb.Image(image)
-        wandb.log({name: wandbImage}, step=step)
+        self.run.log({name: wandbImage}, step=step)
     
-    def log_image(self, name: str,
+    def log_segmentation_image(self, name: str,
                   image: Union[torch.Tensor, np.array],
                    segmentation: Optional[Union[torch.Tensor, np.array]],
                     ground_truth_segmentation: Optional[Union[torch.Tensor, np.array]]=None,
@@ -395,6 +396,8 @@ class Logger(object):
                 image [Union[torch.Tensor, np.array]]: Image to log.
 
         """
+        if not self.run_initialized or not self.log_external:
+            return
         assert len(image.shape) in [3, 4], "Please provide images of shape [H, W, C], [B, H, W, C], [C, H, W] or [B, C, H, W]"
         if torch.is_tensor(image):
             image = image.detach().cpu().numpy()
@@ -445,6 +448,8 @@ class Logger(object):
     # These functions save data to the internal storage and to the local disk.
 
     def log_internal(self, data: Dict[str, Any]):
+        if not self.run_initialized:
+            return
         if self.log_internal:
             for key, value in data.items():
                 if key not in self._internal_log_dir.keys():
@@ -452,6 +457,8 @@ class Logger(object):
                 self._internal_log_dir[key].append(value)
 
     def log_info(self, message: str, message_type: str='info') -> None:
+        if not self.run_initialized:
+            return
         cur_time = self._get_datetime()
         msg_str = f'{cur_time}   [{message_type}]: {message}\n'
         with open(self.log_file_path, 'a') as f:
@@ -462,6 +469,8 @@ class Logger(object):
         """
             Log configuration to the log file.
         """
+        if not self.run_initialized:
+            return
         cur_time = self._get_datetime()
         msg_str = f'{cur_time}   [config]:\n'
         msg_str += '\n'.join([f'  {k}: {v}' for k,v in config.items()])
@@ -470,18 +479,26 @@ class Logger(object):
             f.write(msg_str)
     
     def log_git_hash(self) -> None:
+        if not self.run_initialized:
+            return
         hash = get_current_git_hash()
         self.log_info(f'git hash: {hash}')
 
     def log_architecture(self, model: nn.Module) -> None:
+        if not self.run_initialized:
+            return
         save_path = P(self.log_file_path) / "architecture.txt"
         log_architecture(model=model, save_path=save_path)
 
     def save_checkpoint(self, model: nn.Module, optimizer, scheduler, epoch: int, finished: bool = False) -> None:
+        if not self.run_initialized:
+            return
         save_path = P(self.run_path) / "checkpoints"
         save_checkpoint(model=model, optimizer=optimizer, scheduler=scheduler, epoch=epoch, save_path=save_path, finished=finished)
 
     def dump_dictionary(self, data: Dict[str, Any], file_name: str):
+        if not self.run_initialized:
+            return
         save_path = P(self.log_path) / file_name
         with open(save_path, 'w') as f:
             json.dump(data, f)
@@ -545,5 +562,8 @@ class MetricTracker:
         else:
             self.metrics = {}
     
-    
 
+#####===== Global Logger =====#####
+# This logger should be used throughout the project
+
+LOGGER = Logger()

@@ -21,7 +21,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
         TODO: Implement checkpoint loading
     """
     # Initialize the trainer
-    trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=0)
+    trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=2)
     # Log some information
     log_script_setup()
     # Initialize the model

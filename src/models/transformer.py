@@ -83,27 +83,21 @@ class SpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        import ipdb; ipdb.set_trace()
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
-        import ipdb; ipdb.set_trace()
         if self.spatialDropout is not None:
             spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
         temporalAttentionOut = self.temporalAttention(x)
-        import ipdb; ipdb.set_trace()
         if self.temporalDropout is not None:
             temporalAttentionOut = self.temporalDropout(temporalAttentionOut)
         # Add spatial and temporal attention
         attnOut = self.layerNorm(x + spatialAttentionOut) + self.layerNorm(x+temporalAttentionOut) # shape: [batch_size, num_joints, seq_len, emb_dim]
-        import ipdb; ipdb.set_trace()
         # Point-wise feed-forward layer (point-wise w.r.t. the joints)
         # TODO: Implement this more efficiently by defining projection by hand
         ffOut = self.pointWiseFF(attnOut)
-        import ipdb; ipdb.set_trace()
         if self.ffDropout is not None:
             ffOut = self.ffDropout(ffOut)
         ffOut = self.layerNorm(ffOut + attnOut)
-        import ipdb; ipdb.set_trace()
 
         if self.full_return:
             return attnOut, temporalAttentionOut, spatialAttentionOut
