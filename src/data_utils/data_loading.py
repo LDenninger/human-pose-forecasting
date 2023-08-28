@@ -45,9 +45,9 @@ def read_file(person_id: int, action_str: str, sub_action_id: int = None, return
                     data.append(np.array([float(x) for x in line]))
     return data
 
-def load_data(  person_id: list = None,
-                action_str: list = None,
-                sub_action_id: list = None,
+def load_data(  person_id: list = DATASET_PERSONS,
+                action_str: list = DATASET_ACTIONS,
+                sub_action_id: list = [1,2],
                  skeleton: Optional[Literal['s26']] = None,
                   representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'axis',
                    return_tensor: bool=False,
@@ -93,13 +93,6 @@ def load_data(  person_id: list = None,
             meta_dir (list): List of meta information about each action sequence
     """
 
-    if person_id is None:
-        person_id = DATASET_PERSONS
-    if action_str is None:
-        action_str = DATASET_ACTIONS
-    if sub_action_id is None:
-        sub_action_id = [1,2]
-
     meta_dir = []
     reverse_meta_dir = {}
     data = []
@@ -113,6 +106,7 @@ def load_data(  person_id: list = None,
             for s_id in sub_action_id:
                 # Read data
                 new_data = read_file(p_id, a_str, s_id, return_tensor)
+                import ipdb; ipdb.set_trace()
                 len_data = len(new_data)
                 # Create entry to meta dir for sequence
                 meta_info = {
@@ -157,7 +151,7 @@ def get_conversion_func(representation=Literal['axis', 'mat', 'quat', '6d']):
     if representation == 'axis':
         return blank_processing
     elif representation =='mat':
-        return axis_angle_to_matrix
+        return axis_angle_to_matrix_direct
     elif representation == 'quat':
         return axis_angle_to_quaternion
     elif representation == '6d':
