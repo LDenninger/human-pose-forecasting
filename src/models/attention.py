@@ -23,7 +23,7 @@ class AttentionBase(nn.Module):
         self.token_dim = token_dim
         self.num_heads = num_heads
         self.head_dim = self.token_dim // self.num_heads
-        self.mask = None
+        self.register_buffer('mask', None)
         return
     
     @abstractmethod
@@ -147,7 +147,7 @@ class TemporalAttention(AttentionBase):
         return out
 
     def set_mask(self) -> None:
-        self.mask = torch.tril(torch.ones(self.num_tokens, self.num_tokens), diagonal=1)
+        self.mask = torch.tril(torch.ones(self.num_tokens, self.num_tokens), diagonal=0)
 
 class SpatialAttention(AttentionBase):
     def __init__(self,
@@ -170,6 +170,7 @@ class SpatialAttention(AttentionBase):
             Input:
                 x [batch_size, seq_len, num_joints, emb_dim]
         """
+
         Q = self.multi_head_query_embedding(x, self.W_query) # [batch_size, seq_len, num_heads, num_joints, head_dim]
         K = self.multi_head_linear_embedding(x, self.W_key) # [batch_size, seq_len, num_heads, num_joints, head_dim]
         V = self.multi_head_linear_embedding(x, self.W_value) # [batch_size, seq_len, num_heads, num_joints, head_dim]

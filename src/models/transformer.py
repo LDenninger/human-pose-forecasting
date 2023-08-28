@@ -83,7 +83,6 @@ class SpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
         if self.spatialDropout is not None:

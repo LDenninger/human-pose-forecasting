@@ -25,10 +25,11 @@ class TrainerBaseline:
             run_name=self.run_name,
             log_internal=log_process_internal,
         )
-        logger = self.logger
         self.metric_tracker = MetricTracker()
         # Load the config for the run
         self.config = load_config_from_run(experiment_name, run_name)
+        # Set random seed
+        set_random_seed(self.config['random_seed'])
         # Setup logging to WandB if desired
         if log_process_external:
             self.logger.initialize_logging(
@@ -37,7 +38,6 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
-
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -96,7 +96,7 @@ class TrainerBaseline:
                 drop_last=True,
                 num_workers=self.num_threads,
             )
-            self.num_iterations = self.config['num_iterations'] if self.config['num_iterations']!=-1 else len(self.train_loader)
+            self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
             p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
             print_(p_str)
 
@@ -115,7 +115,7 @@ class TrainerBaseline:
                 num_workers=self.num_threads
             )
             self.len_test = len(self.test_loader)
-            self.num_eval_iterations = self.config['num_iterations'] if self.config['num_iterations']!=-1 else len(self.test_loader)
+            self.num_eval_iterations = self.config['num_eval_iterations'] if self.config['num_eval_iterations']!=-1 else len(self.test_loader)
             p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
             print_(p_str)
 

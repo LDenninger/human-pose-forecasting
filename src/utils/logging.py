@@ -240,6 +240,8 @@ class Logger(object):
         self.vis_path = self.run_path / "visualization" if visualization_path is None else visualization_path
         self.checkpoint_path = self.run_path / "checkpoints" if checkpoint_path is None else checkpoint_path
         self.run_initialized = True
+        ##-- Initialize Global Logger --##
+        LOGGER = self
 
     def initialize(self,
                     exp_name: str,
