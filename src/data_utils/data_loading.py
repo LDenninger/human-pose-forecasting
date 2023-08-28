@@ -120,7 +120,6 @@ def load_data(  person_id: list = DATASET_PERSONS,
                     if skeleton=='s26':
                         conversion_func = get_conversion_func(representation)
                         new_data = _parse_sequence_efficient_to_s26(torch.stack(new_data), conversion_func)
-                        import ipdb; ipdb.set_trace()
                     else:
                         raise ValueError(f'Unknown skeleton {skeleton}')
                 elif return_seq_tensor:
@@ -219,19 +218,20 @@ def _parse_sequence_efficient_to_s26(seq: torch.Tensor, conversion_func: callabl
 
     """
     seq_repr = torch.FloatTensor(seq.shape[0],26,3)
-    seq_repr[:,1] =  seq[:,[3, 4, 5]]
-    seq_repr[:,2] =  seq[:,[6, 7, 8]]
-    seq_repr[:,3] =  seq[:,[9, 10, 11]]
-    seq_repr[:,4] =  seq[:,[12, 13, 14]]
-    seq_repr[:,5] =  seq[:,[15, 16, 17]]
-    seq_repr[:,6] =  seq[:,[21, 22, 23]]
-    seq_repr[:,7] =  seq[:,[24, 25, 26]]
-    seq_repr[:,8] =  seq[:,[27, 28, 29]]
-    seq_repr[:,9] =  seq[:,[30, 31, 32]]
-    seq_repr[:,10] = seq[:,[36, 37, 38]]
-    seq_repr[:,11] = seq[:,[39, 40, 41]]
-    seq_repr[:,12] = seq[:,[42, 43, 44]]
-    seq_repr[:,13] = seq[:,[45, 46, 47]]
+    seq_repr[:,0] =  seq[:,[3, 4, 5]]
+    seq_repr[:,1] =  seq[:,[6, 7, 8]]
+    seq_repr[:,2] =  seq[:,[9, 10, 11]]
+    seq_repr[:,3] =  seq[:,[12, 13, 14]]
+    seq_repr[:,4] =  seq[:,[15, 16, 17]]
+    seq_repr[:,5] =  seq[:,[21, 22, 23]]
+    seq_repr[:,6] =  seq[:,[24, 25, 26]]
+    seq_repr[:,7] =  seq[:,[27, 28, 29]]
+    seq_repr[:,8] =  seq[:,[30, 31, 32]]
+    seq_repr[:,9] = seq[:,[36, 37, 38]]
+    seq_repr[:,10] = seq[:,[39, 40, 41]]
+    seq_repr[:,11] = seq[:,[42, 43, 44]]
+    seq_repr[:,12] = seq[:,[45, 46, 47]]
+    seq_repr[:,13] = seq[:,[48, 49, 50]]
     seq_repr[:,14] = seq[:,[51, 52, 53]]
     seq_repr[:,15] = seq[:,[54, 55, 56]]
     seq_repr[:,16] = seq[:,[57, 58, 59]]
