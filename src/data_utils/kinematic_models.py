@@ -46,13 +46,14 @@ class SkeletonBase(nn.Module):
         super(SkeletonBase, self).__init__()
 
         self.kinematic_chain = None
+        self.offset = None
         self.device = device
-        self.hip_as_root = True
+        self.hip_as_root = hip_as_root
         self._init_skeleton()
     
     ###=== Forward Kinematics ===###
 
-    def forward(self, x: torch.Tensor, format: str):
+    def forward(self, x: torch.Tensor, format: Optional[Literal['ds_angle']] = 'ds_angle'):
         """
             Forward function that takes the joint angles and applies forward kinematics.
         """
@@ -224,6 +225,7 @@ class SkeletonModel32(SkeletonBase):
 
 
         self.kinematic_chain = H36M_SKELETON_STRUCTURE
+        self.offset = torch.reshape(torch.FloatTensor(H36M_BONE_LENGTH), (-1,3))
     
     def _load_data_from_h36m(self, data: torch.Tensor):
         """
@@ -298,9 +300,6 @@ class SkeletonModel32(SkeletonBase):
 
         return joint_angles
 
-
-
-
     
 ###--- Kinematic Module from Motion Mixer ---###
 # These modules were taken from: https://github.com/MotionMLP/MotionMixer/tree/main
@@ -334,7 +333,7 @@ def expmap2rotmat(r):
     return R
 
 # TODO: parent data structure has do be put into meta_info again
-def baseline_forward_kinematics(angles, parent, angle_indices = BASELINE_FKL_IND, offset = H36M_BONE_LENGTH):
+def baseline_forward_kinematics(angles, parent = H36M_BASELINE_PARENTS, angle_indices = BASELINE_FKL_IND, offset = H36M_BONE_LENGTH):
     """
         Convert joint angles and bone lenghts into the 3d points of a person.
 

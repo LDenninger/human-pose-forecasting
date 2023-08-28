@@ -7,7 +7,14 @@ def test_skeleton32_model():
 
     skeleton = SkeletonModel32()
 
-    dataset = H36MDataset(sequence_length=40, down_sampling_factor=2)
+    dataset = H36MDataset(
+            seed_length=40,
+            target_length=1,
+            down_sampling_factor=2,
+            sequence_spacing=0,
+            return_label=True,
+            is_train=True
+        )
 
     for seq, label in dataset:
         position_list = []
@@ -16,7 +23,7 @@ def test_skeleton32_model():
         for i in range(seq.shape[0]):
             #import ipdb; ipdb.set_trace()
             skeleton(seq[i])
-            joint_positions = skeleton.get_joint_positions(incl_names=True)
+            joint_positions = skeleton.getJointPositions(incl_names=True)
             #import ipdb; ipdb.set_trace()
             baseline_positions, baseline_out = baseline_forward_kinematics(angles=seq[i])
             baseline_positions = convert_baseline_representation(baseline_positions)

@@ -19,7 +19,6 @@ def axis_angle_to_matrix_direct(angle: torch.Tensor) -> torch.Tensor:
             angle (torch.Tensor): The 3D axis angle to be converted. shape: [batch_size, 3]
                 --> The magnitude of rotation is determined by the norm of the axis angle.
     """
-    import ipdb; ipdb.set_trace()
     if len(angle.shape) == 2:
         bs = angle.shape[0]
     elif len(angle.shape) == 1:
@@ -34,7 +33,7 @@ def axis_angle_to_matrix_direct(angle: torch.Tensor) -> torch.Tensor:
     S[:, 0, 2] = r_norm[:, 1]
     S[:, 1, 2] = - r_norm[:, 0]
     S = S - torch.transpose(S, -2, -1)
-    rot_mat = torch.repeat_interleave(torch.eye(3).unsqueeze(0), bs, dim=0) + torch.sin(theta).unsqueeze(-1).unsqueeze(-1)* S + (1-torch.cos(theta)).unsqueeze(-1).unsqueeze(-1)rot_mat * (S@S)
+    rot_mat = torch.repeat_interleave(torch.eye(3).unsqueeze(0), bs, dim=0) + torch.sin(theta).unsqueeze(-1).unsqueeze(-1)* S + (1-torch.cos(theta)).unsqueeze(-1).unsqueeze(-1) * (S@S)
     return rot_mat.squeeze()
 
 

@@ -192,6 +192,8 @@ H36M_REDUCED_SKELETON_STRUCTURE = {
     26: ('rWristEnd', 'rWrist')
 }
 
+H36M_BASELINE_PARENTS = np.array([0, 1, 2, 3, 4, 5, 1, 7, 8, 9, 10, 1, 12, 13, 14, 15, 13, 17, 18, 19, 20, 21, 20, 23, 13, 25, 26, 27, 28, 29, 28, 31]) - 1
+
 
 
 ###=== Bone Length ===###

@@ -48,10 +48,12 @@ class H36MDataset(Dataset):
                 sequence = sequence[::down_sampling_factor]
 
         self.valid_indices = self._compute_valid_indices()
+        if self.return_label:
+            self.valid_indices, self.labels = self.valid_indices
 
         # Write the data into a flattened tensor for easier indexing
         for i, sequence in enumerate(self.data):
-            import ipdb; ipdb.set_trace()
+            #import ipdb; ipdb.set_trace()
             if i==0:
                 flatten_data = sequence
                 continue

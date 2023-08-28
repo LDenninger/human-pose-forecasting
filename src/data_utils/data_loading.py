@@ -106,7 +106,6 @@ def load_data(  person_id: list = DATASET_PERSONS,
             for s_id in sub_action_id:
                 # Read data
                 new_data = read_file(p_id, a_str, s_id, return_tensor)
-                import ipdb; ipdb.set_trace()
                 len_data = len(new_data)
                 # Create entry to meta dir for sequence
                 meta_info = {
@@ -121,6 +120,7 @@ def load_data(  person_id: list = DATASET_PERSONS,
                     if skeleton=='s26':
                         conversion_func = get_conversion_func(representation)
                         new_data = _parse_sequence_efficient_to_s26(torch.stack(new_data), conversion_func)
+                        import ipdb; ipdb.set_trace()
                     else:
                         raise ValueError(f'Unknown skeleton {skeleton}')
                 elif return_seq_tensor:
