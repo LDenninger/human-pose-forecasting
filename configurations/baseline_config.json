@@ -5,6 +5,7 @@
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 75,
+    "checkpoint_frequency": 1,
     "model": {
         "type": "baseline",
         "num_blocks": 8,
@@ -49,7 +50,7 @@
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["mse", "mae"],
+        "metrics": ["axis_angle_diff", "positional_mse", "euler_diff"],
         "frequency": 1
     },
     "dataset": {

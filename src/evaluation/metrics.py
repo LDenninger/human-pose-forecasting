@@ -44,6 +44,8 @@ def axis_angle_diff(predictions: torch.tensor,
     Returns:
         The geodesic distance for each joint as a torch tensor of shape (..., n_joints)
     """
+    import ipdb; ipdb.set_trace()
+
     assert predictions.shape[-1] == predictions.shape[-2] == 3
     assert targets.shape[-1] == targets.shape[-2] == 3
 
@@ -70,6 +72,8 @@ def positional_mse(predictions: torch.tensor,
     Returns:
         The Euclidean distance for each joint as a torch tensor of shape (..., n_joints)
     """
+    import ipdb; ipdb.set_trace()
+
     return _reduce(torch.sqrt(torch.sum((predictions - targets) ** 2, dim=-1)), reduction)
 
 
@@ -86,6 +90,8 @@ def euler_diff(predictions: torch.tensor,
     Returns:
         The Euler angle error as a torch tensor of shape (..., )
     """
+    import ipdb; ipdb.set_trace()
+
     assert predictions.shape[-1] == 3 and predictions.shape[-2] == 3
     assert targets.shape[-1] == 3 and targets.shape[-2] == 3
     n_joints = predictions.shape[-3]

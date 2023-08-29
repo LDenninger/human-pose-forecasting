@@ -48,6 +48,7 @@ class EvaluationEngine:
 
             
         """
+        import ipdb; ipdb.set_trace()
         # Parse output and target torch torch tensors
         if not torch.is_tensor(output):
             output = torch.stack(output)
@@ -72,6 +73,7 @@ class EvaluationEngine:
         """
             Compute the quantitative metrics for the model.
         """
+        import ipdb; ipdb.set_trace()
 
         if metric_names is None and self.metric_names is None:
             print_("No metric provided to compute for the EvaluationEngine.")
