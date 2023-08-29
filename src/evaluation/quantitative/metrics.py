@@ -7,9 +7,7 @@ Following https://github.com/eth-ait/motion-transformer/blob/master/metrics/moti
 
 import numpy as np
 import cv2
-import quaternion
 import torch
-import copy
 import pytorch3d.transforms
 
 
@@ -99,8 +97,8 @@ def euler_diff(predictions: torch.tensor, targets: torch.tensor) -> torch.tensor
     targs = targets.view(-1, 3, 3)
 
     # Convert rotation matrices to Euler angles using pytorch3d
-    euler_preds = pytorch3d.transforms.rotation_matrix_to_euler_angles(preds)  # (N, 3)
-    euler_targs = pytorch3d.transforms.rotation_matrix_to_euler_angles(targs)  # (N, 3)
+    euler_preds = pytorch3d.transforms.matrix_to_euler_angles(preds, "ZYX")  # (N, 3)
+    euler_targs = pytorch3d.transforms.matrix_to_euler_angles(targs, "ZYX")  # (N, 3)
 
     # reshape to (-1, n_joints*3) to be consistent with previous work
     euler_preds = euler_preds.view(-1, n_joints * 3)
