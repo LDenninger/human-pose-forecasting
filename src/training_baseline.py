@@ -174,6 +174,12 @@ class TrainerBaseline:
                 self.evaluation_epoch()
             # Print out the epoch results
             self._print_epoch_results()
+            # Save checkpoint 
+            if self.epoch % self.config['checkpoint_frequency'] == 0:
+                self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch)
+        # Save the final model
+        self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch, True)
+        print_('Training finished!')
 
     def train_epoch(self) -> None:
         """
@@ -206,7 +212,7 @@ class TrainerBaseline:
             self.metric_tracker.step_iteration()
             # Update the logger
             self.logger.log({
-                'train_loss': loss.item
+                'train_loss': loss.item()
             }, step=self.iteration)
             # Update the progress bar description
             if batch_idx == 0:
@@ -238,16 +244,16 @@ class TrainerBaseline:
             # Update all the meta information
             self.metric_tracker.log('test_loss', loss.item())
             self.metric_tracker.step_iteration()
-            # Update the logger
-            self.logger.log({
-                'eval_loss': loss.item
-            }, step=self.iteration)
+
             # Update the progress bar description
             if batch_idx == 0:
                 running_loss = loss.item()
             else:
                 running_loss = 0.8*running_loss + 0.2*loss.item()
-            progress_bar.set_description(f"Iter.: {self.iteration}, Loss: {running_loss:.4f}")
+            progress_bar.set_description(f"Eval loss: {running_loss:.4f}")
+        # Update the logger
+        eval_loss = self.metric_tracker.get_mean('test_loss')
+        self.logger.log({'eval_loss': eval_loss}, step=self.iteration)
     
     ###=== Utility Functions ===###
 

@@ -8,6 +8,7 @@
 
 """
 import wandb
+wandb.login()
 import numpy as np
 import json
 import torch
@@ -189,6 +190,7 @@ def save_checkpoint(model, optimizer, scheduler, epoch, save_path, finished=Fals
             'optimizer_state_dict': optimizer.state_dict(),
             "scheduler_state_dict": scheduler_data
             }, savepath)
+    print_(f'Checkpoint was saved to: {savepath}')
 
     return
 
@@ -247,6 +249,8 @@ class Logger(object):
         self.plot_path = self.run_path / "plots" if plot_path is None else plot_path
         self.log_path = self.run_path / "logs" if log_path is None else log_path
         self.log_file_path = self.log_path / log_file_name
+        if os.path.exists(self.log_file_path):
+            os.remove(self.log_file_path)
         self.vis_path = self.run_path / "visualization" if visualization_path is None else visualization_path
         self.checkpoint_path = self.run_path / "checkpoints" if checkpoint_path is None else checkpoint_path
         self.run_initialized = True
@@ -257,7 +261,7 @@ class Logger(object):
                                 config: Optional[Union[Dict, str, None]]=None,
                                  group: Optional[str]=None,
                                   job_type: Optional[str]=None,
-                                   resume: Optional[Literal['allow','must','never','auto',None]]="allow",
+                                   resume: Optional[Literal['allow','must','never','auto',None]]= None,
                                     mode: Optional[Literal['offline','online','disabled']]='online'
                             ) -> None:
         """
@@ -273,7 +277,6 @@ class Logger(object):
                 mode Optional[Literal['offline','online','disabled']]: Flag to determine if and where data is logged to.
         
         """
-        wandb.login()
         self.run = wandb.init(
                     project=project_name,
                     name=(self.exp_name+'/'+self.run_name),
@@ -354,13 +357,12 @@ class Logger(object):
                 data [Dict[str, Any]]: Data to log of form: {metric_name: value, metric_name2: value2,...}
 
         """
-        import ipdb; ipdb.set_trace()
         if not self.run_initialized:
             return False
         
         if self.log_external:
             try:
-                self.run.log(data, step)
+                wandb.log(data, step)
             except Exception as e:
                 print('Logging failed: ', e)
                 return False
@@ -381,7 +383,7 @@ class Logger(object):
             elif len(image.shape) == 4:
                 image = np.transpose(image, (0, 2, 3, 1))
         wandbImage = wandb.Image(image)
-        self.run.log({name: wandbImage}, step=step)
+        wandb.log({name: wandbImage}, step=step)
     
     def log_segmentation_image(self, name: str,
                   image: Union[torch.Tensor, np.array],
@@ -525,6 +527,15 @@ class MetricTracker:
         if metric_name not in self.metrics.keys():
             self.metrics[metric_name] = []
         self.metrics[metric_name].append(metric_value)
+
+    def get_metric(self, metric_name: Optional[str] = None):
+        if metric_name is None:
+            return self.metrics
+        elif metric_name in self.metrics.keys():
+            return self.metrics[metric_name]
+        else:
+            print_('Tried to fetch non-existing from MetricTracker', 'warn')
+            return None
 
     def get_mean(self, metric_name: str = None) -> float:
         """ Get the mean value of a metric """

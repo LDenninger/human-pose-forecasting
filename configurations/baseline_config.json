@@ -5,6 +5,7 @@
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 75,
+    "checkpoint_frequency": 1,
     "model": {
         "type": "baseline",
         "num_blocks": 8,
