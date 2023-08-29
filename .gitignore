@@ -7,3 +7,4 @@ data/*
 #!experiments/.gitkeep
 
 wandb/*
+.vscode/launch.json
