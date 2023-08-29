@@ -9,8 +9,9 @@ from .utils import *
 from .models import PosePredictor
 from .evaluation import EvaluationEngine
 
-@for_all_methods(log_function)
 class TrainerBaseline:
+
+    @log_function
     def __init__(self,
                   experiment_name: str,
                   run_name: str,
@@ -58,10 +59,12 @@ class TrainerBaseline:
         print_(f"Using device: {self.device}")
 
     ###=== Calls ===###
+    @log_function
     def train(self) -> None:
         self.training_loop()
 
     ###=== Initialization Functions ===###
+    @log_function
     def initialize_model(self):
         """
             Initialize the PosePredictor model using the loaded config.
@@ -80,6 +83,7 @@ class TrainerBaseline:
         self.logger.watch_model(self.model)
         print_(f"Initialized model")
 
+    @log_function
     def initialize_optimization(self) -> bool:
         """
             Initializes the optimizer and the learning rate scheduler for training.
@@ -93,6 +97,7 @@ class TrainerBaseline:
         print_(f"Initialized optimizer")
         return True
 
+    @log_function
     def load_data(self, train: bool = True, test: bool = True) -> None:
         """
             Loads the training and test split for the appropriate dataset.
@@ -134,6 +139,7 @@ class TrainerBaseline:
             p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
             print_(p_str)
 
+    @log_function
     def load_checkpoint(self, checkpoint: str):
         load_model_from_checkpoint(
             exp_name=self.exp_name,
@@ -145,7 +151,7 @@ class TrainerBaseline:
         )
     
     ###=== Training Functions ===###
-
+    @log_function
     def training_loop(self) -> bool:
         """
             Training loop for the model.
@@ -172,6 +178,11 @@ class TrainerBaseline:
             return False
         
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
+        print_(f"Initial Evaluation:")
+        self.metric_tracker.reset()
+        self.evaluation_epoch()
+        self._print_epoch_results()
+
         for self.epoch in range(1, self.config['num_epochs'] + 1):
             print_(f"Epoch {self.epoch}/{self.config['num_epochs']}", 'info')
             # Reset the tracked metrics for the new epoch
@@ -190,6 +201,7 @@ class TrainerBaseline:
         self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch, True)
         print_('Training finished!')
 
+    @log_function
     def train_epoch(self) -> None:
         """
             A single epoch of training.
@@ -230,6 +242,7 @@ class TrainerBaseline:
                 running_loss = 0.8*running_loss + 0.2*loss.item()
             progress_bar.set_description(f"Train loss: {running_loss:.4f}")
 
+    @log_function
     def evaluation_epoch(self) -> None:
         """
             A single epoch of evaluation
@@ -239,7 +252,7 @@ class TrainerBaseline:
         self.evaluation_engine.clear_log()
 
         for batch_idx, data in progress_bar:
-            if batch_idx==self.num_iterations:
+            if batch_idx==self.num_eval_iterations:
                 break
 
             # Load data to GPU and split into seed and target data

@@ -38,7 +38,7 @@ class H36MDataset(Dataset):
         self.return_label = return_label
 
         # Load the data from disk
-        self.data, self.meta_info = load_data(person_id = DEBUG_SPLIT if is_train else DEBUG_SPLIT,
+        self.data, self.meta_info = load_data(person_id = TRAIN_SUBJECTS if is_train else TEST_SUBJECTS,
                                                 skeleton=skeleton_model,
                                                     representation=rot_representation,
                                                         return_tensor=True)

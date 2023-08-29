@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Local application imports
 from ..data_utils import *
-from ..evaluation import euler_diff, angle_diff
+from ..evaluation import euler_angle_error, geodesic_distance
 
 
 def test_metrics():
@@ -21,7 +21,7 @@ def test_metrics():
 
     # TODO: Test euler diff
     # Test 1 - Test if the euler diff is zero for the same input
-    euler_same = euler_diff(frame, frame)
+    euler_same = euler_angle_error(frame, frame)
     assert torch.all(euler_same == 0)
     # Test 2 - Test if the euler diff is slightly larger than zero for a slightly different input
     slightly_different_frame = frame.clone()
@@ -31,7 +31,7 @@ def test_metrics():
             slightly_different_frame[i]
             + torch.from_numpy(R.random().as_matrix()) * 0.01
         )
-    euler_slightly_different = euler_diff(frame, slightly_different_frame)
+    euler_slightly_different = euler_angle_error(frame, slightly_different_frame)
     # Test 3 - Test if the euler diff is larger for a 90 degree rotation
     frame_90_degrees = frame.clone()
     # Add 90 degree rotation to each joint
@@ -39,18 +39,18 @@ def test_metrics():
         frame_90_degrees[i] = frame_90_degrees[i] + torch.from_numpy(
             R.from_euler("x", 90, degrees=True).as_matrix()
         )
-    euler_90_degrees = euler_diff(frame, frame_90_degrees)
+    euler_90_degrees = euler_angle_error(frame, frame_90_degrees)
 
     # TODO: Test angle diff
     # Test 1 - Test if the angle diff is zero for the same input
-    angle_same = angle_diff(frame, frame)
+    angle_same = geodesic_distance(frame, frame)
     assert torch.all(angle_same == 0)
 
     # Test 2 - Test if the angle diff is slightly larger than zero for a slightly different input
-    angle_slightly_different = angle_diff(frame, slightly_different_frame)
+    angle_slightly_different = geodesic_distance(frame, slightly_different_frame)
 
     # Test 3 - Test the angle diff is larger for a 90 degree rotation
-    angle_90_degrees = angle_diff(frame, frame_90_degrees)
+    angle_90_degrees = geodesic_distance(frame, frame_90_degrees)
 
     pass
 

@@ -45,8 +45,6 @@ def geodesic_distance(predictions: torch.tensor,
     Returns:
         The geodesic distance for each joint as a torch tensor of shape (..., n_joints)
     """
-    import ipdb; ipdb.set_trace()
-
     preds, _ = _fix_dimensions(predictions)
     targs, orig_shape = _fix_dimensions(targets)
     # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
@@ -69,8 +67,6 @@ def positional_mse(predictions: torch.tensor,
     Returns:
         The Euclidean distance for each joint as a torch tensor of shape (..., n_joints)
     """
-    import ipdb; ipdb.set_trace()
-
     return _reduce(torch.sqrt(torch.sum((predictions - targets) ** 2, dim=-1)), reduction)
 
 
@@ -87,8 +83,6 @@ def euler_angle_error(predictions: torch.tensor,
     Returns:
         The Euler angle error as a torch tensor of shape (..., )
     """
-    import ipdb; ipdb.set_trace()
-
     n_joints = predictions.shape[-3]
 
     preds, _ = _fix_dimensions(predictions)

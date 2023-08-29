@@ -2,8 +2,8 @@
     "random_seed": 42,
     "batch_size": 32,
     "num_epochs": 20,
-    "num_train_iterations": 20,
-    "num_eval_iterations": 20,
+    "num_train_iterations": 1000,
+    "num_eval_iterations": 100,
     "seq_length": 75,
     "model": {
         "type": "baseline",
@@ -49,7 +49,7 @@
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["mse", "mae"],
+        "metrics": ["geodesic_distance", "positional_mse", "euler_angle_error"],
         "frequency": 1
     },
     "dataset": {

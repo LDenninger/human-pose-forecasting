@@ -1,19 +1,9 @@
 import argparse
 import os
 
-import torch
-import copy
-import optuna
-
 import src.utils as utils
 
-import torchgadgets as tg
 
-from prettytable import PrettyTable
-
-import matplotlib.pyplot as plt
-
-import seaborn as sn
 
 from src.tests import test_data_loading, test_skeleton32_model, test_transformer, test_processing_functions
 
