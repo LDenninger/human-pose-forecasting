@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 from .utils import *
 from .models import PosePredictor
+from .evaluation import EvaluationEngine
 
 @for_all_methods(log_function)
 class TrainerBaseline:
@@ -40,6 +41,7 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
+        self.evaluation_engine = EvaluationEngine(metric_names=self.config['evaluation']['metrics'], keep_log=True)
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -61,6 +63,9 @@ class TrainerBaseline:
 
     ###=== Initialization Functions ===###
     def initialize_model(self):
+        """
+            Initialize the PosePredictor model using the loaded config.
+        """
         self.model = PosePredictor(
             positional_encoding_config=self.config['model']['positional_encoding'],
             transformer_config=self.config['model']['transformer'],
@@ -71,10 +76,14 @@ class TrainerBaseline:
             joint_dim=self.config['joint_representation']['joint_dim'],
             input_dropout=self.config['model']['input_dropout']
         ).to(self.device)
+
         self.logger.watch_model(self.model)
         print_(f"Initialized model")
 
     def initialize_optimization(self) -> bool:
+        """
+            Initializes the optimizer and the learning rate scheduler for training.
+        """
         if self.model is None:
             print_("Cannot initialize optimization without a model.", 'error')
             return False
@@ -85,6 +94,9 @@ class TrainerBaseline:
         return True
 
     def load_data(self, train: bool = True, test: bool = True) -> None:
+        """
+            Loads the training and test split for the appropriate dataset.
+        """
         if train:
             dataset = getDataset(
                 self.config['dataset'],
@@ -221,6 +233,7 @@ class TrainerBaseline:
         """
         self.model.eval()
         progress_bar = tqdm(enumerate(self.test_loader), total=self.num_eval_iterations)
+        self.evaluation_engine.clear_log()
 
         for batch_idx, data in progress_bar:
             if batch_idx==self.num_iterations:
@@ -242,12 +255,16 @@ class TrainerBaseline:
             self.logger.log({
                 'eval_loss': loss.item
             }, step=self.iteration)
+            # Save output and target to the evaluation engine
+            self.evaluation_engine.log(output=output[:,-1], target=target_data[:,-1])
             # Update the progress bar description
             if batch_idx == 0:
                 running_loss = loss.item()
             else:
                 running_loss = 0.8*running_loss + 0.2*loss.item()
             progress_bar.set_description(f"Iter.: {self.iteration}, Loss: {running_loss:.4f}")
+        eval_results = self.evaluation_engine.compute()
+        
     
     ###=== Utility Functions ===###
 

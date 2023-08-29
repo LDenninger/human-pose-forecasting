@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Local application imports
 from ..data_utils import *
-from ..evaluation.quantitative import euler_diff, angle_diff
+from ..evaluation import euler_diff, angle_diff
 
 
 def test_metrics():
