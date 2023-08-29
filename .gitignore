@@ -9,3 +9,6 @@ data/*
 wandb/*
 .vscode/launch.json
 .vscode/settings.json
+
+*.txt
+*.pdf
