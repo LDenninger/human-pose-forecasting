@@ -4,15 +4,15 @@ import os
 from typing import Optional, Dict, Any, List, Union
 
 from ..utils import print_
-from .metrics import axis_angle_diff, euler_diff, positional_mse
+from .metrics import geodesic_distance, euler_angle_error, positional_mse
 
 METRICS_IMPLEMENTED = {
-    'axis_angle_diff': axis_angle_diff,
+    'geodesic_distance': geodesic_distance,
     'positional_mse': positional_mse,
-    'euler_diff': euler_diff
+    'euler_error': euler_angle_error
 }
 VISUALIZATION_IMPLEMENTED = {
-    '3dpose': angle_diff # placeholder
+    '3dpose': geodesic_distance # placeholder
 }
 
 class EvaluationEngine:
@@ -48,7 +48,8 @@ class EvaluationEngine:
 
             
         """
-        import ipdb; ipdb.set_trace()
+        output = output.cpu().detach()
+        target = target.cpu().detach()
         # Parse output and target torch torch tensors
         if not torch.is_tensor(output):
             output = torch.stack(output)
@@ -60,13 +61,13 @@ class EvaluationEngine:
             target = torch.flatten(target, start_dim=1, end_dim=2)
         # If wanted, the logs are saved internally to use for computation later
         if self.output_log is None or not self.keep_log:
-            self.output_log = output.cpu()
+            self.output_log = output
         else:
-            self.output_log = torch.cat([self.output_log, output.cpu()], dim=0)
+            self.output_log = torch.cat([self.output_log, output], dim=0)
         if self.target_log is None or not self.keep_log:
-            self.target_log = target.cpu()
+            self.target_log = target
         else:
-            self.target_log = torch.cat([self.target_log, target.cpu()], dim=0)
+            self.target_log = torch.cat([self.target_log, target], dim=0)
 
 
     def compute(self, metric_names: Optional[List[str]] = None,) -> Dict[str, float]:
@@ -82,15 +83,14 @@ class EvaluationEngine:
             metric_names = self.metric_names
 
         results = {}
-        
+        # Compute the quantitative metrics one by one
         for metric_name in metric_names:
             if metric_name not in METRICS_IMPLEMENTED.keys():
                 print_(f"Metric {metric_name} not implemented.")
                 continue
             metric = METRICS_IMPLEMENTED[metric_name]
-            metric_value = metric(self.output_log, self.target_log)
+            metric_value = metric(self.output_log, self.target_log, reduction='mean')
             results[metric_name] = metric_value
-            print_(f"Metric {metric_name}: {metric_value}")
 
         return results
     

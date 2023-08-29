@@ -8,6 +8,7 @@ import numpy as np
 import torch
 from typing import Optional, Literal, Union
 
+from ..utils import print_
 from ..data_utils import matrix_to_euler_angles, matrix_to_axis_angle
 
 def pck(
@@ -28,9 +29,9 @@ def pck(
     return pck
 
 
-def axis_angle_diff(predictions: torch.tensor,
-                     targets: torch.tensor,
-                      reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
+def geodesic_distance(predictions: torch.tensor,
+                      targets: torch.tensor,
+                       reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
     """
     Computes the angular distance between the target and predicted rotations. We define this as the angle that is
     required to rotate one rotation into the other. This essentially computes || log(R_diff) || where R_diff is the
@@ -38,7 +39,7 @@ def axis_angle_diff(predictions: torch.tensor,
 
     Args:
         predictions: torch tensor of predicted joint angles represented as rotation matrices, i.e. in shape
-          (..., n_joints, 3, 3)
+          (..., n_joints, 3, 3) or (..., n_joints, 9)
         targets: torch tensor of same shape as `predictions`
 
     Returns:
@@ -46,23 +47,19 @@ def axis_angle_diff(predictions: torch.tensor,
     """
     import ipdb; ipdb.set_trace()
 
-    assert predictions.shape[-1] == predictions.shape[-2] == 3
-    assert targets.shape[-1] == targets.shape[-2] == 3
-
-    ori_shape = predictions.shape[:-2]
-    preds = predictions.view(-1, 3, 3)
-    targs = targets.view(-1, 3, 3)
-
+    preds, _ = _fix_dimensions(predictions)
+    targs, orig_shape = _fix_dimensions(targets)
     # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
-    r = torch.matmul(preds, targs.transpose(1, 2))
+    r = torch.matmul(preds, targs.transpose(-2,-1))
     angles = matrix_to_axis_angle(r)
+    angles = torch.linalg.vector_norm(angles, dim=-1)
 
-    return _reduce(angles.view(ori_shape), reduction)
+    return _reduce(angles.view(*orig_shape), reduction)
 
 
 def positional_mse(predictions: torch.tensor,
-                targets: torch.tensor,
-                 reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
+                    targets: torch.tensor,
+                     reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
     """
     Computes the Euclidean distance between joints in 3D space.
     Args:
@@ -77,9 +74,9 @@ def positional_mse(predictions: torch.tensor,
     return _reduce(torch.sqrt(torch.sum((predictions - targets) ** 2, dim=-1)), reduction)
 
 
-def euler_diff(predictions: torch.tensor,
-                targets: torch.tensor,
-                 reduction: Optional[Literal['mean','sum','mse',None]] = None) -> torch.tensor:
+def euler_angle_error(predictions: torch.tensor,
+                      targets: torch.tensor,
+                       reduction: Optional[Literal['mean','sum','mse',None]] = None) -> torch.tensor:
     """
     Computes the Euler angle error using pytorch3d.
     Args:
@@ -92,13 +89,10 @@ def euler_diff(predictions: torch.tensor,
     """
     import ipdb; ipdb.set_trace()
 
-    assert predictions.shape[-1] == 3 and predictions.shape[-2] == 3
-    assert targets.shape[-1] == 3 and targets.shape[-2] == 3
     n_joints = predictions.shape[-3]
 
-    ori_shape = predictions.shape[:-3]
-    preds = predictions.view(-1, 3, 3)
-    targs = targets.view(-1, 3, 3)
+    preds, _ = _fix_dimensions(predictions)
+    targs, orig_shape = _fix_dimensions(targets)
 
     # Convert rotation matrices to Euler angles using pytorch3d
     euler_preds = matrix_to_euler_angles(preds, "ZYX")  # (N, 3)
@@ -114,9 +108,11 @@ def euler_diff(predictions: torch.tensor,
     euc_error = torch.sqrt(torch.sum(euc_error, dim=1))  # (-1, ...)
 
     # reshape to original
-    return _reduce(euc_error.view(ori_shape), reduction)
+    return _reduce(euc_error.view(*orig_shape), reduction)
 
-def _reduce(self, input, reduction: Literal['mean','sum','mse', None] = None):
+#####===== Helper Functions =====#####
+
+def _reduce(input, reduction: Literal['mean','sum','mse', None] = None):
     """
         Reduce the output of the quantitative metrics to a scalar.
     """
@@ -130,3 +126,15 @@ def _reduce(self, input, reduction: Literal['mean','sum','mse', None] = None):
         return torch.mean(torch.sqrt(torch.sum((input) ** 2, dim=-1)))
     else:
         raise NotImplementedError
+
+def _fix_dimensions(input: torch.Tensor,):
+    """
+        Fix input dimensions by flattening the leading dimensions and eventually stacking a flattened rotation matrix.
+    """
+    shape = input.shape
+    if shape[-1] == 9:
+        return torch.reshape(input, (-1,3,3)), input.shape[:-1]
+    elif shape[-1] == 3 and shape[-2] == 3:
+        return torch.view(-1,3,3), input.shape[:-2]
+    else:
+        print_(f'Evaluation functions received invalid input shape: {shape}')
