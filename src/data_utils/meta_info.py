@@ -22,6 +22,8 @@ import numpy as np
 H36M_DATASET_PATH = 'data/h3.6m/dataset'
 H36M_DATASET_PERSONS = [1,5,6,7,8,9,11]
 H36M_DATASET_ACTIONS = ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+H36M_FPS = 50
+H36M_STEP_SIZE_MS = 20
 
 #####===== Official Data Splits =====#####
 H36M_TRAIN_SUBJECTS = [1,5,6,7,8]

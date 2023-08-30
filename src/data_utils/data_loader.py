@@ -1,21 +1,22 @@
 import torch
 from torch.utils.data import Dataset
 import numpy as np
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 
 from .data_loading import load_data_h36m
-from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT
+from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT, H36M_DATASET_ACTIONS
 
 
 class H36MDataset(Dataset):
     def __init__(self, seed_length: int,
                         target_length: int,
-                         down_sampling_factor: int=1,
-                          sequence_spacing: int=0,
-                           skeleton_model: Optional[Literal['s26', None]] = None,
-                            rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
-                             return_label: Optional[bool] = False,
-                              is_train=True):
+                         actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
+                          down_sampling_factor: int=1,
+                           sequence_spacing: int=0,
+                            skeleton_model: Optional[Literal['s26', None]] = None,
+                             rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
+                              return_label: Optional[bool] = False,
+                               is_train=True):
         """
             Initialize the H36M dataset. This loads the data from the H36M dataset to torch tensors.
 
@@ -39,9 +40,10 @@ class H36MDataset(Dataset):
 
         # Load the data from disk
         self.data, self.meta_info = load_data_h36m(person_id = H36M_TRAIN_SUBJECTS if is_train else H36M_TEST_SUBJECTS,
-                                                skeleton=skeleton_model,
-                                                    representation=rot_representation,
-                                                        return_tensor=True)
+                                                    action_str=actions,
+                                                     skeleton=skeleton_model,
+                                                         representation=rot_representation,
+                                                             return_tensor=True)
         # Downsample the data
         if down_sampling_factor != 1:
             for sequence in self.data:
