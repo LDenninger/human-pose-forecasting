@@ -49,7 +49,7 @@ class AttentionBase(nn.Module):
         query, key, value = query.reshape(-1, shape[-2], shape[-1]), key.reshape(-1, shape[-2], shape[-1]), value.reshape(-1, shape[-2], shape[-1])
         attn = torch.bmm(query, torch.transpose(key, 1, 2)) * (self.token_dim ** -0.5) 
         if self.mask is not None:
-            attn = torch.einsum('bij,ij->bij', attn, self.mask)
+            attn += self.mask.unsqueeze(0)
         attn = torch.softmax(attn, dim=-1)
         out = torch.bmm(attn, value)
         out = out.view(*shape)
@@ -147,7 +147,7 @@ class TemporalAttention(AttentionBase):
         return out
 
     def set_mask(self) -> None:
-        self.mask = torch.tril(torch.ones(self.num_tokens, self.num_tokens), diagonal=0)
+        self.mask = torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
 
 class SpatialAttention(AttentionBase):
     def __init__(self,
@@ -206,4 +206,37 @@ class SpatialAttention(AttentionBase):
         out = torch.einsum('nik,bjnk->bjni', torch.transpose(W, -2, -1), x) # shape [batch_size*seq_len, num_joints, token_dim]
         out = out.view(*shape) # shape [batch_size, seq_len, num_joints, token_dim]
         return out
+
+class VanillaAttention(AttentionBase):
+
+    class SpatialAttention(AttentionBase):
+        def __init__(self,
+                    num_emb: int,
+                    num_tokens: int,
+                    token_dim: int,
+                        num_heads: int) -> None:
+            super().__init__(num_tokens, token_dim, num_heads)
+            self.num_emb = num_emb
+            self.register_parameter('W_query', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
+            self.register_parameter('W_key', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+            self.register_parameter('W_value', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+            self.register_parameter('W_output', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+            self._reset_parameters()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Apply temporal attention to the input tensor.
+
+            Input:
+                x [batch_size, seq_len, num_joints * emb_dim]
+        """
+        Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size,num_tokens, token_dim]
+        K = self.multi_head_linear_embedding(x, self.W_key)
+        V = self.multi_head_linear_embedding(x, self.W_value)
+
+        out = self.scaled_dot_product_attention(Q, K, V)
+        out = self.linear_embedding(out, self.W_output)
+        return out
     
+    def set_mask(self) -> None:
+        self.mask = torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
