@@ -6,13 +6,81 @@ Following https://github.com/eth-ait/motion-transformer/blob/master/metrics/moti
 
 import numpy as np
 import torch
-from typing import Optional, Literal, Union
+from typing import Optional, Literal, Union, List
 
 from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle
 
-def pck(
-    predictions: torch.tensor, targets: torch.tensor, thresh: float
-) -> torch.tensor:
+#####===== Distribution Metrics =====#####
+
+def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
+    """
+    # seq = seq[:, :, 0:-1:12, :]  # 5 fps for amass (in 60 fps)
+    
+    Args:
+      seq: (batch_size, n_joints, seq_len, feature_size)
+  
+    Returns:
+        (n_joints, seq_len, feature_size)
+    """
+    feature_size = seq.shape[-1]
+    n_joints = seq.shape[1]
+
+    seq_t = torch.transpose(seq, [0, 2, 1, 3])
+    dims_to_use = torch.where((torch.reshape(seq_t, [-1, n_joints, feature_size]).std(0) >= 1e-4).all(dim=-1))[0]
+    seq_t = seq_t[:, :, dims_to_use]
+
+    seq_t = torch.reshape(seq_t, [seq_t.shape[0], seq_t.shape[1], 1, -1])
+    seq = torch.transpose(seq_t, [0, 2, 1, 3])
+    
+    seq_fft = torch.fft.fft(seq, dim=2)
+    seq_ps = torch.abs(seq_fft)**2
+    
+    seq_ps_global = seq_ps.sum(dim=0) + 1e-8
+    seq_ps_global /= seq_ps_global.sum(dim=1, keepdims=True)
+    return seq_ps_global
+
+
+def ps_entropy(seq_ps):
+    """
+    
+    Args:
+        seq_ps: (n_joints, seq_len, feature_size)
+
+    Returns:
+    """
+    return -torch.sum(seq_ps * torch.log(seq_ps), dim=1)
+
+
+def ps_kld(seq_ps_from, seq_ps_to):
+    """ Calculates KL(seq_ps_from, seq_ps_to).
+    Args:
+        seq_ps_from:
+        seq_ps_to:
+
+    Returns:
+    """
+    return torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), dim=1)
+
+
+
+#####===== Pair-Wise Metrics =====#####
+
+def accuracy_under_curve(predictions: torch.tensor, 
+                           targets: torch.tensor, 
+                            thresholds: List[float]) -> torch.tensor:
+    """
+        Area und the Curve metric to measure the accuracy at different thresholds.
+    """
+    accs = []
+    for threshold in thresholds:
+        accs.append(accuracy_at_threshold(predictions, targets, threshold, 'mean').item())
+    auc = np.mean(accs)*100
+    return auc
+
+def accuracy_at_threshold(predictions: torch.tensor, 
+                           targets: torch.tensor, 
+                            thresh: float,
+                             reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
     """
     Percentage of correct keypoints.
     Args:
@@ -25,7 +93,7 @@ def pck(
     """
     dist = torch.sqrt(torch.sum((predictions - targets) ** 2, dim=-1))
     pck = torch.mean((dist <= thresh).to(dtype=torch.float32), dim=-1)
-    return pck
+    return _reduce(pck, reduction)
 
 
 def geodesic_distance(predictions: torch.tensor,

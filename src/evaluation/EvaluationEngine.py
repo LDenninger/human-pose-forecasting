@@ -1,10 +1,15 @@
 import torch
+import math
 import numpy as np
+from tqdm import tqdm
 import os
-from typing import Optional, Dict, Any, List, Union
+from prettytable import PrettyTable
+from typing import Optional, Dict, Any, List, Union, Literal
 
-from ..utils import print_
+from ..utils import print_, log_function
+from ..data_utils import H36M_DATASET_ACTIONS, H36M_STEP_SIZE_MS, H36MDataset
 from .metrics import geodesic_distance, euler_angle_error, positional_mse
+
 
 METRICS_IMPLEMENTED = {
     'geodesic_distance': geodesic_distance,
@@ -15,7 +20,164 @@ VISUALIZATION_IMPLEMENTED = {
     '3dpose': geodesic_distance # placeholder
 }
 
-class EvaluationEngine:
+
+class EvaluationEngineActive:
+    """
+        Active evaluation engine that directly computes the model outputs.
+        Doing so we are able to compute more high-level metrics on the H3.6M dataset.
+
+        Here we compute all defined metrics, instead of a small subset.
+    """
+
+    def __init__(self, device: str = 'cpu'):
+        """
+            Initialize the active evaluation engine.
+        """
+        self.device = torch.device(device)
+
+    @log_function
+    def initialize_evaluation(self, 
+                               batches_per_action: int,
+                                seed_length: int,
+                                 prediction_lengths: List[int],
+                                  down_sampling_factor: int = 1,
+                                    actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
+                                     skeleton_model: Optional[Literal['s26', None]] = None,
+                                      rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
+                                       batch_size: Optional[int] = 32,) -> None:
+        ##== Data Structures ==##
+        self.datasets = {}
+        self.evaluation_results = {}
+        for a in (actions+['overall']):
+            self.evaluation_results[a] = {}
+            for prediction_length in prediction_lengths:
+                self.evaluation_results[a][prediction_length] = {}
+                for metric_names in METRICS_IMPLEMENTED.keys():
+                    self.evaluation_results[a][prediction_length][metric_names] = []
+        ##== Evaluation Parameters ==##
+        self.prediction_lengths = prediction_lengths
+        self.batches_per_action = batches_per_action
+        self.evaluation_finished = False
+
+        ##== Dataset Parameters ==##
+        self.seed_length = seed_length
+        self.target_frames = np.ceil(prediction_lengths / (H36M_STEP_SIZE_MS * down_sampling_factor))
+        self.last_target_frame = max(self.target_frames)
+        self.target_length = math.ceil(max(prediction_lengths) / (H36M_STEP_SIZE_MS * down_sampling_factor))
+        self.skeleton_model = skeleton_model
+
+        self.rot_representation = rot_representation
+        self.down_sampling_factor = down_sampling_factor
+        self.actions = actions
+        self.batch_size = batch_size
+
+        ##== Load Action dataset ==##
+        for a in self.actions:
+            self.datasets[a] = H36MDataset(
+                actions=self.actions,
+                seed_length=self.seed_length,
+                target_length=self.target_length,
+                down_sampling_factor=self.down_sampling_factor,
+                skeleton_model=skeleton_model,
+
+            )
+
+    @log_function
+    def evaluate(self, model: torch.nn.Module, mode: Optional[Literal['standard', 'long_prediction']] = 'standard'):
+        """
+            Evaluate the provided model on the H3.6M dataset.
+            For this the evaluation needs to be initialized.
+        """
+        self.evaluation_results = {}
+        
+        model.eval()
+        for action, dataset in self.datasets.items():
+            print_(f"Evaluating model on action {action}...")
+            data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
+            if mode == 'standard':
+                self.evaluation_loop(action, model, data_loader)
+        self._compute_overall_means()
+        print_(f"Evaluation finished!")
+
+    
+    @torch.no_grad()
+    def evaluation_loop(self, action: str, model: torch.nn.Module, data_loader: torch.utils.data.DataLoader) -> None:
+        """
+            A single evaluation loop for an action.
+        
+        """
+        self.model.eval()
+        # Initialize progress bar
+        progress_bar = tqdm(enumerate(self.test_loader), total=self.batches_per_action)
+        progress_bar.set_description('Evaluation: ')
+
+        for batch_idx, data in progress_bar:
+            if batch_idx==self.batches_per_action:
+                break
+            # Load data
+            data = data.to(self.device)
+            # Set input for the model
+            cur_input = data[:, :self.seed_length]
+            targets = []
+            outputs = []
+            # Predict future frames in an auto-regressive manner
+            for i in range(1, self.last_target_frame+1):
+                # Compute the output
+                output = model(cur_input)
+                # Take the predicted timestamp from the last position
+                outputs.append(output[:,-1])
+                targets.append(data[:, self.seed_length + i])
+                # Check if we want to compute metrics for this timestep
+                if i in self.target_frames:
+                    # Compute the implemented metrics
+                    for metric_name, metric_func in METRICS_IMPLEMENTED.items():
+                        res = metric_func(outputs[-1], targets[-1])
+                        self.evaluation_results[action][i][metric_name].append(res)
+                # Update model input for auto-regressive prediction
+                cur_input = output
+        
+        self._reduce_action_metrics(action)
+            
+    def _reduce_action_metrics(self, action: str) -> None:
+        """
+            Compute the mean over the metrics logged for several iterations
+        """
+        for pred_length in self.evaluation_results[action].keys():
+            for metric_name in  self.evaluation_results[action][pred_length].keys():
+                self.evaluation_results[action][pred_length][metric_name] = np.mean(self.evaluation_results[action][pred_length][metric_name]) 
+
+    def _compute_overall_means(self):
+        """
+            Compute the mean over all actions.
+        """
+        for pred_length in self.evaluation_results['overall'].keys():
+            for metric_name in  self.evaluation_results['overall'][pred_length].keys():
+                self.evaluation_results['overall'][pred_length][metric_name] = np.mean(self.evaluation_results[:][pred_length][metric_name])
+
+    def _print_results(self) -> None:
+        """
+            Print the results into the console using the PrettyTable library.
+        """
+
+        if not self.evaluation_finished:
+            return
+        for a in self.evaluation_results.keys():
+            if a == 'overall':
+                print(f'Average over all actions:')
+            else:
+                print_(f'Evaluation results for action {a}:')
+            table = PrettyTable()
+            table.field_names = METRICS_IMPLEMENTED.keys()
+            for pred_length in self.evaluation_results[a].keys():
+                table.add_row([pred_length] + self.evaluation_results[a][pred_length].values())
+            print_(table)
+        
+
+class EvaluationEnginePassive:
+    """
+        A passive evaluation engine meaning that it only receives output and targets and computes the metrics and visualizations.
+        This only enables to compute simple metrics during training.
+    """
 
     def __init__(self, 
                   metric_names: Optional[List[str]] = None,
@@ -69,7 +231,7 @@ class EvaluationEngine:
         else:
             self.target_log = torch.cat([self.target_log, target], dim=0)
 
-
+    @log_function
     def compute(self, metric_names: Optional[List[str]] = None,) -> Dict[str, float]:
         """
             Compute the quantitative metrics for the model.
@@ -89,9 +251,9 @@ class EvaluationEngine:
             metric = METRICS_IMPLEMENTED[metric_name]
             metric_value = metric(self.output_log, self.target_log, reduction='mean')
             results[metric_name] = metric_value
-    
+
         return results
-    
+    @log_function
     def visualize(self, visualization_name: Optional[List[str]] = None) -> Dict[str, Any]:
         """
             Compute the qualitative metric for the model.
