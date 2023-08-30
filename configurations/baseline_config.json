@@ -50,7 +50,7 @@
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["axis_angle_diff", "positional_mse", "euler_diff"],
+        "metrics": ["geodesic_distance", "positional_mse", "euler_angle"],
         "frequency": 1
     },
     "dataset": {
