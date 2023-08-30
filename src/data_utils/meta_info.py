@@ -8,15 +8,25 @@
 """
 import numpy as np
 
+"""     ### General Information ###
+
+    Currently supported datasets are: Human 3.6M dataset, VisionLab3DPose dataset
+
+    Skeleton names:
+        s26: Describes the skeleton with 26 active joints used in the H3.6M dataset
+        s19: Describes the skeleton with 19 active joints used in the VisionLab3DPose dataset
+        
+"""
+
 #####===== H36M General Information =====#####
-DATASET_PATH = 'data/h3.6m/dataset'
-DATASET_PERSONS = [1,5,6,7,8,9,11]
-DATASET_ACTIONS = ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+H36M_DATASET_PATH = 'data/h3.6m/dataset'
+H36M_DATASET_PERSONS = [1,5,6,7,8,9,11]
+H36M_DATASET_ACTIONS = ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
 
 #####===== Official Data Splits =====#####
-TRAIN_SUBJECTS = [1,5,6,7,8]
-TEST_SUBJECTS  = [9,11]
-DEBUG_SPLIT = [1,]
+H36M_TRAIN_SUBJECTS = [1,5,6,7,8]
+H36M_TEST_SUBJECTS  = [9,11]
+H36M_DEBUG_SPLIT = [1,]
 
 #####===== H36M Skeleton Information =====#####
 # Number Joints: 32
@@ -199,6 +209,110 @@ H36M_BASELINE_PARENTS = np.array([0, 1, 2, 3, 4, 5, 1, 7, 8, 9, 10, 1, 12, 13, 1
 ###=== Bone Length ===###
 # Length of the limbs connecting the joints
 H36M_BONE_LENGTH = [0.000000,0.000000,0.000000,-132.948591,0.000000,0.000000,0.000000,-442.894612,0.000000,0.000000,-454.206447,0.000000,0.000000,0.000000,162.767078,0.000000,0.000000,74.999437,132.948826,0.000000,0.000000,0.000000,-442.894413,0.000000,0.000000,-454.206590,0.000000,0.000000,0.000000,162.767426,0.000000,0.000000,74.999948,0.000000,0.100000,0.000000,0.000000,233.383263,0.000000,0.000000,257.077681,0.000000,0.000000,121.134938,0.000000,0.000000,115.002227,0.000000,0.000000,257.077681,0.000000,0.000000,151.034226,0.000000,0.000000,278.882773,0.000000,0.000000,251.733451,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,99.999627,0.000000,100.000188,0.000000,0.000000,0.000000,0.000000,0.000000,257.077681,0.000000,0.000000,151.031437,0.000000,0.000000,278.892924,0.000000,0.000000,251.728680,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,99.999888,0.000000,137.499922,0.000000,0.000000,0.000000,0.000000]
+
+
+#####===== VisionLab Skeleton Model =====#####
+# Num keypoints: 27
+# Active joints: 19
+VLP_DATASET_PATH = 'data/VisionLab3DPoses'
+
+
+###=== Joint Names ===###
+VLP_NAMES = [''] * 27
+VLP_NAMES[0] = 'nose'
+VLP_NAMES[1] = 'neck'
+VLP_NAMES[2] = 'rShoulder'
+VLP_NAMES[3] = 'rElbow'
+VLP_NAMES[4] = 'rWrist'
+VLP_NAMES[5] = 'lShoulder'
+VLP_NAMES[6] = 'lElbow'
+VLP_NAMES[7] = 'lWrist'
+VLP_NAMES[8] = 'midHip'
+VLP_NAMES[9] = 'rHip'
+VLP_NAMES[10] = 'rKnee'
+VLP_NAMES[11] = 'rAnkle'
+VLP_NAMES[12] = 'lHip'
+VLP_NAMES[13] = 'lKnee'
+VLP_NAMES[14] = 'lAnkle'
+VLP_NAMES[15] = 'rEye'
+VLP_NAMES[16] = 'lEye'
+VLP_NAMES[17] = 'rEar'
+VLP_NAMES[18] = 'lEar'
+VLP_NAMES[19] = 'head'   #unused
+VLP_NAMES[20] = 'belly'  #unused
+VLP_NAMES[21] = 'lbToe'  #unused
+VLP_NAMES[22] = 'lsToe'  #unused
+VLP_NAMES[23] = 'lHeel'  #unused
+VLP_NAMES[24] = 'rbToe'  #unused
+VLP_NAMES[25] = 'rsToe'  #unused
+VLP_NAMES[26] = 'rHeel'  #unused
+
+VLP_SKELETON_STRUCTURE = {
+    0: {'nose', 'root'},
+    1: {'neck', 'nose'},
+    2: {'rShoulder', 'neck'},
+    3: {'rElbow', 'rShoulder'},
+    4: {'rWrist', 'rElbow'},
+    5: {'lShoulder', 'neck'},
+    6: {'lElbow', 'lShoulder'},
+    7: {'lWrist', 'lElbow'},
+    8: {'midHip', 'neck'},
+    9: {'rHip', 'midHip'},
+    10: {'rKnee', 'rHip'},
+    11: {'rAnkle', 'rKnee'},
+    12: {'lHip','midHip'},
+    13: {'lKnee', 'lHip'},
+    14: {'lAnkle', 'lKnee'},
+    15: {'rEye', 'nose'},
+    16: {'lEye', 'nose'},
+    17: {'rEar', 'rEye'},
+    18: {'lEar', 'lEye'},
+}
+
+
+VLP_PARENTS=[-1, 0, 1, 2, 3, 1, 5, 6, 1, 8, 9, 10, 8, 12, 13, 0, 0, 15, 16]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #####===== Additional Skeleton Definitions =====#####

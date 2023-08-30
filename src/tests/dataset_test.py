@@ -2,7 +2,7 @@ from ..data_utils import *
 import ipdb
 import numpy as np
 
-def test_data_loading():
+def test_h36m_data_loading():
 
     PERSON_IDS = None
     ACTION_STR = None
@@ -10,7 +10,7 @@ def test_data_loading():
     RETURN_TENSOR = False
 
 
-    data, meta_dir = load_data(PERSON_IDS, ACTION_STR, SUB_ACTION_ID, RETURN_TENSOR)
+    data, meta_dir = load_data_h36m(PERSON_IDS, ACTION_STR, SUB_ACTION_ID, RETURN_TENSOR)
 
     # Compute some diagnostic information about the data
     num_sequences = len(data)
@@ -36,3 +36,10 @@ def test_data_loading():
     print(f' Active Angles: {active_angles}\n Zero Angles: {zero_angles}')
     ipdb.set_trace()
     print('Test Finished!')
+
+def test_vslab_data_loading():
+
+    rotation_data = load_data_visionlab3DPoses()
+    position_data = load_data_visionlab3DPoses(representation='pos')
+
+    

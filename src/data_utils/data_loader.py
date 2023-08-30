@@ -3,8 +3,8 @@ from torch.utils.data import Dataset
 import numpy as np
 from typing import Optional, Literal
 
-from .data_loading import load_data
-from .meta_info import TRAIN_SUBJECTS, TEST_SUBJECTS, DEBUG_SPLIT
+from .data_loading import load_data_h36m
+from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT
 
 
 class H36MDataset(Dataset):
@@ -38,7 +38,7 @@ class H36MDataset(Dataset):
         self.return_label = return_label
 
         # Load the data from disk
-        self.data, self.meta_info = load_data(person_id = TRAIN_SUBJECTS if is_train else TEST_SUBJECTS,
+        self.data, self.meta_info = load_data_h36m(person_id = H36M_TRAIN_SUBJECTS if is_train else H36M_TEST_SUBJECTS,
                                                 skeleton=skeleton_model,
                                                     representation=rot_representation,
                                                         return_tensor=True)

@@ -9,6 +9,67 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from typing import Literal
+
+#####===== Outside Helper Functions =====#####
+
+def get_conv_from_rotation_matrix(representation=Literal['axis', 'mat', 'quat', '6d', 'euler']):
+    """
+        Get conversion function from rotation matrix to an arbitrary 3D rotation representations.
+    """
+    if representation == 'axis':
+        return blank_processing
+    elif representation =='mat':
+        return axis_angle_to_matrix_direct
+    elif representation == 'quat':
+        return axis_angle_to_quaternion
+    elif representation == '6d':
+        return axis_angle_to_rotation_6d
+    elif representation == 'euler':
+        return axis_angle_to_euler_angles
+    else:
+        raise ValueError(f'Unknown representation {representation}')
+    
+def get_conv_to_rotation_matrix(representation=Literal['axis','mat', 'quat', '6d', 'euler']):
+    """
+        Get conversion function from an arbitrary 3D rotation representations to rotation matrix.
+    """
+    if representation == 'axis':
+        return axis_angle_to_matrix
+    elif representation =='mat':
+        return blank_processing
+    elif representation == 'quat':
+        return quaternion_to_matrix
+    elif representation == '6d':
+        return rotation_6d_to_matrix
+    elif representation == 'euler':
+        return euler_angles_to_matrix
+    else:
+        raise ValueError(f'Unknown representation {representation}')
+
+    
+def get_conv_from_vectors(representation=Literal['axis','mat', 'quat', '6d', 'euler', 'pos']):
+    """
+        Get conversion function to compute a 3D rotation between two vectors.
+    """
+    if representation == 'pos':
+        return blank_processing
+    elif representation =='axis':
+        return vectors_to_axis_angle
+    elif representation =='mat':
+        return vectors_to_rotation_matrix
+    elif representation == 'quat':
+        return vectors_to_quaternion
+    elif representation == '6d':
+        return vectors_to_rotation_6d
+    elif representation == 'euler':
+        return vectors_to_euler_angles
+    else:
+        raise ValueError(f'Unknown representation {representation}')
+
+#####===== Additional Conversion Functions =====#####
+# These are some conversions not provided by PyTorch3d
+
 def axis_angle_to_matrix_direct(angle: torch.Tensor) -> torch.Tensor:
     """
         Converts a 3D axis angle to a 3x3 rotation matrix using the Rodrigues formula.
@@ -35,6 +96,68 @@ def axis_angle_to_matrix_direct(angle: torch.Tensor) -> torch.Tensor:
     S = S - torch.transpose(S, -2, -1)
     rot_mat = torch.repeat_interleave(torch.eye(3).unsqueeze(0), bs, dim=0) + torch.sin(theta).unsqueeze(-1).unsqueeze(-1)* S + (1-torch.cos(theta)).unsqueeze(-1).unsqueeze(-1) * (S@S)
     return rot_mat.squeeze()
+
+def vectors_to_axis_angle(vector1: torch.Tensor, vector2: torch.Tensor) -> torch.Tensor:
+    """
+        Computes the axis angle between the provided vectors.
+        Method was taken from: https://www.euclideanspace.com/maths/algebra/vectors/angleBetween/
+    """
+    # Deal with additional leading dimensions
+    if len(vector1.shape)>2:
+        vector1 = torch.flatten(vector1, start_dim=0, end_dim=-2)
+    if len(vector2.shape)>2:
+        vector2 = torch.flatten(vector2, start_dim=0, end_dim=-2)
+    if vector1.shape!= vector2.shape:
+        raise ValueError("The input vectors must have the same shape.")
+    # Normalize the vectors
+    vector1_norm = vector1 / torch.linalg.norm(vector1, dim=-1).unsqueeze(-1)
+    vector2_norm = vector2 / torch.linalg.norm(vector2, dim=-1).unsqueeze(-1)
+    # compute the dot and cross products
+    dot_prod = torch.einsum("bi,bi->b", vector1_norm, vector2_norm)
+    cross_prod = torch.cross(vector1_norm, vector2_norm)
+    # prevent numerical instabilities in the arccos when the vectors are equal.
+    eps = torch.finfo(dot_prod.dtype).eps
+    dot_prod = torch.clamp(dot_prod, min=-1+eps, max=1-eps)
+    # compute the axis rotated around and the magnitude of the rotation
+    angle = torch.acos(dot_prod)
+    axis = cross_prod / torch.linalg.norm(cross_prod, dim=-1).unsqueeze(-1)
+    # Combine to axis angle representation
+    return axis * angle.unsqueeze(-1)
+
+def vectors_to_rotation_matrix(vector1: torch.Tensor, vector2: torch.Tensor) -> torch.Tensor:
+    """
+        Compute the rotation between two vectors using the rotation matrix representation.
+        The method first computes the axis angles and then calculates the rotation matrix from that.
+    """
+    return axis_angle_to_matrix(vectors_to_axis_angle(vector1, vector2))
+
+def vectors_to_quaternion(vector1: torch.Tensor, vector2: torch.Tensor):
+    """
+        Compute the quaternion between two vectors using the quaternion representation.
+        The method first computes the axis angles and then calculates the quaternion from that.
+    """
+    return axis_angle_to_quaternion(vectors_to_axis_angle(vector1, vector2))
+
+def vectors_to_euler_angles(vector1: torch.Tensor, vector2: torch.Tensor):
+    """
+        Compute the Euler angles between two vectors using the Euler angles representation.
+        The method first computes the axis angles and then calculates the Euler angles from that.
+    """
+    return axis_angle_to_euler_angles(vectors_to_axis_angle(vector1, vector2))
+
+def vectors_to_rotation_6d(vector1: torch.Tensor, vector2: torch.Tensor) -> torch.Tensor:
+    """
+        Compute the rotation between two vectors using the rotation matrix representation.
+        The method first computes the axis angles and then calculates the rotation matrix from that.
+    """
+    return axis_angle_to_rotation_6d(vectors_to_axis_angle(vector1, vector2))
+
+def axis_angle_to_euler_angles(axis_angle: torch.Tensor, convention: str) -> torch.Tensor:
+    """
+        Convert the axis angle representation to the Euler angles representation.
+        The method first computes the axis angles and then calculates the Euler angles from that.
+    """
+    return matrix_to_euler_angles(axis_angle_to_matrix(axis_angle), convention)
 
 #####===== Computation Helper Functions =====#####
 

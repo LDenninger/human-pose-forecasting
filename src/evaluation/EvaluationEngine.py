@@ -89,7 +89,7 @@ class EvaluationEngine:
             metric = METRICS_IMPLEMENTED[metric_name]
             metric_value = metric(self.output_log, self.target_log, reduction='mean')
             results[metric_name] = metric_value
-
+    
         return results
     
     def visualize(self, visualization_name: Optional[List[str]] = None) -> Dict[str, Any]:

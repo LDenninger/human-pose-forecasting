@@ -6,7 +6,7 @@ from abc import abstractmethod
 import numpy as np
 
 from .meta_info import *
-from .transformations import *
+from ..utils.transformations import *
 
 """
 

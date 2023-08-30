@@ -17,7 +17,10 @@ def parse_arguments():
         help="Test the joint encoding and decoding of the pose predictor",
     )
     parser.add_argument(
-        "--data", action="store_true", default=False, help="Test the model"
+        "--data", action="store_true", default=False, help="Test the data loading "
+    )
+    parser.add_argument(
+        "--data_vlp", action="store_true", default=False, help="Test the data loading of the VisionLab3DPose dataset"
     )
     parser.add_argument(
         "--sk32", action="store_true", default=False, help="Test the Skeleton32 model"
@@ -44,7 +47,9 @@ def parse_arguments():
 def main():
     args = parse_arguments()
     if args.data:
-        test_data_loading()
+        test_h36m_data_loading()
+    if args.data_vlp:
+        test_vslab_data_loading()
     if args.sk32:
         test_skeleton32_model()
     if args.model:

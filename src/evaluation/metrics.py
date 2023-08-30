@@ -8,8 +8,7 @@ import numpy as np
 import torch
 from typing import Optional, Literal, Union
 
-from ..utils import print_
-from ..data_utils import matrix_to_euler_angles, matrix_to_axis_angle
+from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle
 
 def pck(
     predictions: torch.tensor, targets: torch.tensor, thresh: float
