@@ -9,10 +9,48 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from .attention import TemporalAttention, SpatialAttention, VanillaAttention
 from .utils import PointWiseLinear
+
+def getTransformerBlock(transformer_config: Dict[str, Any],
+                    num_joints: int, 
+                     emb_dim: int,
+                      seq_len: int) -> torch.nn.Module:
+    if transformer_config['type'] in ['parallel', 'seq_st', 'seq_ts']:
+        if transformer_config['type'] == 'parallel':
+            transformer = SeqSpatioTemporalTransformer
+        elif transformer_config['type'] =='seq_st':
+            transformer = SeqSpatioTemporalTransformer
+        elif transformer_config['type'] =='seq_ts':
+            transformer = SeqTemporalSpatialTransformer
+        return transformer(
+                        emb_dim = emb_dim,
+                        ff_dim = transformer_config['ff_dimension'],
+                        num_emb = num_joints,
+                        seq_len = seq_len,
+                        temporal_heads = transformer_config['temporal_heads'],
+                        spatial_heads = transformer_config['spatial_heads'],
+                        temporal_dropout=transformer_config['temporal_dropout'],
+                        spatial_dropout=transformer_config['spatial_dropout'],
+                        ff_dropout=transformer_config['ff_dropout'],
+        )
+    elif transformer_config['type'] =='vanilla':
+        return VanillaTransformer(
+                        emb_dim = emb_dim,
+                        ff_dim = transformer_config['ff_dimension'],
+                        num_emb = num_joints,
+                        seq_len = seq_len,
+                        temporal_heads = transformer_config['temporal_heads'],
+                        spatial_heads = transformer_config['spatial_heads'],
+                        temporal_dropout=transformer_config['temporal_dropout'],
+                        spatial_dropout=transformer_config['spatial_dropout'],
+                        ff_dropout=transformer_config['ff_dropout'],
+    )
+    else:
+        raise NotImplementedError(f'Transformer type not implemented: {type}')
+
 
 #####===== Transformer Block ====#####
 

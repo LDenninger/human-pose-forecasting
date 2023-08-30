@@ -11,67 +11,9 @@ import math
 
 from typing import Optional, Dict, Any
 
-from .transformer import SpatioTemporalTransformer, SeqSpatioTemporalTransformer, SeqTemporalSpatialTransformer, VanillaTransformer
-from .PosePredictor import PosePredictor
-
 
 #####===== Helper Functions =====#####
 
-def getTransformerBlock(transformer_config: Dict[str, Any],
-                    num_joints: int, 
-                     emb_dim: int,
-                      seq_len: int) -> torch.nn.Module:
-    if transformer_config['type'] in ['parallel', 'seq_st', 'seq_ts']:
-        if transformer_config['type'] == 'parallel':
-            transformer = SeqSpatioTemporalTransformer
-        elif transformer_config['type'] =='seq_st':
-            transformer = SeqSpatioTemporalTransformer
-        elif transformer_config['type'] =='seq_ts':
-            transformer = SeqTemporalSpatialTransformer
-        return transformer(
-                        emb_dim = emb_dim,
-                        ff_dim = transformer_config['ff_dimension'],
-                        num_emb = num_joints,
-                        seq_len = seq_len,
-                        temporal_heads = transformer_config['temporal_heads'],
-                        spatial_heads = transformer_config['spatial_heads'],
-                        temporal_dropout=transformer_config['temporal_dropout'],
-                        spatial_dropout=transformer_config['spatial_dropout'],
-                        ff_dropout=transformer_config['ff_dropout'],
-        )
-    elif transformer_config['type'] =='vanilla':
-        return VanillaTransformer(
-                        emb_dim = emb_dim,
-                        ff_dim = transformer_config['ff_dimension'],
-                        num_emb = num_joints,
-                        seq_len = seq_len,
-                        temporal_heads = transformer_config['temporal_heads'],
-                        spatial_heads = transformer_config['spatial_heads'],
-                        temporal_dropout=transformer_config['temporal_dropout'],
-                        spatial_dropout=transformer_config['spatial_dropout'],
-                        ff_dropout=transformer_config['ff_dropout'],
-    )
-    else:
-        raise NotImplementedError(f'Transformer type not implemented: {type}')
-
-def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
-    """
-        Construct and return a model given the run configuration.
-    """
-    if config['model']['type'] == 'baseline':
-        model = PosePredictor(
-            positional_encoding_config=config['model']['positional_encoding'],
-            transformer_config=config['model']['transformer'],
-            num_joints=config['skeleton']['num_joints'],
-            seq_len=config['seq_length'],
-            num_blocks=config['model']['num_blocks'],
-            emb_dim=config['model']['embedding_dim'],
-            joint_dim=config['joint_representation']['joint_dim'],
-            input_dropout=config['model']['input_dropout']
-        ).to(device)
-        return model
-    else:
-        raise NotImplementedError(f'Model type not implemented: {config["model"]["type"]}')
 
 
 def generateTemporalMask(seq_len: int, device: Optional[torch.device]) -> torch.Tensor:

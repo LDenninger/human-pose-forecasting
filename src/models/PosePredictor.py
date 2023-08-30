@@ -7,10 +7,31 @@
 import torch
 import torch.nn as nn
 import math
+from typing import Dict, Any
 
-from .transformer import SpatioTemporalTransformer
+from .transformer import SpatioTemporalTransformer, getTransformerBlock
 from .positional_encoding import PositionalEncodingSinusoidal
-from .utils import PointWiseLinear, getTransformerBlock
+from .utils import PointWiseLinear
+
+
+def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
+    """
+        Construct and return a model given the run configuration.
+    """
+    if config['model']['type'] == 'baseline':
+        model = PosePredictor(
+            positional_encoding_config=config['model']['positional_encoding'],
+            transformer_config=config['model']['transformer'],
+            num_joints=config['skeleton']['num_joints'],
+            seq_len=config['seq_length'],
+            num_blocks=config['model']['num_blocks'],
+            emb_dim=config['model']['embedding_dim'],
+            joint_dim=config['joint_representation']['joint_dim'],
+            input_dropout=config['model']['input_dropout']
+        ).to(device)
+        return model
+    else:
+        raise NotImplementedError(f'Model type not implemented: {config["model"]["type"]}')
 
 #####====== Pose Predictor =====#####
 

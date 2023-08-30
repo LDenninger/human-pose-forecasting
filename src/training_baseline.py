@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from typing import Optional
 from tqdm import tqdm
 
+from .data_utils import getDataset
 from .utils import *
 from .models import PosePredictor, getModel
 from .evaluation import EvaluationEngine

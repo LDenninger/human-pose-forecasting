@@ -6,6 +6,29 @@ from typing import Optional, Literal, List
 from .data_loading import load_data_h36m
 from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT, H36M_DATASET_ACTIONS
 
+#####===== Helper Functions =====#####
+
+def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_train: Optional[bool] =True,  **kwargs) -> torch.utils.data.Dataset:
+    """
+        Load a dataset using a run config.
+
+        Arguments:
+            config (dict): The configuration dictionary of the dataset.
+            joint_representation (str): The representation of the joints.
+
+    """
+    if config["name"] == 'h36m':
+        return H36MDataset(
+            seed_length=config["seed_length"],
+            rot_representation=joint_representation,
+            skeleton_model=skeleton_model,
+            target_length=config["target_length"],
+            down_sampling_factor=config["downsampling_factor"],
+            sequence_spacing=config["spacing"],
+            is_train=is_train
+        )
+    else:
+        raise NotImplementedError(f'Dataset {config["name"]} is not implemented.')
 
 class H36MDataset(Dataset):
     def __init__(self, seed_length: int,

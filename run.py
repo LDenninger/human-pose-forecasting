@@ -5,7 +5,7 @@ import src.utils as utils
 
 
 
-from src.tests import test_data_loading, test_skeleton32_model, test_transformer, test_processing_functions
+from src.tests import *
 
 
 ###--- Run Information ---###

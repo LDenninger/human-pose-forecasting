@@ -9,7 +9,6 @@ import torch.nn as nn
 import os
 from typing import Optional
 
-from ..data_utils import H36MDataset
 from .schedulers import SchedulerBase, SPLScheduler
 from .losses import LossBase, PerJointMSELoss
 
@@ -52,25 +51,5 @@ def getOptimizer(config: dict, model: nn.Module, **kwargs) -> nn.Module:
     else:
         raise NotImplementedError(f'Optimizer {config["type"]} is not implemented.')
 
-def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_train: Optional[bool] =True,  **kwargs) -> torch.utils.data.Dataset:
-    """
-        Load a dataset using a run config.
 
-        Arguments:
-            config (dict): The configuration dictionary of the dataset.
-            joint_representation (str): The representation of the joints.
-
-    """
-    if config["name"] == 'h36m':
-        return H36MDataset(
-            seed_length=config["seed_length"],
-            rot_representation=joint_representation,
-            skeleton_model=skeleton_model,
-            target_length=config["target_length"],
-            down_sampling_factor=config["downsampling_factor"],
-            sequence_spacing=config["spacing"],
-            is_train=is_train
-        )
-    else:
-        raise NotImplementedError(f'Dataset {config["name"]} is not implemented.')
     
