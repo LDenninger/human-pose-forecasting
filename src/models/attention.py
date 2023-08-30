@@ -209,19 +209,18 @@ class SpatialAttention(AttentionBase):
 
 class VanillaAttention(AttentionBase):
 
-    class SpatialAttention(AttentionBase):
-        def __init__(self,
-                    num_emb: int,
-                    num_tokens: int,
-                    token_dim: int,
-                        num_heads: int) -> None:
-            super().__init__(num_tokens, token_dim, num_heads)
-            self.num_emb = num_emb
-            self.register_parameter('W_query', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
-            self.register_parameter('W_key', nn.Parameter(torch.Tensor(token_dim, token_dim)))
-            self.register_parameter('W_value', nn.Parameter(torch.Tensor(token_dim, token_dim)))
-            self.register_parameter('W_output', nn.Parameter(torch.Tensor(token_dim, token_dim)))
-            self._reset_parameters()
+    def __init__(self,
+                num_emb: int,
+                num_tokens: int,
+                token_dim: int,
+                    num_heads: int) -> None:
+        super().__init__(num_tokens, token_dim, num_heads)
+        self.num_emb = num_emb
+        self.register_parameter('W_query', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
+        self.register_parameter('W_key', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+        self.register_parameter('W_value', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+        self.register_parameter('W_output', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+        self._reset_parameters()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

@@ -10,7 +10,7 @@ import math
 
 from .transformer import SpatioTemporalTransformer
 from .positional_encoding import PositionalEncodingSinusoidal
-from .utils import PointWiseLinear
+from .utils import PointWiseLinear, getTransformerBlock
 
 #####====== Pose Predictor =====#####
 
@@ -42,7 +42,7 @@ class PosePredictor(nn.Module):
         self.positionalEncoding = self._resolve_positional_encoding(positional_encoding_config, emb_dim, seq_len)
         self.inputDropout = nn.Dropout(p=input_dropout)
         # Attention blocks
-        self.attnBlocks = [self._resolve_transformer(transformer_config, num_joints, emb_dim, seq_len) for _ in range(num_blocks)]
+        self.attnBlocks = [getTransformerBlock(transformer_config, num_joints, emb_dim, seq_len) for _ in range(num_blocks)]
         self.attnBlocks = nn.Sequential(*self.attnBlocks)
         # Final decoding layer to retrieve the original joint representation
         self.joint_decoder = PointWiseLinear(emb_dim, joint_dim, num_joints)
@@ -93,27 +93,6 @@ class PosePredictor(nn.Module):
         x += self.b_dec.unsqueeze(0).unsqueeze(0)
         return x
 
-    def _resolve_transformer(self, 
-                                config: dict,
-                                 num_joints: int, 
-                                  emb_dim: int,
-                                   seq_len: int) -> nn.Module:
-        assert config['type'] in ['spl', 'vanilla'], 'Please provide a valid transformer type [spl, vanilla].'
-        if config['type'] =='spl':
-            return SpatioTemporalTransformer(
-                        emb_dim = emb_dim,
-                        ff_dim = config['ff_dimension'],
-                        num_emb = num_joints,
-                        seq_len = seq_len,
-                        temporal_heads = config['temporal_heads'],
-                        spatial_heads = config['spatial_heads'],
-                        temporal_dropout=config['temporal_dropout'],
-                        spatial_dropout=config['spatial_dropout'],
-                        ff_dropout=config['ff_dropout'],
-            )
-        else:
-            raise NotImplementedError(f'Transformer type not implemented: {type}')
-    
     def _resolve_positional_encoding(self, config: dict, emb_dim: int, seq_len: int) -> nn.Module:
         assert config["type"] in ['sin', 'learned'], 'Please provide a valid positional encoding type [sin, learned].'
         if config["type"] =='sin':

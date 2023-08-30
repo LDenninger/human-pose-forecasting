@@ -6,7 +6,7 @@ from typing import Optional
 from tqdm import tqdm
 
 from .utils import *
-from .models import PosePredictor
+from .models import PosePredictor, getModel
 from .evaluation import EvaluationEngine
 
 class TrainerBaseline:
@@ -69,17 +69,7 @@ class TrainerBaseline:
         """
             Initialize the PosePredictor model using the loaded config.
         """
-        self.model = PosePredictor(
-            positional_encoding_config=self.config['model']['positional_encoding'],
-            transformer_config=self.config['model']['transformer'],
-            num_joints=self.config['skeleton']['num_joints'],
-            seq_len=self.config['seq_length'],
-            num_blocks=self.config['model']['num_blocks'],
-            emb_dim=self.config['model']['embedding_dim'],
-            joint_dim=self.config['joint_representation']['joint_dim'],
-            input_dropout=self.config['model']['input_dropout']
-        ).to(self.device)
-
+        self.model = getModel(self.config, self.device)
         self.logger.watch_model(self.model)
         print_(f"Initialized model")
 

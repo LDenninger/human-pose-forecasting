@@ -11,66 +11,40 @@ import math
 
 from typing import Optional
 
-from .attention import TemporalAttention, SpatialAttention
+from .attention import TemporalAttention, SpatialAttention, VanillaAttention
 from .utils import PointWiseLinear
 
 #####===== Transformer Block ====#####
 
 class VanillaTransformer(nn.Module):
-    def __init__(
-                    self,
-                     emb_dim: int,
-                     ff_dim: int,
-                     num_emb: int,
-                     seq_len: int,
-                       temporal_heads: int,
-                       spatial_heads: int,
-                         temporal_dropout: float = 0.0,
-                         spatial_dropout: float =0.0,
-                         ff_dropout: float = 0.0,
-                          full_return: bool = False
-
-                          ):
+    def __init__(self,
+                  emb_dim: int,
+                  ff_dim: int,
+                  num_tokens: int,
+                    heads: int,
+                     attention_dropout: float = 0.0,
+                     ff_dropout: float = 0.0,
+                      full_return: bool = False):
         super(VanillaTransformer, self).__init__()
         # Meta Parameters
         self.emb_dim = emb_dim
         self.ff_dim = ff_dim
-        self.num_emb = num_emb
-        self.seq_len = seq_len
-        self.temporal_heads = temporal_heads
-        self.spatial_heads = spatial_heads
-        self.temporal_dropout = temporal_dropout
-        self.spatial_dropout = spatial_dropout
         self.ff_dropout = ff_dropout
 
         self.full_return = full_return
         # Define used modules
-        self.vanillaAttention = VanillaTransformer(
-            num_emb=num_emb,
-            num_tokens=seq_len,
+        self.vanillaAttention = VanillaAttention(
+            num_tokens=num_tokens,
             token_dim=emb_dim,
-            num_heads = temporal_heads
-        )
-        self.spatialAttention = SpatialAttention(
-            num_emb=num_emb,
-            num_tokens=num_emb,
-            token_dim=emb_dim,
-            num_heads = spatial_heads
+            num_heads = heads,
         )
         self.layerNorm = nn.LayerNorm(emb_dim, eps=1e-6)
         self.pointWiseFF = self._build_point_wise_ff()
-        self.temporalDropout = None
-        self.spatialDropout = None
-        self.ffDropout = None
 
-        if temporal_dropout !=0:
-            self.temporalDropout = nn.Dropout(p=temporal_dropout)
-        if spatial_dropout!=0:
-            self.spatialDropout = nn.Dropout(p=spatial_dropout)
+        if attention_dropout !=0:
+            self.attentionDropout = nn.Dropout(p=attention_dropout)
         if ff_dropout!=0:
             self.ffDropout = nn.Dropout(p=ff_dropout)
-
-        
 
     
     def forward(self, x):
@@ -80,25 +54,24 @@ class VanillaTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
+        shape = x.shape
+        x = torch.flatten(x, start_dim=-2, end_dim=-1)
         # Compute spatial and temporal attention separately and update input
-        spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
-        if self.spatialDropout is not None:
-            spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
-        temporalAttentionOut = self.temporalAttention(x)
-        if self.temporalDropout is not None:
-            temporalAttentionOut = self.temporalDropout(temporalAttentionOut)
+        attentionOut = self.vanillaAttention(x) 
+        if self.attentionDropout is not None:
+            attentionOut = self.attentionDropout(attentionOut)
         # Add spatial and temporal attention
-        attnOut = self.layerNorm(x + spatialAttentionOut) + self.layerNorm(x+temporalAttentionOut) # shape: [batch_size, num_joints, seq_len, emb_dim]
+        attnOut = self.layerNorm(x + attentionOut)
         # Point-wise feed-forward layer (point-wise w.r.t. the joints)
-        # TODO: Implement this more efficiently by defining projection by hand
         ffOut = self.pointWiseFF(attnOut)
         if self.ffDropout is not None:
             ffOut = self.ffDropout(ffOut)
         ffOut = self.layerNorm(ffOut + attnOut)
 
         if self.full_return:
-            return ffOut, temporalAttentionOut, spatialAttentionOut
+            return ffOut, attentionOut
         
+        ffOut = torch.reshape(ffOut, shape)
         return ffOut
         
     def _build_point_wise_ff(self):

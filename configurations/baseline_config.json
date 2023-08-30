@@ -7,7 +7,7 @@
     "seq_length": 75,
     "checkpoint_frequency": 1,
     "model": {
-        "type": "baseline",
+        "type": "st_transformer",
         "num_blocks": 8,
         "input_dropout": 0.1,
         "embedding_dim": 64,
@@ -15,7 +15,7 @@
             "type": "sin"
         },
         "transformer": {
-            "type": "spl",
+            "type": "parallel",
             "spatial_heads": 4,
             "temporal_heads": 4,
             "spatial_dropout": 0.1,
