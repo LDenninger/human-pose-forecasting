@@ -20,7 +20,10 @@ def parse_arguments():
         "--data", action="store_true", default=False, help="Test the data loading "
     )
     parser.add_argument(
-        "--data_vlp", action="store_true", default=False, help="Test the data loading of the VisionLab3DPose dataset"
+        "--data_vlp",
+        action="store_true",
+        default=False,
+        help="Test the data loading of the VisionLab3DPose dataset",
     )
     parser.add_argument(
         "--sk32", action="store_true", default=False, help="Test the Skeleton32 model"
@@ -39,6 +42,12 @@ def parse_arguments():
         action="store_true",
         default=False,
         help="Test the metrics of the model",
+    )
+    parser.add_argument(
+        "--visualizer",
+        action="store_true",
+        default=False,
+        help="Test the visualizer of the model",
     )
     args = parser.parse_args()
     return args
@@ -60,6 +69,8 @@ def main():
         test_pose_encoding_decoding()
     if args.metrics:
         test_metrics()
+    if args.visualizer:
+        test_visualizer()
 
 
 if __name__ == "__main__":
