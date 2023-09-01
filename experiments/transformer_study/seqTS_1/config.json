@@ -35,7 +35,8 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "mse"
+        "type": "mse",
+        "reduction": "mean"
     },
     "lr_scheduler": {
         "type": "baseline",

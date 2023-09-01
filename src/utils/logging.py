@@ -292,6 +292,17 @@ class Logger(object):
         log_str += f'project_name: {project_name}, entity: {entity}, group: {group}, job_type: {job_type}, resume: {resume}, mode: {mode}'
         self.log_info(log_str, message_type="info")
         self.log_config(config)
+
+    def finish_logging(self) -> None:
+        """
+            Finish logging using WandB.
+        """
+        if not self.run_initialized:
+            return
+        wandb.finish()
+        self.log_external = False
+        log_str = 'WandB logging finished\n'
+        print_(log_str, message_type="info")
     
     def watch_model(self, model: torch.nn.Module, log: Optional[Literal['gradients', 'parameters', 'all']] = "gradients"):
         if not self.log_external:
