@@ -32,15 +32,16 @@ def evaluate_distance_metrics(
         metrics = METRICS_IMPLEMENTED.keys()
 
     results = {}
-
     conversion_func = get_conv_to_rotation_matrix(representation)
     predictions = conversion_func(predictions)
+    targets = conversion_func(targets)
+
     if representation == 'mat':
         # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
-        predictions = torch.reshape(predictions, (*predictions.shape[:-1], 3, 3))
         predictions = correct_rotation_matrix(predictions)
-        predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
-    targets = conversion_func(targets)
+        
+    predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
+    targets = torch.reshape(targets, (*targets.shape[:-2], 9))
     
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
@@ -198,10 +199,10 @@ def euler_angle_error(predictions: torch.tensor,
     Returns:
         The Euler angle error as a torch tensor of shape (..., )
     """
-    shape = predictions.shape
 
     preds, _ = _fix_dimensions(predictions)
     targs, orig_shape = _fix_dimensions(targets)
+    shape = predictions.shape
 
     # Convert rotation matrices to Euler angles using pytorch3d
     euler_preds = matrix_to_euler_angles(preds, "ZYX")  # (N, 3)
@@ -211,8 +212,8 @@ def euler_angle_error(predictions: torch.tensor,
     euler_targs = torch.reshape(euler_targs, (*shape[:-1], 3))
 
     # reshape to (-1, n_joints*3) to be consistent with previous work
-    euler_preds = euler_preds.view(-1, shape[-2] * 3)
-    euler_targs = euler_targs.view(-1, shape[-2] * 3)
+    euler_preds = euler_preds.view(-1, shape[-3] * 3)
+    euler_targs = euler_targs.view(-1, shape[-3] * 3)
 
     # l2 error on euler angles
     idx_to_use = torch.where(torch.std(euler_targs, dim=0) > 1e-4)[0]
@@ -247,6 +248,6 @@ def _fix_dimensions(input: torch.Tensor,):
     if shape[-1] == 9:
         return torch.reshape(input, (-1,3,3)), input.shape[:-1]
     elif shape[-1] == 3 and shape[-2] == 3:
-        return torch.view(-1,3,3), input.shape[:-2]
+        return input.view(-1,3,3), input.shape[:-2]
     else:
         print_(f'Evaluation functions received invalid input shape: {shape}')

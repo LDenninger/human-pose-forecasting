@@ -107,16 +107,14 @@ def h36m_forward_kinematics(data: torch.Tensor, representation: Literal['axis', 
     conversion_func = get_conv_to_rotation_matrix(representation)
     if data.shape[-1] == 99:
         shape = data.shape[:-1]
-        if len(data.shape) > 2:
+        if len(data.shape) > 3:
             data = torch.flatten(data, start_dim=0, end_dim=-2)
         data = parse_sequence_efficient_to_s26(data, conversion_func)
     else:
-        shape = data.shape[:-1]
-        if len(data.shape) > 3:
-            data = torch.flatten(data, start_dim=0, end_dim=-3) 
         data = conversion_func(data)
-    if data.shape[-1] == 9:
-        data = torch.reshape(data, (*data.shape[:-1], 3, 3))
+        shape = data.shape[:-2]
+        if len(data.shape) > 4:
+            data = torch.flatten(data, start_dim=0, end_dim=-3) 
         
     name_to_ind = H36M_REVERSED_REDUCED_ANGLE_INDICES
     offset = torch.reshape(torch.FloatTensor(H36M_BONE_LENGTH), (-1,3))

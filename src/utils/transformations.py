@@ -37,7 +37,7 @@ def get_conv_to_rotation_matrix(representation=Literal['axis','mat', 'quat', '6d
     if representation == 'axis':
         return axis_angle_to_matrix
     elif representation =='mat':
-        return blank_processing
+        return unflatten_rotation_matrix
     elif representation == 'quat':
         return quaternion_to_matrix
     elif representation == '6d':
@@ -172,6 +172,11 @@ def axis_angle_to_euler_angles(axis_angle: torch.Tensor, convention: str) -> tor
         The method first computes the axis angles and then calculates the Euler angles from that.
     """
     return matrix_to_euler_angles(axis_angle_to_matrix(axis_angle), convention)
+
+def unflatten_rotation_matrix(rotation_matrix: torch.Tensor) -> torch.Tensor:
+    if rotation_matrix.shape[-1]== 9:
+        return torch.reshape(rotation_matrix, (*rotation_matrix.shape[:-1], 3, 3))
+    return rotation_matrix
 
 #####===== Computation Helper Functions =====#####
 

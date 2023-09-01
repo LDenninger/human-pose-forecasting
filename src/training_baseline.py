@@ -84,7 +84,7 @@ class TrainerBaseline:
             return False
         self.optimizer = getOptimizer(self.config['optimizer'], self.model)
         self.scheduler = getScheduler(self.config['lr_scheduler'], self.optimizer, emb_size=self.config['model']['embedding_dim'])
-        self.loss = getLoss(self.config['loss'])
+        self.loss = getLoss(self.config['loss'], self.config['joint_representation']['type'])
         print_(f"Initialized optimizer")
         return True
 

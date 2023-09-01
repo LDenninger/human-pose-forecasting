@@ -64,7 +64,6 @@ class AttentionBase(nn.Module):
                 x [..., num_tokens, token_dim], W [num_tokens, token_dim]
             output: [..., num_heads, num_tokens, head_dim]
         """
-        import ipdb; ipdb.set_trace()
         out = self.linear_embedding(x, W)
         out = out.view(*out.shape[:-1], self.num_heads, self.head_dim)
         out = torch.transpose(out, -3, -2)
@@ -79,7 +78,6 @@ class AttentionBase(nn.Module):
                 x [..., num_tokens, token_dim], W [num_tokens, token_dim]
             output: [..., num_tokens, token_dim]
         """
-        import ipdb; ipdb.set_trace()
         shape = x.shape
         x = x.view(-1, shape[-2], shape[-1])
         out = torch.einsum('bij,jk->bik', x, W)

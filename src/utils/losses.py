@@ -12,6 +12,7 @@ from abc import abstractmethod
 
 from .transformations import get_conv_to_rotation_matrix, matrix_to_axis_angle
 
+
 ######===== Base Module =====#####
 
 class LossBase(nn.Module):
@@ -31,7 +32,7 @@ class LossBase(nn.Module):
     ###=== Helper Functions ===###
     ##== Input Reductions ==##
     def _flatten_leading(self, input: torch.Tensor) -> torch.Tensor:
-        return input.view(-1, input.shape[-1])
+        return torch.reshape(input, (-1, input.shape[-1]))
 
     ##== Output Reductions ==##
     def _reduce_sum(self, input: torch.Tensor) -> torch.Tensor:
@@ -52,12 +53,15 @@ class LossBase(nn.Module):
 class PerJointMSELoss(LossBase):
     """
         Module to compute the per joint mean squared error loss on the rotation matrix.
+        This is equal to the loss function used in the original paper.
     """
 
-    def __init__(self):
+    def __init__(self, org_representation: Optional[Literal['axis','mat', 'quat', '6d']] = 'mat'):
         super(PerJointMSELoss, self).__init__()
+        self.conversion_func = get_conv_to_rotation_matrix(org_representation)
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        output, target = self.conversion_func(output), self.conversion_func(target)
         loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
         loss = torch.sum(loss, dim=-1) # Sum over rotation dimensions
         loss = torch.sqrt(loss) # mse over all rotation dimensions
@@ -83,12 +87,9 @@ class GeodesicLoss(LossBase):
             If rotation matrices are directly inputted, we assume they are flattened.
         """
         output, target = self._flatten_leading(output), self._flatten_leading(target)
-        if self.org_representation == 'mat':
-            output = torch.reshape(output, 3, 3)
-            target = torch.reshape(target, 3, 3)
-        else:
-            output = self.conversion_func(output)
-            target = self.conversion_func(target)
+    
+        output = self.conversion_func(output)
+        target = self.conversion_func(target)
         r = torch.matmul(output, target.transpose(-2,-1))
         angles = matrix_to_axis_angle(r)
         angles = torch.linalg.vector_norm(angles, dim=-1)
