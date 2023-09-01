@@ -8,10 +8,59 @@ import numpy as np
 import torch
 from typing import Optional, Literal, Union, List
 
-from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle
+from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle, get_conv_to_rotation_matrix, correct_rotation_matrix
+from ..data_utils import h36m_forward_kinematics
+#####===== General Evaluation Constants =====#####
+ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
+
+
+#####===== Evaluation Functions =====#####
+def evaluate_distance_metrics(
+                              predictions: torch.tensor, 
+                               targets: torch.tensor, 
+                                metrics: List[str] = None,
+                                 reduction: Optional[Literal['mean', 'sum', 'mse', None]] = None,
+                                  representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
+    METRICS_IMPLEMENTED = {
+        'geodesic_distance': geodesic_distance,
+        'positional_mse': positional_mse,
+        'euler_error': euler_angle_error,
+        'auc': accuracy_under_curve
+    }
+
+    if metrics is None:
+        metrics = METRICS_IMPLEMENTED.keys()
+
+    results = {}
+    conversion_func = get_conv_to_rotation_matrix(representation)
+    predictions = conversion_func(predictions)
+    targets = conversion_func(targets)
+
+    if representation == 'mat':
+        # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
+        predictions = correct_rotation_matrix(predictions)
+        
+    predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
+    targets = torch.reshape(targets, (*targets.shape[:-2], 9))
+    
+    for metric in metrics:
+        if metric not in METRICS_IMPLEMENTED.keys():
+            print_(f'Metric {metric} not implemented.')
+        if metric == 'auc':
+            # Compute the joint positions using forward kinematics
+            prediction_positions, _ = h36m_forward_kinematics(predictions, 'mat') 
+            target_positions, _ = h36m_forward_kinematics(targets, 'mat')
+            # Scale to meters for evaluation
+            prediction_positions /= 1000
+            target_positions /= 1000
+            results[metric] = accuracy_under_curve(prediction_positions, target_positions)
+        else:
+            results[metric] = METRICS_IMPLEMENTED[metric](predictions, targets, reduction=reduction).item()
+    
+    return results
+
 
 #####===== Distribution Metrics =====#####
-
 def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     """
     # seq = seq[:, :, 0:-1:12, :]  # 5 fps for amass (in 60 fps)
@@ -62,15 +111,15 @@ def ps_kld(seq_ps_from, seq_ps_to):
     return torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), dim=1)
 
 
-
-#####===== Pair-Wise Metrics =====#####
+#####===== Pair-Wise Distance Metrics =====#####
 
 def accuracy_under_curve(predictions: torch.tensor, 
                            targets: torch.tensor, 
-                            thresholds: List[float]) -> torch.tensor:
+                            thresholds: List[float] = ACC_THRESHOLDS) -> torch.tensor:
     """
         Area und the Curve metric to measure the accuracy at different thresholds.
     """
+
     accs = []
     for threshold in thresholds:
         accs.append(accuracy_at_threshold(predictions, targets, threshold, 'mean').item())
@@ -144,24 +193,27 @@ def euler_angle_error(predictions: torch.tensor,
     Computes the Euler angle error using pytorch3d.
     Args:
         predictions: torch tensor of predicted joint angles represented as rotation matrices, i.e. in shape
-          (..., n_joints, 3, 3)
+          (..., n_joints, 9)
         targets: torch tensor of same shape as `predictions`
 
     Returns:
         The Euler angle error as a torch tensor of shape (..., )
     """
-    n_joints = predictions.shape[-3]
 
     preds, _ = _fix_dimensions(predictions)
     targs, orig_shape = _fix_dimensions(targets)
+    shape = predictions.shape
 
     # Convert rotation matrices to Euler angles using pytorch3d
     euler_preds = matrix_to_euler_angles(preds, "ZYX")  # (N, 3)
     euler_targs = matrix_to_euler_angles(targs, "ZYX")  # (N, 3)
 
+    euler_preds = torch.reshape(euler_preds, (*shape[:-1], 3))
+    euler_targs = torch.reshape(euler_targs, (*shape[:-1], 3))
+
     # reshape to (-1, n_joints*3) to be consistent with previous work
-    euler_preds = euler_preds.view(-1, n_joints * 3)
-    euler_targs = euler_targs.view(-1, n_joints * 3)
+    euler_preds = euler_preds.view(-1, shape[-3] * 3)
+    euler_targs = euler_targs.view(-1, shape[-3] * 3)
 
     # l2 error on euler angles
     idx_to_use = torch.where(torch.std(euler_targs, dim=0) > 1e-4)[0]
@@ -169,7 +221,7 @@ def euler_angle_error(predictions: torch.tensor,
     euc_error = torch.sqrt(torch.sum(euc_error, dim=1))  # (-1, ...)
 
     # reshape to original
-    return _reduce(euc_error.view(*orig_shape), reduction)
+    return _reduce(euc_error, reduction)
 
 #####===== Helper Functions =====#####
 
@@ -196,6 +248,6 @@ def _fix_dimensions(input: torch.Tensor,):
     if shape[-1] == 9:
         return torch.reshape(input, (-1,3,3)), input.shape[:-1]
     elif shape[-1] == 3 and shape[-2] == 3:
-        return torch.view(-1,3,3), input.shape[:-2]
+        return input.view(-1,3,3), input.shape[:-2]
     else:
         print_(f'Evaluation functions received invalid input shape: {shape}')

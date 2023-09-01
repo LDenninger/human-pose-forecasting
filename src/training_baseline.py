@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .data_utils import getDataset
 from .utils import *
 from .models import PosePredictor, getModel
-from .evaluation import EvaluationEngine
+from .evaluation import EvaluationEnginePassive
 
 class TrainerBaseline:
 
@@ -43,7 +43,7 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
-        self.evaluation_engine = EvaluationEngine(metric_names=self.config['evaluation']['metrics'], keep_log=True)
+        self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -84,7 +84,7 @@ class TrainerBaseline:
             return False
         self.optimizer = getOptimizer(self.config['optimizer'], self.model)
         self.scheduler = getScheduler(self.config['lr_scheduler'], self.optimizer, emb_size=self.config['model']['embedding_dim'])
-        self.loss = getLoss(self.config['loss'])
+        self.loss = getLoss(self.config['loss'], self.config['joint_representation']['type'])
         print_(f"Initialized optimizer")
         return True
 
@@ -190,6 +190,7 @@ class TrainerBaseline:
                 self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch)
         # Save the final model
         self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch, True)
+        self.logger.finish_logging()
         print_('Training finished!')
 
     @log_function

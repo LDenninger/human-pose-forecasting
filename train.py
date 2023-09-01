@@ -14,14 +14,17 @@ from src.utils import print_
 #####===== Training Functions =====#####
 # Functions to initialize a trainer and run a training.
 
-def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, log: bool):
+def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, log: bool, debug: bool = False):
     """
         Run a training using the baseline trainer.
 
         TODO: Implement checkpoint loading
     """
+
+    num_threads = 0 if debug else 4
+
     # Initialize the trainer
-    trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=2)
+    trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=num_threads)
     # Log some information
     log_script_setup()
     # Initialize the model
@@ -30,14 +33,18 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
     trainer.initialize_optimization()
     # Load the data
     trainer.load_data()
+    if debug:
+        trainer.num_iterations = 10
+        trainer.num_eval_iterations = 10
+        trainer.num_epochs = 5
     # Train the model
     trainer.train()
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
 QUEUED = False # Activate the usage of the training queue
-EXPERIMENT_NAMES = []
-RUN_NAMES = []
+EXPERIMENT_NAMES = ['transformer_study']*2
+RUN_NAMES = ['seqST_1', 'seqTS_1']
 
 
 #####===== Meta Information =====#####
@@ -59,9 +66,9 @@ def log_script_setup():
 
 
 #####===== Main Functions =====#####
-def run_training(experiment_name: str, run_name: str, checkpoint_name: str, training_id: int, log: bool = False):
+def run_training(experiment_name: str, run_name: str, checkpoint_name: str, training_id: int, log: bool = False, debug: bool = False):
     train_func = TRAINING_FUNCTIONS[training_id]
-    train_func(experiment_name, run_name, checkpoint_name, log)
+    train_func(experiment_name, run_name, checkpoint_name, log, debug)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -70,6 +77,7 @@ def main():
     parser.add_argument('-c','--checkpoint', type=str, default=None, help='Checkpoint name to resume the training from')
     parser.add_argument('-t','--training_id', type=int, default=0, help='Training ID: 0: baseline')
     parser.add_argument('--log', action='store_true', default=False, help='Log the training process to WandB')
+    parser.add_argument('--debug', action='store_true', default=False, help='Debug mode')
     args = parser.parse_args()
     # Run a training using the queued runs from above
     if QUEUED:
@@ -80,10 +88,10 @@ def main():
             print_(f'Number of experiment names ({len(EXPERIMENT_NAMES)}) does not match number of run names ({len(RUN_NAMES)})')
             return
         else:
-            for i in range(EXPERIMENT_NAMES):
+            for i in range(len(EXPERIMENT_NAMES)):
                 exp_name = EXPERIMENT_NAMES[i]
                 run_name = RUN_NAMES[i]
-                run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log)
+                run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
     # Run a single training for the run defined by the environment or passed as arguments
     else:
         if args.experiment is None:
@@ -105,7 +113,7 @@ def main():
         else:
             run_name = args.run
         
-        run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log)
+        run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
 
 if __name__ == '__main__':
     main()

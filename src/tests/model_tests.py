@@ -11,7 +11,7 @@ import ipdb
 import numpy as np
 import os
 
-from ..models import *
+from ..models import SpatioTemporalTransformer, PosePredictor
 from ..utils import load_config
 ######===== Test Data Structures and Parameters =====######
 

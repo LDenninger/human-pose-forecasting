@@ -10,7 +10,8 @@ import os
 from typing import Optional
 
 from .schedulers import SchedulerBase, SPLScheduler
-from .losses import LossBase, PerJointMSELoss
+from .losses import *
+from .logging import print_
 
 #####===== Random Seed =====#####
 def set_random_seed(seed):
@@ -34,12 +35,29 @@ def getScheduler(config: dict, optimizer: nn.Module, **kwargs) -> SchedulerBase:
     else:
         raise NotImplementedError(f'Scheduler {config["type"]} is not implemented.')
     
-def getLoss(config: dict, **kwargs) -> LossBase:
-    if config["type"] =='mse':
-        return PerJointMSELoss()
+def getLoss(config: str, rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat') -> nn.Module:
+    """
+        Returns the loss module based on the given configuration.
+    """
+    if config['type'] == "mse":
+        return PerJointMSELoss(org_representation=rot_representation)
+    elif config['type'] == 'geodesic':
+        return GeodesicLoss(org_representation=rot_representation, reduction=config['reduction'])
+    elif config['type'] == 'euler':
+        if rot_representation!= 'euler':
+            print_('Euler loss only works with euler rotation representation.', 'warn')
+        return EulerLoss(config['reduction'])
+    elif config['type'] == 'quaternion':
+        if rot_representation!= 'quaternion':
+            print_('Quaternion loss only works with quaternion rotation representation.', 'warn')
+        return QuaternionLoss(config['reduction'])
+    elif config['type'] == 'rotation6d':
+        if rot_representation!= 'rotation6d':
+            print_('Rotation6D loss only works with rotation6d rotation representation.', 'warn')
+        return Rotation6DLoss(config['reduction'])
     else:
-        raise NotImplementedError(f'Loss {config["type"]} is not implemented.')
-
+        raise ValueError(f"Loss {config['type']} is not supported.")
+    
 def getOptimizer(config: dict, model: nn.Module, **kwargs) -> nn.Module:
     if config["type"] == 'Adam':
         return torch.optim.Adam(

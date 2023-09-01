@@ -195,13 +195,13 @@ H36M_REDUCED_SKELETON_STRUCTURE = {
     16: ('lElbow', 'lShoulder'),
     17: ('lWrist', 'lElbow'),
     18: ('lThumb', 'lWrist'),
-    20: ('lWristEnd', 'lWrist'),
-    21: ('rShoulderAnchor', 'spine1'),
-    22: ('rShoulder', 'rShoulderAnchor'),
-    23: ('rElbow', 'rShoulder'),
-    24: ('rWrist', 'rElbow'),
-    25: ('rThumb', 'rWrist'),
-    26: ('rWristEnd', 'rWrist')
+    19: ('lWristEnd', 'lWrist'),
+    20: ('rShoulderAnchor', 'spine1'),
+    21: ('rShoulder', 'rShoulderAnchor'),
+    22: ('rElbow', 'rShoulder'),
+    23: ('rWrist', 'rElbow'),
+    24: ('rThumb', 'rWrist'),
+    25: ('rWristEnd', 'rWrist')
 }
 
 H36M_BASELINE_PARENTS = np.array([0, 1, 2, 3, 4, 5, 1, 7, 8, 9, 10, 1, 12, 13, 14, 15, 13, 17, 18, 19, 20, 21, 20, 23, 13, 25, 26, 27, 28, 29, 28, 31]) - 1

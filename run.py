@@ -3,8 +3,6 @@ import os
 
 import src.utils as utils
 
-
-
 from src.tests import *
 
 
@@ -46,7 +44,6 @@ if __name__ == '__main__':
     argparser.add_argument('--test_model', action='store_true', default=False, help='Test the Skeleton32 model')
     argparser.add_argument('--test_comp', action='store_true', default=False, help='Test the high-level computation functions of the model')
 
-
     argparser.add_argument('--augm_study', action='store_true', default=False, help='Run the augmentation study')
     argparser.add_argument('--opt_study', action='store_true', default=False, help='Run the augmentation study')
 
@@ -65,7 +62,6 @@ if __name__ == '__main__':
     # Additional parameter
     argparser.add_argument('-n', type=int, default=None)
     
-
     ##-- Function Calls --##
     # Here we simply determien which function to call and how to set the experiment and run name
 
