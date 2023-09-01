@@ -35,7 +35,7 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "geodesic",
+        "type": "mse",
         "reduction": "mean"
     },
     "lr_scheduler": {
@@ -47,8 +47,8 @@
         "num_joints": 26
     },
     "joint_representation": {
-        "type": "quat",
-        "joint_dim": 4
+        "type": "6d",
+        "joint_dim": 6
     },
     "evaluation": {
         "metrics": ["geodesic_distance", "positional_mse", "euler_error", "auc"],

@@ -35,7 +35,8 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "mse"
+        "type": "quaternion",
+        "reduction": "mean"
     },
     "lr_scheduler": {
         "type": "baseline",
@@ -46,8 +47,8 @@
         "num_joints": 26
     },
     "joint_representation": {
-        "type": "mat",
-        "joint_dim": 9
+        "type": "quat",
+        "joint_dim": 4
     },
     "evaluation": {
         "metrics": ["geodesic_distance", "positional_mse", "euler_error", "auc"],
