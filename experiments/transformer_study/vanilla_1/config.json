@@ -16,10 +16,8 @@
         },
         "transformer": {
             "type": "vanilla",
-            "spatial_heads": 4,
-            "temporal_heads": 4,
-            "spatial_dropout": 0.1,
-            "temporal_dropout": 0.1,
+            "heads": 4,
+            "attention_dropout": 0.1,
             "ff_dimension": 128,
             "ff_dropout": 0.1,
             "input_dropout": 0.1

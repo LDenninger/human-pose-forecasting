@@ -20,7 +20,7 @@ def getTransformerBlock(transformer_config: Dict[str, Any],
                       seq_len: int) -> torch.nn.Module:
     if transformer_config['type'] in ['parallel', 'seq_st', 'seq_ts']:
         if transformer_config['type'] == 'parallel':
-            transformer = SeqSpatioTemporalTransformer
+            transformer = SpatioTemporalTransformer
         elif transformer_config['type'] =='seq_st':
             transformer = SeqSpatioTemporalTransformer
         elif transformer_config['type'] =='seq_ts':
@@ -40,12 +40,9 @@ def getTransformerBlock(transformer_config: Dict[str, Any],
         return VanillaTransformer(
                         emb_dim = emb_dim,
                         ff_dim = transformer_config['ff_dimension'],
-                        num_emb = num_joints,
-                        seq_len = seq_len,
-                        temporal_heads = transformer_config['temporal_heads'],
-                        spatial_heads = transformer_config['spatial_heads'],
-                        temporal_dropout=transformer_config['temporal_dropout'],
-                        spatial_dropout=transformer_config['spatial_dropout'],
+                        num_tokens = seq_len,
+                        heads = transformer_config['heads'],
+                        attention_dropout=transformer_config['attention_dropout'],
                         ff_dropout=transformer_config['ff_dropout'],
     )
     else:
@@ -92,6 +89,7 @@ class VanillaTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
+        import ipdb; ipdb.set_trace()
         shape = x.shape
         x = torch.flatten(x, start_dim=-2, end_dim=-1)
         # Compute spatial and temporal attention separately and update input
@@ -237,7 +235,7 @@ class SeqSpatioTemporalTransformer(nn.Module):
                           full_return: bool = False
 
                           ):
-        super(SpatioTemporalTransformer, self).__init__()
+        super(SeqSpatioTemporalTransformer, self).__init__()
         # Meta Parameters
         self.emb_dim = emb_dim
         self.ff_dim = ff_dim
@@ -290,6 +288,7 @@ class SeqSpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
+
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
         if self.spatialDropout is not None:
@@ -297,7 +296,7 @@ class SeqSpatioTemporalTransformer(nn.Module):
         spatialOut = self.spatialPointWiseFF(spatialAttentionOut)
         if self.ffDropout is not None:
             spatialOut = self.ffDropout(spatialOut)
-        spatialOut = self.LayerNorm(spatialOut + x)
+        spatialOut = self.layerNorm(spatialOut + x)
 
         temporalAttentionOut = self.temporalAttention(spatialOut)
         if self.temporalDropout is not None:
@@ -305,7 +304,7 @@ class SeqSpatioTemporalTransformer(nn.Module):
         temporalOut = self.temporalPointWiseFF(temporalAttentionOut)
         if self.ffDropout is not None:
             temporalOut = self.ffDropout(temporalOut)
-        temporalOut = self.LayerNorm(temporalOut + spatialOut)
+        temporalOut = self.layerNorm(temporalOut + spatialOut)
         
         if self.full_return:
             return temporalOut, temporalAttentionOut, spatialAttentionOut
@@ -323,7 +322,7 @@ class SeqSpatioTemporalTransformer(nn.Module):
         return f'emb_size={self.emb_dim}, num_emb={self.num_emb}, temporal_heads={self.temporal_heads}, spatial_heads={self.spatial_heads}, temporal_dropout={self.temporal_dropout}, spatial_dropout={self.spatial_dropout}, ff_dropout={self.ff_dropout}'
     
 
-class SeqTemporalSpatialTransformer(SpatioTemporalTransformer):
+class SeqTemporalSpatialTransformer(nn.Module):
 
     def __init__(
                     self,
@@ -339,7 +338,7 @@ class SeqTemporalSpatialTransformer(SpatioTemporalTransformer):
                           full_return: bool = False
 
                           ):
-        super(SpatioTemporalTransformer, self).__init__()
+        super(SeqTemporalSpatialTransformer, self).__init__()
         # Meta Parameters
         self.emb_dim = emb_dim
         self.ff_dim = ff_dim
@@ -392,6 +391,7 @@ class SeqTemporalSpatialTransformer(SpatioTemporalTransformer):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
+
         # Compute spatial and temporal attention separately and update input
         temporalAttentionOut = self.temporalAttention(x)
         if self.temporalDropout is not None:
@@ -399,7 +399,7 @@ class SeqTemporalSpatialTransformer(SpatioTemporalTransformer):
         temporalOut = self.temporalPointWiseFF(temporalAttentionOut)
         if self.ffDropout is not None:
             temporalOut = self.ffDropout(temporalOut)
-        temporalOut = self.LayerNorm(temporalOut + x)
+        temporalOut = self.layerNorm(temporalOut + x)
 
         spatialAttentionOut = self.spatialAttention(temporalOut) # shape: [batch_size, num_joints, seq_len, emb_dim]
         if self.spatialDropout is not None:
@@ -407,7 +407,7 @@ class SeqTemporalSpatialTransformer(SpatioTemporalTransformer):
         spatialOut = self.spatialPointWiseFF(spatialAttentionOut)
         if self.ffDropout is not None:
             spatialOut = self.ffDropout(spatialOut)
-        spatialOut = self.LayerNorm(spatialOut + temporalOut)
+        spatialOut = self.layerNorm(spatialOut + temporalOut)
         
         if self.full_return:
             return spatialOut, temporalAttentionOut, spatialAttentionOut

@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .data_utils import getDataset
 from .utils import *
 from .models import PosePredictor, getModel
-from .evaluation import EvaluationEngine
+from .evaluation import EvaluationEnginePassive
 
 class TrainerBaseline:
 
@@ -43,7 +43,7 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
-        self.evaluation_engine = EvaluationEngine(metric_names=self.config['evaluation']['metrics'], keep_log=True)
+        self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
         self.scheduler = None
         self.optimizer = None
         self.loss = None

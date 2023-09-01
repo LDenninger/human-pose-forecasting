@@ -102,37 +102,40 @@ def parse_sequence_efficient_to_s26(seq: torch.Tensor, conversion_func: callable
 def h36m_forward_kinematics(data: torch.Tensor, representation: Literal['axis', 'mat', 'quat', '6d']) -> torch.Tensor:
     """
         Compute the forward kinematics of the h36m skeleton model from a given representation.
+        The functions returns the joint positions
     """
- 
     conversion_func = get_conv_to_rotation_matrix(representation)
     if data.shape[-1] == 99:
-        shape = data.shape[:-2]
+        shape = data.shape[:-1]
         if len(data.shape) > 2:
             data = torch.flatten(data, start_dim=0, end_dim=-2)
         data = parse_sequence_efficient_to_s26(data, conversion_func)
     else:
-        shape = data.shape[:-2]
+        shape = data.shape[:-1]
         if len(data.shape) > 3:
             data = torch.flatten(data, start_dim=0, end_dim=-3) 
         data = conversion_func(data)
     if data.shape[-1] == 9:
-        data = torch.reshape(*data.shape[:-2], 3, 3)
+        data = torch.reshape(data, (*data.shape[:-1], 3, 3))
         
     name_to_ind = H36M_REVERSED_REDUCED_ANGLE_INDICES
     offset = torch.reshape(torch.FloatTensor(H36M_BONE_LENGTH), (-1,3))
     parent_position = torch.zeros(data.shape[0], 3)
+
     joint_positions = torch.zeros(data.shape[0], 26, 3)
-    
+    joint_rotations = torch.zeros(data.shape[0], 26, 3, 3)
     for id, (cur_frame, par_frame) in H36M_REDUCED_SKELETON_STRUCTURE.items():
         if id == 0:
-            parent_position = torch.zeros(data.shape[0], 3)
-            parent_rotation = data[:, id, name_to_ind[par_frame]]
-            joint_positions[:,id] = parent_position
-
-        joint_positions[:,id] = offset[id].unsqueeze(0) @ parent_rotation + parent_position
-
-    joint_positions = torch.reshape(joint_positions, (*shape, 26, 3))
-    return joint_positions
+            joint_positions[:,id] = offset[id].unsqueeze(0)
+            joint_rotations[:,id] = data[:, id]
+            continue
+        parent_rotation = joint_rotations[:,name_to_ind[par_frame]]
+        parent_position = joint_positions[:,name_to_ind[par_frame]]
+        joint_positions[:,id] = (offset[id].unsqueeze(0).unsqueeze(0) @ parent_rotation).squeeze() + parent_position
+        joint_rotations[:,id] = data[:, id] @ parent_rotation
+    joint_positions = torch.reshape(joint_positions, (*shape, 3))
+    joint_rotations = torch.reshape(joint_rotations, (*shape, 3, 3))
+    return joint_positions, joint_rotations
 
 #####===== VisionLab3DPose Skeleton Transformations =====#####
 

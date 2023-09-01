@@ -64,6 +64,7 @@ class AttentionBase(nn.Module):
                 x [..., num_tokens, token_dim], W [num_tokens, token_dim]
             output: [..., num_heads, num_tokens, head_dim]
         """
+        import ipdb; ipdb.set_trace()
         out = self.linear_embedding(x, W)
         out = out.view(*out.shape[:-1], self.num_heads, self.head_dim)
         out = torch.transpose(out, -3, -2)
@@ -78,7 +79,7 @@ class AttentionBase(nn.Module):
                 x [..., num_tokens, token_dim], W [num_tokens, token_dim]
             output: [..., num_tokens, token_dim]
         """
-
+        import ipdb; ipdb.set_trace()
         shape = x.shape
         x = x.view(-1, shape[-2], shape[-1])
         out = torch.einsum('bij,jk->bik', x, W)
@@ -210,13 +211,11 @@ class SpatialAttention(AttentionBase):
 class VanillaAttention(AttentionBase):
 
     def __init__(self,
-                num_emb: int,
                 num_tokens: int,
                 token_dim: int,
                     num_heads: int) -> None:
         super().__init__(num_tokens, token_dim, num_heads)
-        self.num_emb = num_emb
-        self.register_parameter('W_query', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
+        self.register_parameter('W_query', nn.Parameter(torch.Tensor(token_dim, token_dim)))
         self.register_parameter('W_key', nn.Parameter(torch.Tensor(token_dim, token_dim)))
         self.register_parameter('W_value', nn.Parameter(torch.Tensor(token_dim, token_dim)))
         self.register_parameter('W_output', nn.Parameter(torch.Tensor(token_dim, token_dim)))
@@ -229,6 +228,7 @@ class VanillaAttention(AttentionBase):
             Input:
                 x [batch_size, seq_len, num_joints * emb_dim]
         """
+        import ipdb; ipdb.set_trace()
         Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size,num_tokens, token_dim]
         K = self.multi_head_linear_embedding(x, self.W_key)
         V = self.multi_head_linear_embedding(x, self.W_value)

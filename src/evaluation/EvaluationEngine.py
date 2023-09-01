@@ -183,8 +183,8 @@ class EvaluationEnginePassive:
                    visualization_names: Optional[List[str]] = None,
                     skeleton_model: Optional[Literal['s26', None]] = None,
                      representation: Optional[Literal['axis','mat', 'quat', '6d']] = 'mat',
-                     keep_log: Optional[bool] = False,
-                      device: str = 'cpu') -> None:
+                      keep_log: Optional[bool] = False,
+                       device: str = 'cpu') -> None:
 
         self.metric_names = metric_names
         self.visualization_names = visualization_names
