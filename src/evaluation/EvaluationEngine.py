@@ -7,14 +7,15 @@ from prettytable import PrettyTable
 from typing import Optional, Dict, Any, List, Union, Literal
 
 from ..utils import print_, log_function
-from ..data_utils import H36M_DATASET_ACTIONS, H36M_STEP_SIZE_MS, H36MDataset
-from .metrics import geodesic_distance, euler_angle_error, positional_mse
+from ..data_utils import H36M_DATASET_ACTIONS, H36M_STEP_SIZE_MS, H36MDataset, SkeletonModel32, h36m_forward_kinematics
+from .metrics import evaluate_distance_metrics, geodesic_distance, positional_mse, euler_angle_error, accuracy_under_curve
 
 
 METRICS_IMPLEMENTED = {
     'geodesic_distance': geodesic_distance,
     'positional_mse': positional_mse,
-    'euler_error': euler_angle_error
+    'euler_error': euler_angle_error,
+    'auc': accuracy_under_curve
 }
 VISUALIZATION_IMPLEMENTED = {
     '3dpose': geodesic_distance # placeholder
@@ -130,9 +131,7 @@ class EvaluationEngineActive:
                 # Check if we want to compute metrics for this timestep
                 if i in self.target_frames:
                     # Compute the implemented metrics
-                    for metric_name, metric_func in METRICS_IMPLEMENTED.items():
-                        res = metric_func(outputs[-1], targets[-1])
-                        self.evaluation_results[action][i][metric_name].append(res)
+                    self.evaluation_results[action][i] = evaluate_distance_metrics(outputs, targets, reduction='mean', representation=self.representation)
                 # Update model input for auto-regressive prediction
                 cur_input = output
         
@@ -182,13 +181,19 @@ class EvaluationEnginePassive:
     def __init__(self, 
                   metric_names: Optional[List[str]] = None,
                    visualization_names: Optional[List[str]] = None,
-                    keep_log: Optional[bool] = False) -> None:
+                    skeleton_model: Optional[Literal['s26', None]] = None,
+                     representation: Optional[Literal['axis','mat', 'quat', '6d']] = 'mat',
+                     keep_log: Optional[bool] = False,
+                      device: str = 'cpu') -> None:
 
         self.metric_names = metric_names
         self.visualization_names = visualization_names
+        self.representation = representation
+        self.skeleton_model = skeleton_model
         self.keep_log = keep_log
         self.output_log = None
         self.target_log = None
+        self.device = torch.device(device)
 
 
     def log(self, 
@@ -242,16 +247,7 @@ class EvaluationEnginePassive:
         if metric_names is None:
             metric_names = self.metric_names
 
-        results = {}
-        # Compute the quantitative metrics one by one
-        for metric_name in metric_names:
-            if metric_name not in METRICS_IMPLEMENTED.keys():
-                print_(f"Metric {metric_name} not implemented.")
-                continue
-            metric = METRICS_IMPLEMENTED[metric_name]
-            metric_value = metric(self.output_log, self.target_log, reduction='mean')
-            results[metric_name] = metric_value
-
+        results = evaluate_distance_metrics(self.output_log, self.target_log, metric_names, reduction='mean', representation=self.representation)
         return results
     @log_function
     def visualize(self, visualization_name: Optional[List[str]] = None) -> Dict[str, Any]:

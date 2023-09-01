@@ -8,10 +8,54 @@ import numpy as np
 import torch
 from typing import Optional, Literal, Union, List
 
-from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle
+from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle, get_conv_to_rotation_matrix, correct_rotation_matrix
+from ..data_utils import h36m_forward_kinematics
+#####===== General Evaluation Constants =====#####
+ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
+
+
+#####===== Evaluation Functions =====#####
+def evaluate_distance_metrics(
+                              predictions: torch.tensor, 
+                               targets: torch.tensor, 
+                                metrics: List[str] = None,
+                                 reduction: Optional[Literal['mean', 'sum', 'mse', None]] = None,
+                                  representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
+    
+    METRICS_IMPLEMENTED = {
+        'geodesic_distance': geodesic_distance,
+        'positional_mse': positional_mse,
+        'euler_error': euler_angle_error,
+        'auc': accuracy_under_curve
+    }
+
+    if metrics is None:
+        metrics = METRICS_IMPLEMENTED.keys()
+
+    results = {}
+
+    conversion_func = get_conv_to_rotation_matrix(representation)
+    predictions = conversion_func(predictions)
+    if representation == 'mat':
+        predictions = torch.reshape(predictions, (*predictions.shape[:-2], 3, 3))
+        predictions = correct_rotation_matrix(predictions)
+        predictions = torch.reshape(predictions, (*predictions.shape[:-3], 9))
+    targets = conversion_func(targets)
+    
+    for metric in metrics:
+        if metric not in METRICS_IMPLEMENTED.keys():
+            print_(f'Metric {metric} not implemented.')
+        if metric == 'auc':
+            prediction_positions = h36m_forward_kinematics(predictions, 'mat')
+            target_positions = h36m_forward_kinematics(targets, 'mat')
+            results[metric] = accuracy_under_curve(prediction_positions, target_positions)
+        else:
+            results[metric] = METRICS_IMPLEMENTED[metric](predictions, targets, reduction=reduction)
+    
+    return results
+
 
 #####===== Distribution Metrics =====#####
-
 def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     """
     # seq = seq[:, :, 0:-1:12, :]  # 5 fps for amass (in 60 fps)
@@ -62,12 +106,11 @@ def ps_kld(seq_ps_from, seq_ps_to):
     return torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), dim=1)
 
 
-
-#####===== Pair-Wise Metrics =====#####
+#####===== Pair-Wise Distance Metrics =====#####
 
 def accuracy_under_curve(predictions: torch.tensor, 
                            targets: torch.tensor, 
-                            thresholds: List[float]) -> torch.tensor:
+                            thresholds: List[float] = ACC_THRESHOLDS) -> torch.tensor:
     """
         Area und the Curve metric to measure the accuracy at different thresholds.
     """

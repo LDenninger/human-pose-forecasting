@@ -66,9 +66,23 @@ def get_conv_from_vectors(representation=Literal['axis','mat', 'quat', '6d', 'eu
         return vectors_to_euler_angles
     else:
         raise ValueError(f'Unknown representation {representation}')
+    
+def correct_rotation_matrix(rotation_matrix: torch.Tensor) -> torch.Tensor:
+    """
+        Correct a predicted rotation matrix using a singular value decomposition.
+    """
+    shape = rotation_matrix.shape
+    if len(rotation_matrix.shape) > 3:
+        rotation_matrix = rotation_matrix.view(-1, 3, 3)
+
+    U, S, V = torch.linalg.svd(rotation_matrix)
+    rotation_matrix = torch.bmm(U, V)
+    rotation_matrix = torch.reshape(rotation_matrix, shape)
+    return rotation_matrix
 
 #####===== Additional Conversion Functions =====#####
 # These are some conversions not provided by PyTorch3d
+
 
 def axis_angle_to_matrix_direct(angle: torch.Tensor) -> torch.Tensor:
     """

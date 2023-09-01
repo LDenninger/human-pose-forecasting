@@ -62,3 +62,31 @@ Train a model: `train -exp [exp. name] -run [run name]` <br/>
     * Optimize inference with TensorRT and run on embedded system
     * Jetson AGX Nano?
     * How far can we watch in the future in real-time ?
+
+# ToDo
+
+    1) Data loader for evaluation
+        -> A dataloader that can variable load sequences dependent on sequence spacing, predicition length (in ms and frames), action etc.
+    2) Data loader for the AIS dataset
+    3) EvaluationEngine
+        - evaluate on different prediction lengths -> see original paper
+        - add visualizations to evaluation
+    3) Skeleton models
+        - models for 21 and 16 joint skeletons
+        - interpolation between the skeleton models
+    4) Visualization
+        - visualize the predictions in 2D as an image
+        - Interactive 3D visualization as a video -> addition to what we already have
+    5) Make project runnable with GPU scheduler from bender cluster
+    6) Transformer model implementations
+        - vanilla transformer
+        - sequential transformer
+    7) Losses
+        - implement the other losses 
+    8) 6D rotation representation implementation
+    9) Trainer and training pipeline for the AIS dataset
+    
+    At the end:
+        1) Notebook to present the project
+        2) Redo some documentation and comments
+        3) Write report
