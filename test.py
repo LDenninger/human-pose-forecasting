@@ -29,6 +29,9 @@ def parse_arguments():
         "--sk32", action="store_true", default=False, help="Test the Skeleton32 model"
     )
     parser.add_argument(
+        "--h36mfk", action="store_true", default=False, help="Test the h36m forward kinematics function"
+    )
+    parser.add_argument(
         "--model", action="store_true", default=False, help="Test the Skeleton32 model"
     )
     parser.add_argument(
@@ -61,6 +64,8 @@ def main():
         test_vslab_data_loading()
     if args.sk32:
         test_skeleton32_model()
+    if args.h36mfk:
+        test_h36m_forward_kinematics()
     if args.model:
         test_transformer()
     if args.comp:
