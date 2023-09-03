@@ -2,11 +2,12 @@
     "random_seed": 42,
     "batch_size": 32,
     "num_epochs": 20,
-    "num_train_iterations": 1000,
-    "num_eval_iterations": 100,
+    "num_train_iterations": 10,
+    "num_eval_iterations": 20,
     "seq_length": 75,
+    "checkpoint_frequency": 1,
     "model": {
-        "type": "baseline",
+        "type": "st_transformer",
         "num_blocks": 8,
         "input_dropout": 0.1,
         "embedding_dim": 64,
@@ -14,7 +15,7 @@
             "type": "sin"
         },
         "transformer": {
-            "type": "spl",
+            "type": "parallel",
             "spatial_heads": 4,
             "temporal_heads": 4,
             "spatial_dropout": 0.1,
@@ -49,14 +50,16 @@
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["geodesic_distance", "positional_mse", "euler_angle_error"],
-        "frequency": 1
+        "metrics": ["geodesic_distance", "positional_mse", "euler_angle", "auc"],
+        "frequency": 1,
+        "exhaustive_evaluation": true,
+        "timesteps": [100,200,300,400]
     },
     "dataset": {
         "name": "h36m",
         "seed_length": 75,
         "target_length": 1,
-        "downsampling_factor": 4,
+        "downsampling_factor": 2,
         "spacing": 0,
         "training_size": 1000,
         "validation_size": 1000,
