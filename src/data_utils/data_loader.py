@@ -8,7 +8,7 @@ from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT
 
 #####===== Helper Functions =====#####
 
-def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_train: Optional[bool] =True,  **kwargs) -> torch.utils.data.Dataset:
+def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_train: Optional[bool] =True, debug: Optional[bool] = False, **kwargs) -> torch.utils.data.Dataset:
     """
         Load a dataset using a run config.
 
@@ -25,7 +25,8 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
             target_length=config["target_length"],
             down_sampling_factor=config["downsampling_factor"],
             sequence_spacing=config["spacing"],
-            is_train=is_train
+            is_train=is_train,
+            debug=debug
         )
     else:
         raise NotImplementedError(f'Dataset {config["name"]} is not implemented.')
@@ -39,7 +40,8 @@ class H36MDataset(Dataset):
                             skeleton_model: Optional[Literal['s26', None]] = None,
                              rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
                               return_label: Optional[bool] = False,
-                               is_train=True):
+                               is_train: Optional[bool]=True,
+                                debug: Optional[bool]=False):
         """
             Initialize the H36M dataset. This loads the data from the H36M dataset to torch tensors.
 
@@ -62,7 +64,7 @@ class H36MDataset(Dataset):
         self.return_label = return_label
 
         # Load the data from disk
-        self.data, self.meta_info = load_data_h36m(person_id = H36M_TRAIN_SUBJECTS if is_train else H36M_TEST_SUBJECTS,
+        self.data, self.meta_info = load_data_h36m(person_id = (H36M_TRAIN_SUBJECTS if is_train else H36M_TEST_SUBJECTS) if not debug else H36M_DEBUG_SPLIT,
                                                     action_str=actions,
                                                      skeleton=skeleton_model,
                                                          representation=rot_representation,

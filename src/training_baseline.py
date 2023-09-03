@@ -5,10 +5,10 @@ from torch.utils.data import DataLoader
 from typing import Optional
 from tqdm import tqdm
 
-from .data_utils import getDataset
+from .data_utils import getDataset, H36M_DATASET_ACTIONS
 from .utils import *
 from .models import PosePredictor, getModel
-from .evaluation import EvaluationEnginePassive
+from .evaluation import EvaluationEnginePassive, EvaluationEngineActive
 
 class TrainerBaseline:
 
@@ -18,7 +18,10 @@ class TrainerBaseline:
                   run_name: str,
                   log_process_internal: Optional[bool] = False,
                   log_process_external: Optional[bool] = True,
+                  exhaustive_evaluation: Optional[bool] = False,
                   num_threads: int = 2) -> None:
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        
         # Run meta information
         self.exp_name = experiment_name
         self.run_name = run_name
@@ -43,6 +46,9 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
+        self.exhaustive_evaluation = exhaustive_evaluation
+        if exhaustive_evaluation:
+            self.evaluation_engine = EvaluationEngineActive(self.device)
         self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
         self.scheduler = None
         self.optimizer = None
@@ -54,7 +60,6 @@ class TrainerBaseline:
         self.epoch = 1
         self.iteration = 1
         # Backend configuration
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.num_threads = num_threads
         print_(f"Initialized trainer for run: {experiment_name}/{run_name}")
         print_(f"Using device: {self.device}")
@@ -91,7 +96,9 @@ class TrainerBaseline:
     @log_function
     def load_data(self, train: bool = True, test: bool = True) -> None:
         """
-            Loads the training and test split for the appropriate dataset.
+            Loads the training data.
+            If we want to perform an exhaustive evaluation during training, we do not load the test data directly.
+            The evaluation engine will be initialized instead which loads the test data in a more appropriate manner.
         """
         if train:
             dataset = getDataset(
@@ -112,23 +119,35 @@ class TrainerBaseline:
             print_(p_str)
 
         if test:
-            dataset = getDataset(
-                self.config['dataset'],
-                joint_representation = self.config['joint_representation']['type'],
-                skeleton_model = self.config['skeleton']['type'],
-                is_train=False
-            )
-            self.test_loader = DataLoader(
-                dataset=dataset,
-                batch_size=self.config['batch_size'],
-                shuffle=True,
-                drop_last=True,
-                num_workers=self.num_threads
-            )
-            self.len_test = len(self.test_loader)
-            self.num_eval_iterations = self.config['num_eval_iterations'] if self.config['num_eval_iterations']!=-1 else len(self.test_loader)
-            p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
-            print_(p_str)
+            if self.exhaustive_evaluation:
+                self.evaluation_engine.initialize_evaluation(
+                    batches_per_action=self.config['num_eval_iterations'],
+                    seed_length = self.config['dataset']['seed_length'],
+                    prediction_lengths = self.config['evaluation']['timesteps'],
+                    down_sampling_factor=self.config['dataset']['downsampling_factor'],
+                    skeleton_model = self.config['skeleton']['type'],
+                    rot_representation= self.config['joint_representation']['type']
+                )
+                self.num_eval_iterations = self.evaluation_engine.total_iterations
+                print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
+            else:
+                dataset = getDataset(
+                    self.config['dataset'],
+                    joint_representation = self.config['joint_representation']['type'],
+                    skeleton_model = self.config['skeleton']['type'],
+                    is_train=False
+                )
+                self.test_loader = DataLoader(
+                    dataset=dataset,
+                    batch_size=self.config['batch_size'],
+                    shuffle=True,
+                    drop_last=True,
+                    num_workers=self.num_threads
+                )
+                self.len_test = len(self.test_loader)
+                self.num_eval_iterations = self.config['num_eval_iterations'] if self.config['num_eval_iterations']!=-1 else len(self.test_loader)
+                p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
+                print_(p_str)
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
@@ -178,11 +197,17 @@ class TrainerBaseline:
             print_(f"Epoch {self.epoch}/{self.config['num_epochs']}", 'info')
             # Reset the tracked metrics for the new epoch
             self.metric_tracker.reset()
+            if self.exhaustive_evaluation:
+                self.evaluation_engine.reset()
             # Run a single epoch of training
             self.train_epoch()
             # Evaluation in pre-defined intervals
             if self.epoch % self.config['evaluation']['frequency'] == 0:
-                self.evaluation_epoch()
+                if self.exhaustive_evaluation:
+                    self.evaluation_engine.evaluate(self.model)
+                    self.evaluation_engine.log_results(self.iteration)
+                else:
+                    self.evaluation_epoch()
             # Print out the epoch results
             self._print_epoch_results()
             # Save checkpoint 
@@ -225,7 +250,7 @@ class TrainerBaseline:
             self.metric_tracker.step_iteration()
             # Update the logger
             self.logger.log({
-                'train_loss': loss.item()
+                self.config['loss']['type']: loss.item()
             }, step=self.iteration)
             # Update the progress bar description
             if batch_idx == 0:
@@ -296,3 +321,6 @@ class TrainerBaseline:
         pstr = f'Iterations completed: {self.iteration-1} Results:\n '
         pstr += '\n '.join([f'{metric_names[i]}: mean: {mean:.4f}, var: {var:.4f}' for i, (mean, var) in enumerate(zip(list(metric_means.values()), list(metric_vars.values())))])
         print_(pstr, 'info')
+        if self.exhaustive_evaluation:
+            print_(f'Exhaustive Evaluation Results:\n',)
+            self.evaluation_engine.print()

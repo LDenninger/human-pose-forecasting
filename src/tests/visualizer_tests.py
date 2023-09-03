@@ -1,4 +1,5 @@
 import time
+import random
 
 import torch
 
@@ -27,16 +28,18 @@ def test_visualizer():
         is_train=True,
     )
 
-    # Grab three sequences from the dataset
-    seq1, label1 = dataset[0]
-    seq2, label2 = dataset[1]
-    seq3, label3 = dataset[2]
+    # Grab three random sequences from the dataset
+    seq1, label1 = dataset[random.randint(0, len(dataset) - 1)]
+    seq2, label2 = dataset[random.randint(0, len(dataset) - 1)]
+    seq3, label3 = dataset[random.randint(0, len(dataset) - 1)]
 
     visualizer = Visualizer()
 
     # Visualize sequences
-    visualizer.compare_sequences(
-        ["seq1", "seq2"], [seq1[:5], seq2[:5]], title_text="Test Sequence"
+    visualizer.compare_sequences_plotly(
+        ["seq1", "seq2"],
+        [seq1[:6], seq2[:6]],
+        title_text="Test Sequence",
     )
 
     pass

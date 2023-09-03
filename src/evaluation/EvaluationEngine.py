@@ -6,7 +6,7 @@ import os
 from prettytable import PrettyTable
 from typing import Optional, Dict, Any, List, Union, Literal
 
-from ..utils import print_, log_function
+from ..utils import print_, log_function, LOGGER
 from ..data_utils import H36M_DATASET_ACTIONS, H36M_STEP_SIZE_MS, H36MDataset, SkeletonModel32, h36m_forward_kinematics
 from .metrics import evaluate_distance_metrics, geodesic_distance, positional_mse, euler_angle_error, accuracy_under_curve
 
@@ -46,6 +46,8 @@ class EvaluationEngineActive:
                                      skeleton_model: Optional[Literal['s26', None]] = None,
                                       rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
                                        batch_size: Optional[int] = 32,) -> None:
+        print_('Initializing the evaluation engine for an exhaustive evaluation...')
+        import ipdb; ipdb.set_trace()
         ##== Data Structures ==##
         self.datasets = {}
         self.evaluation_results = {}
@@ -59,6 +61,7 @@ class EvaluationEngineActive:
         self.prediction_lengths = prediction_lengths
         self.batches_per_action = batches_per_action
         self.evaluation_finished = False
+        self.total_iterations = batches_per_action * len(actions)
 
         ##== Dataset Parameters ==##
         self.seed_length = seed_length
@@ -71,7 +74,7 @@ class EvaluationEngineActive:
         self.down_sampling_factor = down_sampling_factor
         self.actions = actions
         self.batch_size = batch_size
-
+        print_(f"Load the evaluation data")
         ##== Load Action dataset ==##
         for a in self.actions:
             self.datasets[a] = H36MDataset(
@@ -83,6 +86,62 @@ class EvaluationEngineActive:
 
             )
 
+    def reset(self) -> None:
+        """
+            Reset the evaluation engine.
+        """
+        self.evaluation_results = {}
+        for a in (self.actions+['overall']):
+            self.evaluation_results[a] = {}
+            for prediction_length in self.prediction_lengths:
+                self.evaluation_results[a][prediction_length] = {}
+                for metric_names in METRICS_IMPLEMENTED.keys():
+                    self.evaluation_results[a][prediction_length][metric_names] = []
+    
+    def print(self) -> None:
+        """
+            Print the evaluation results in a table to the console.
+        """
+        return self._print_results()
+    
+    def log_results(self, step: int) -> None:
+        """
+            Log the evaluation results using the global logger
+
+            Arguments:
+                step (int): The current step of the training.
+        """
+        logger = LOGGER
+        if logger is None:
+            print_(f'No logger defined, cannot log evaluation results')
+        data_dir = {}
+        for a in (self.actions+['overall']):
+            for p in self.prediction_lengths:
+                for m in METRICS_IMPLEMENTED.keys():
+                    data_dir[f'{a}/{p}/{m}'] = self.evaluation_results[a][p][m]
+        logger.log(data_dir, step)
+
+
+    #####===== Getter Functions =====#####
+    def get_results(self):
+        """
+            Returns the complete directory holding the evaluation results.
+
+            Format:
+            {
+                action: 
+                {
+                    prediction_length: 
+                    {
+                        metric_name: [metric_value]
+                    }
+                }
+            }
+        
+        """
+        return self.evaluation_results
+
+    #####===== Evaluation Functions =====#####
     @log_function
     def evaluate(self, model: torch.nn.Module, mode: Optional[Literal['standard', 'long_prediction']] = 'standard'):
         """
@@ -107,7 +166,9 @@ class EvaluationEngineActive:
             A single evaluation loop for an action.
         
         """
-        self.model.eval()
+        import ipdb; ipdb.set_trace()
+
+        model.eval()
         # Initialize progress bar
         progress_bar = tqdm(enumerate(self.test_loader), total=self.batches_per_action)
         progress_bar.set_description('Evaluation: ')
@@ -136,6 +197,8 @@ class EvaluationEngineActive:
                 cur_input = output
         
         self._reduce_action_metrics(action)
+    
+    #####===== Utility Functions =====#####
             
     def _reduce_action_metrics(self, action: str) -> None:
         """

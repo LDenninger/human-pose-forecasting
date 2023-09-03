@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import time
+import plotly.graph_objects as go
 
 #####===== Visualization Parameters =====#####
 JOINT_COLORS = [
@@ -182,9 +183,9 @@ def create_skeleton_subplot(
     ax,
     title_text="",
 ):
-    ax.set_xlim3d([-2.5, 2.5])
-    ax.set_ylim3d([-2.5, 2.5])
-    ax.set_zlim3d([-2.5, 2.5])
+    ax.set_xlim3d([-4.5, 4.5])
+    ax.set_ylim3d([-4.5, 4.5])
+    ax.set_zlim3d([-4.5, 4.5])
     ax.set_xlabel("X")
     ax.set_ylabel("Z")
     ax.set_zlabel("Y")
@@ -215,3 +216,30 @@ def create_skeleton_subplot(
 
     # ax.legend(loc="upper left")
     ax.set_title(title_text)
+    ax.view_init(elev=0, azim=-90)
+
+
+def create_skeleton_subplot_plotly(subplot, position_data, skeleton_structure):
+    # Extract joint positions
+    joint_positions = position_data
+
+    # Convert PyTorch tensors to NumPy arrays
+    for joint_name, joint_position in joint_positions.items():
+        joint_positions[joint_name] = joint_position.numpy()
+
+    # # Create scatter plot for each joint within the subplot
+    # for joint_name, joint_position in joint_positions.items():
+    #     subplot.x += joint_position[0]
+    #     subplot.y += joint_position[2]
+    #     subplot.z += joint_position[1]
+
+    # Define lines connecting joints within the subplot
+    for id, (cur_frame, par_frame) in skeleton_structure.items():
+        if cur_frame == "hip":
+            continue
+        start_pos = joint_positions[cur_frame]
+        end_pos = joint_positions[par_frame]
+        subplot.x += (start_pos[0], end_pos[0], None)
+        subplot.y += (start_pos[2], end_pos[2], None)
+        subplot.z += (start_pos[1], end_pos[1], None)
+    return subplot
