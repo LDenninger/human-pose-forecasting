@@ -190,6 +190,7 @@ class TrainerBaseline:
                 self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch)
         # Save the final model
         self.logger.save_checkpoint(self.model, self.optimizer, self.scheduler, self.epoch, True)
+        self.logger.finish_logging()
         print_('Training finished!')
 
     @log_function
