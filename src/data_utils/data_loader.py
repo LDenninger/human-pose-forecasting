@@ -22,6 +22,7 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
             seed_length=config["seed_length"],
             rot_representation=joint_representation,
             skeleton_model=skeleton_model,
+            reverse_prob=config['reverse_prob'],
             target_length=config["target_length"],
             down_sampling_factor=config["downsampling_factor"],
             sequence_spacing=config["spacing"],
@@ -37,11 +38,12 @@ class H36MDataset(Dataset):
                          actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
                           down_sampling_factor: int=1,
                            sequence_spacing: int=0,
-                            skeleton_model: Optional[Literal['s26', None]] = None,
-                             rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
-                              return_label: Optional[bool] = False,
-                               is_train: Optional[bool]=True,
-                                debug: Optional[bool]=False):
+                            reverse_prob: Optional[float] = 0.0,
+                             skeleton_model: Optional[Literal['s26', None]] = None,
+                              rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
+                               return_label: Optional[bool] = False,
+                                is_train: Optional[bool]=True,
+                                 debug: Optional[bool]=False):
         """
             Initialize the H36M dataset. This loads the data from the H36M dataset to torch tensors.
 
@@ -61,6 +63,7 @@ class H36MDataset(Dataset):
         self.target_length = target_length
         self.sequence_spacing = sequence_spacing
         self.down_sampling_factor = down_sampling_factor
+        self.reverse_prob = reverse_prob
         self.return_label = return_label
 
         # Load the data from disk
@@ -92,6 +95,9 @@ class H36MDataset(Dataset):
     def __getitem__(self, x):
         seq_start = self.valid_indices[x]
         sequence = self.data[seq_start:(seq_start + self.seed_length + self.target_length)]
+        # Reverse the sequence with given probability
+        if self.reverse_prob != 0.0 and torch.randn(1).item() < self.reverse_prob:
+            sequence = torch.flip(sequence, 0)
         if self.return_label:
             return sequence, self.labels[x]
         return sequence
