@@ -18,13 +18,14 @@ class TrainerBaseline:
                   run_name: str,
                   log_process_internal: Optional[bool] = False,
                   log_process_external: Optional[bool] = True,
-                  exhaustive_evaluation: Optional[bool] = False,
-                  num_threads: int = 2) -> None:
+                  num_threads: int = 2,
+                  debug: Optional[bool] = False) -> None:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # Run meta information
         self.exp_name = experiment_name
         self.run_name = run_name
+        self.debug = debug
         # Setup logging
         self.logger = LOGGER
         self.logger.initialize(
@@ -46,10 +47,11 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
-        self.exhaustive_evaluation = exhaustive_evaluation
-        if exhaustive_evaluation:
+        self.exhaustive_evaluation = self.config['evaluation']['exhaustive_evaluation']
+        if self.exhaustive_evaluation:
             self.evaluation_engine = EvaluationEngineActive(self.device)
-        self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
+        else:
+            self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -94,7 +96,7 @@ class TrainerBaseline:
         return True
 
     @log_function
-    def load_data(self, train: bool = True, test: bool = True) -> None:
+    def load_data(self, train: bool = True, test: bool = True,) -> None:
         """
             Loads the training data.
             If we want to perform an exhaustive evaluation during training, we do not load the test data directly.
@@ -105,7 +107,8 @@ class TrainerBaseline:
                 self.config['dataset'],
                 joint_representation = self.config['joint_representation']['type'],
                 skeleton_model = self.config['skeleton']['type'],
-                is_train=True
+                is_train=True,
+                debug=self.debug
             )
             self.train_loader = DataLoader(
                 dataset=dataset,
@@ -123,7 +126,7 @@ class TrainerBaseline:
                 self.evaluation_engine.initialize_evaluation(
                     batches_per_action=self.config['num_eval_iterations'],
                     seed_length = self.config['dataset']['seed_length'],
-                    prediction_lengths = self.config['evaluation']['timesteps'],
+                    prediction_timesteps = self.config['evaluation']['timesteps'],
                     down_sampling_factor=self.config['dataset']['downsampling_factor'],
                     skeleton_model = self.config['skeleton']['type'],
                     rot_representation= self.config['joint_representation']['type']
@@ -135,7 +138,8 @@ class TrainerBaseline:
                     self.config['dataset'],
                     joint_representation = self.config['joint_representation']['type'],
                     skeleton_model = self.config['skeleton']['type'],
-                    is_train=False
+                    is_train=False,
+                    debug=self.debug
                 )
                 self.test_loader = DataLoader(
                     dataset=dataset,
@@ -183,14 +187,18 @@ class TrainerBaseline:
         if self.train_loader is None:
             print_("Cannot train without a training loader.", 'error')
             return False
-        if self.test_loader is None:
+        if self.test_loader is None and not self.exhaustive_evaluation:
             print_("Cannot train without a test loader.", 'error')
             return False
         
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
         print_(f"Initial Evaluation:")
-        self.metric_tracker.reset()
-        self.evaluation_epoch()
+        if self.exhaustive_evaluation:
+            self.evaluation_engine.evaluate(self.model)
+            self.evaluation_engine.log_results(self.iteration)
+        else:
+            self.metric_tracker.reset()
+            self.evaluation_epoch()
         self._print_epoch_results()
 
         for self.epoch in range(1, self.config['num_epochs'] + 1):
@@ -262,7 +270,8 @@ class TrainerBaseline:
     @log_function
     def evaluation_epoch(self) -> None:
         """
-            A single epoch of evaluation
+            A single epoch of a simple evaluation only considering one step predictions.
+            For a full evaluation we use our active evaluation engine.
         """
         self.model.eval()
         progress_bar = tqdm(enumerate(self.test_loader), total=self.num_eval_iterations)

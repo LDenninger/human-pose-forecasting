@@ -24,7 +24,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
     num_threads = 0 if debug else 4
 
     # Initialize the trainer
-    trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=num_threads)
+    trainer = TrainerBaseline(experiment_name, run_name, log_process_external=log, num_threads=num_threads, debug=debug)
     # Log some information
     log_script_setup()
     # Initialize the model
@@ -42,7 +42,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
-QUEUED = True # Activate the usage of the training queue
+QUEUED = False # Activate the usage of the training queue
 EXPERIMENT_NAMES = ['repr_loss_study']*7
 RUN_NAMES = ['6d_abs_1', '6d_geo_1', '6d_matMSE_1', 'mat_geo_1', 'quat_geo_1', 'quat_matMSE_1', 'quat_quatLoss_1']
 

@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import DataLoader
 import math
 import numpy as np
 from tqdm import tqdm
@@ -40,49 +41,54 @@ class EvaluationEngineActive:
     def initialize_evaluation(self, 
                                batches_per_action: int,
                                 seed_length: int,
-                                 prediction_lengths: List[int],
+                                 prediction_timesteps: List[int],
                                   down_sampling_factor: int = 1,
                                     actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
                                      skeleton_model: Optional[Literal['s26', None]] = None,
                                       rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
                                        batch_size: Optional[int] = 32,) -> None:
         print_('Initializing the evaluation engine for an exhaustive evaluation...')
-        import ipdb; ipdb.set_trace()
         ##== Data Structures ==##
         self.datasets = {}
         self.evaluation_results = {}
         for a in (actions+['overall']):
             self.evaluation_results[a] = {}
-            for prediction_length in prediction_lengths:
-                self.evaluation_results[a][prediction_length] = {}
+            for timestep in prediction_timesteps:
+                self.evaluation_results[a][timestep] = {}
                 for metric_names in METRICS_IMPLEMENTED.keys():
-                    self.evaluation_results[a][prediction_length][metric_names] = []
+                    self.evaluation_results[a][timestep][metric_names] = []
         ##== Evaluation Parameters ==##
-        self.prediction_lengths = prediction_lengths
+        self.prediction_timesteps = prediction_timesteps
         self.batches_per_action = batches_per_action
         self.evaluation_finished = False
         self.total_iterations = batches_per_action * len(actions)
 
         ##== Dataset Parameters ==##
         self.seed_length = seed_length
-        self.target_frames = np.ceil(prediction_lengths / (H36M_STEP_SIZE_MS * down_sampling_factor))
+        # Set the target frames and reachable timesteps given the time intervals between frames
+        self.target_frames = np.ceil(np.array(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)).astype(int)
+        self.target_timesteps = (self.target_frames * (H36M_STEP_SIZE_MS * down_sampling_factor)).tolist()
+        self.target_frames = self.target_frames.tolist()
+        if (self.prediction_timesteps!=self.target_timesteps):
+            print_(f'Goal prediction timesteps: {self.prediction_timesteps} not reachable using timesteps: {self.target_timesteps}', 'warn')
         self.last_target_frame = max(self.target_frames)
-        self.target_length = math.ceil(max(prediction_lengths) / (H36M_STEP_SIZE_MS * down_sampling_factor))
+        self.target_length = math.ceil(max(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor))
         self.skeleton_model = skeleton_model
 
         self.rot_representation = rot_representation
         self.down_sampling_factor = down_sampling_factor
         self.actions = actions
         self.batch_size = batch_size
-        print_(f"Load the evaluation data")
+        print_(f"Load the evaluation data for each action")
         ##== Load Action dataset ==##
         for a in self.actions:
             self.datasets[a] = H36MDataset(
-                actions=self.actions,
+                actions=[a],
                 seed_length=self.seed_length,
                 target_length=self.target_length,
                 down_sampling_factor=self.down_sampling_factor,
                 skeleton_model=skeleton_model,
+                rot_representation=rot_representation
 
             )
 
@@ -93,10 +99,11 @@ class EvaluationEngineActive:
         self.evaluation_results = {}
         for a in (self.actions+['overall']):
             self.evaluation_results[a] = {}
-            for prediction_length in self.prediction_lengths:
-                self.evaluation_results[a][prediction_length] = {}
+            for timestep in self.target_timesteps:
+                self.evaluation_results[a][timestep] = {}
                 for metric_names in METRICS_IMPLEMENTED.keys():
-                    self.evaluation_results[a][prediction_length][metric_names] = []
+                    self.evaluation_results[a][timestep][metric_names] = []
+        self.evaluation_finished = False
     
     def print(self) -> None:
         """
@@ -116,7 +123,7 @@ class EvaluationEngineActive:
             print_(f'No logger defined, cannot log evaluation results')
         data_dir = {}
         for a in (self.actions+['overall']):
-            for p in self.prediction_lengths:
+            for p in self.target_timesteps:
                 for m in METRICS_IMPLEMENTED.keys():
                     data_dir[f'{a}/{p}/{m}'] = self.evaluation_results[a][p][m]
         logger.log(data_dir, step)
@@ -148,15 +155,17 @@ class EvaluationEngineActive:
             Evaluate the provided model on the H3.6M dataset.
             For this the evaluation needs to be initialized.
         """
-        self.evaluation_results = {}
+        self.reset()
         
         model.eval()
+        print_(f"Start evaluation on actions: {self.actions}")
+
         for action, dataset in self.datasets.items():
-            print_(f"Evaluating model on action {action}...")
             data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
             if mode == 'standard':
                 self.evaluation_loop(action, model, data_loader)
         self._compute_overall_means()
+        self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
     
@@ -166,12 +175,19 @@ class EvaluationEngineActive:
             A single evaluation loop for an action.
         
         """
-        import ipdb; ipdb.set_trace()
 
         model.eval()
         # Initialize progress bar
-        progress_bar = tqdm(enumerate(self.test_loader), total=self.batches_per_action)
-        progress_bar.set_description('Evaluation: ')
+        dataset = self.datasets[action]
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        progress_bar = tqdm(enumerate(data_loader), total=self.batches_per_action)
+        progress_bar.set_description(f'Evaluation {action}')
+
+        predictions = {}
+        targets = {}
+        for i in self.target_frames:
+            predictions[i] = []
+            targets[i] = []
 
         for batch_idx, data in progress_bar:
             if batch_idx==self.batches_per_action:
@@ -180,24 +196,24 @@ class EvaluationEngineActive:
             data = data.to(self.device)
             # Set input for the model
             cur_input = data[:, :self.seed_length]
-            targets = []
-            outputs = []
             # Predict future frames in an auto-regressive manner
             for i in range(1, self.last_target_frame+1):
                 # Compute the output
                 output = model(cur_input)
-                # Take the predicted timestamp from the last position
-                outputs.append(output[:,-1])
-                targets.append(data[:, self.seed_length + i])
                 # Check if we want to compute metrics for this timestep
                 if i in self.target_frames:
                     # Compute the implemented metrics
-                    self.evaluation_results[action][i] = evaluate_distance_metrics(outputs, targets, reduction='mean', representation=self.representation)
+                    predictions[i].append(output[:,-1].detach().cpu())
+                    targets[i].append(data[:,self.seed_length + i - 1].detach().cpu())
                 # Update model input for auto-regressive prediction
                 cur_input = output
-        
-        self._reduce_action_metrics(action)
-    
+        # Compute the distance metrics for each timestep
+        for frame in self.target_frames:
+            timestep = frame * (H36M_STEP_SIZE_MS * self.down_sampling_factor)
+            timestep_prediction = torch.flatten(torch.stack(predictions[frame]), start_dim=0, end_dim=1)
+            timestep_target = torch.flatten(torch.stack(targets[frame]), start_dim=0, end_dim=1)
+            self.evaluation_results[action][timestep] = evaluate_distance_metrics(timestep_prediction, timestep_target, reduction='mean', representation=self.rot_representation)
+
     #####===== Utility Functions =====#####
             
     def _reduce_action_metrics(self, action: str) -> None:
@@ -214,13 +230,13 @@ class EvaluationEngineActive:
         """
         for pred_length in self.evaluation_results['overall'].keys():
             for metric_name in  self.evaluation_results['overall'][pred_length].keys():
-                self.evaluation_results['overall'][pred_length][metric_name] = np.mean(self.evaluation_results[:][pred_length][metric_name])
+                metric_data = [self.evaluation_results[a][pred_length][metric_name] for a in self.actions]
+                self.evaluation_results['overall'][pred_length][metric_name] = np.mean(metric_data)
 
     def _print_results(self) -> None:
         """
             Print the results into the console using the PrettyTable library.
         """
-
         if not self.evaluation_finished:
             return
         for a in self.evaluation_results.keys():
@@ -229,9 +245,9 @@ class EvaluationEngineActive:
             else:
                 print_(f'Evaluation results for action {a}:')
             table = PrettyTable()
-            table.field_names = METRICS_IMPLEMENTED.keys()
+            table.field_names = ['Pred. length'] + list(METRICS_IMPLEMENTED.keys())
             for pred_length in self.evaluation_results[a].keys():
-                table.add_row([pred_length] + self.evaluation_results[a][pred_length].values())
+                table.add_row([pred_length] + list(self.evaluation_results[a][pred_length].values()))
             print_(table)
         
 
