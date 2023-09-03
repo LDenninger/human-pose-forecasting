@@ -1,5 +1,5 @@
 import torch
-torch.autograd.set_detect_anomaly(True)
+#torch.autograd.set_detect_anomaly(True)
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Optional
@@ -10,7 +10,12 @@ from .utils import *
 from .models import PosePredictor, getModel
 from .evaluation import EvaluationEnginePassive, EvaluationEngineActive
 
-class TrainerBaseline:
+class Session:
+    """
+        The session module capsules the complete interaction with the model.
+        Within a session we load the run data, configs and anything else needed for the model.
+        THe session can be used to either train or evaluate the model.
+    """
 
     @log_function
     def __init__(self,
@@ -26,6 +31,7 @@ class TrainerBaseline:
         self.exp_name = experiment_name
         self.run_name = run_name
         self.debug = debug
+        self.evaluate_model = False
         # Setup logging
         self.logger = LOGGER
         self.logger.initialize(
@@ -47,11 +53,6 @@ class TrainerBaseline:
             )
         # Modules
         self.model = None
-        self.exhaustive_evaluation = self.config['evaluation']['exhaustive_evaluation']
-        if self.exhaustive_evaluation:
-            self.evaluation_engine = EvaluationEngineActive(self.device)
-        else:
-            self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -69,9 +70,69 @@ class TrainerBaseline:
     ###=== Calls ===###
     @log_function
     def train(self) -> None:
+        """
+            Train the model.
+        """
         self.training_loop()
 
+    @log_function
+    def evaluate(self) -> None:
+        """ Evaluate the model. """
+        if not self.evaluate_model:
+            print_('Evaluation was not properly initialized!', 'error')
+            return
+        if self.exhaustive_evaluation:
+                self.evaluation_engine.evaluate(self.model)
+                self.evaluation_engine.log_results(self.iteration)
+        else:
+            self.metric_tracker.reset()
+            self.evaluation_epoch()
+        self._print_epoch_results()
+
     ###=== Initialization Functions ===###
+
+    @log_function
+    def initialize_evaluation(self, exhaustive_evaluation: Optional[bool] = None) -> bool:
+        """
+            Initialize the evaluation procedure and load the corresponding data
+        """
+        self.evaluate_model = True
+        if exhaustive_evaluation is None:
+            self.exhaustive_evaluation = self.config['evaluation']['exhaustive_evaluation']
+        # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
+        if self.exhaustive_evaluation:
+            self.evaluation_engine = EvaluationEngineActive(self.device)
+            self.evaluation_engine.initialize_evaluation(
+                batches_per_action=self.config['num_eval_iterations'],
+                seed_length = self.config['dataset']['seed_length'],
+                prediction_timesteps = self.config['evaluation']['timesteps'],
+                down_sampling_factor=self.config['dataset']['downsampling_factor'],
+                skeleton_model = self.config['skeleton']['type'],
+                rot_representation= self.config['joint_representation']['type']
+            )
+            self.num_eval_iterations = self.evaluation_engine.total_iterations
+            print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
+        else:
+            self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
+            dataset = getDataset(
+                self.config['dataset'],
+                joint_representation = self.config['joint_representation']['type'],
+                skeleton_model = self.config['skeleton']['type'],
+                is_train=False,
+                debug=self.debug
+            )
+            self.test_loader = DataLoader(
+                dataset=dataset,
+                batch_size=self.config['batch_size'],
+                shuffle=True,
+                drop_last=True,
+                num_workers=self.num_threads
+            )
+            self.len_test = len(self.test_loader)
+            self.num_eval_iterations = self.config['num_eval_iterations'] if self.config['num_eval_iterations']!=-1 else len(self.test_loader)
+            p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
+            print_(p_str)
+
     @log_function
     def initialize_model(self):
         """
@@ -96,62 +157,27 @@ class TrainerBaseline:
         return True
 
     @log_function
-    def load_data(self, train: bool = True, test: bool = True,) -> None:
+    def load_train_data(self) -> None:
         """
-            Loads the training data.
-            If we want to perform an exhaustive evaluation during training, we do not load the test data directly.
-            The evaluation engine will be initialized instead which loads the test data in a more appropriate manner.
+            Load the training data.
         """
-        if train:
-            dataset = getDataset(
-                self.config['dataset'],
-                joint_representation = self.config['joint_representation']['type'],
-                skeleton_model = self.config['skeleton']['type'],
-                is_train=True,
-                debug=self.debug
-            )
-            self.train_loader = DataLoader(
-                dataset=dataset,
-                batch_size=self.config['batch_size'],
-                shuffle=True,
-                drop_last=True,
-                num_workers=self.num_threads,
-            )
-            self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
-            p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
-            print_(p_str)
-
-        if test:
-            if self.exhaustive_evaluation:
-                self.evaluation_engine.initialize_evaluation(
-                    batches_per_action=self.config['num_eval_iterations'],
-                    seed_length = self.config['dataset']['seed_length'],
-                    prediction_timesteps = self.config['evaluation']['timesteps'],
-                    down_sampling_factor=self.config['dataset']['downsampling_factor'],
-                    skeleton_model = self.config['skeleton']['type'],
-                    rot_representation= self.config['joint_representation']['type']
-                )
-                self.num_eval_iterations = self.evaluation_engine.total_iterations
-                print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
-            else:
-                dataset = getDataset(
-                    self.config['dataset'],
-                    joint_representation = self.config['joint_representation']['type'],
-                    skeleton_model = self.config['skeleton']['type'],
-                    is_train=False,
-                    debug=self.debug
-                )
-                self.test_loader = DataLoader(
-                    dataset=dataset,
-                    batch_size=self.config['batch_size'],
-                    shuffle=True,
-                    drop_last=True,
-                    num_workers=self.num_threads
-                )
-                self.len_test = len(self.test_loader)
-                self.num_eval_iterations = self.config['num_eval_iterations'] if self.config['num_eval_iterations']!=-1 else len(self.test_loader)
-                p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
-                print_(p_str)
+        dataset = getDataset(
+            self.config['dataset'],
+            joint_representation = self.config['joint_representation']['type'],
+            skeleton_model = self.config['skeleton']['type'],
+            is_train=True,
+            debug=self.debug
+        )
+        self.train_loader = DataLoader(
+            dataset=dataset,
+            batch_size=self.config['batch_size'],
+            shuffle=True,
+            drop_last=True,
+            num_workers=self.num_threads,
+        )
+        self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
+        p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
+        print_(p_str)
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
@@ -192,14 +218,15 @@ class TrainerBaseline:
             return False
         
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
-        print_(f"Initial Evaluation:")
-        if self.exhaustive_evaluation:
-            self.evaluation_engine.evaluate(self.model)
-            self.evaluation_engine.log_results(self.iteration)
-        else:
-            self.metric_tracker.reset()
-            self.evaluation_epoch()
-        self._print_epoch_results()
+        if self.evaluate_model:
+            print_(f"Initial Evaluation:")
+            if self.exhaustive_evaluation:
+                self.evaluation_engine.evaluate(self.model)
+                self.evaluation_engine.log_results(self.iteration)
+            else:
+                self.metric_tracker.reset()
+                self.evaluation_epoch()
+            self._print_epoch_results()
 
         for self.epoch in range(1, self.config['num_epochs'] + 1):
             print_(f"Epoch {self.epoch}/{self.config['num_epochs']}", 'info')
@@ -210,7 +237,7 @@ class TrainerBaseline:
             # Run a single epoch of training
             self.train_epoch()
             # Evaluation in pre-defined intervals
-            if self.epoch % self.config['evaluation']['frequency'] == 0:
+            if self.evaluate_model and self.epoch % self.config['evaluation']['frequency'] == 0:
                 if self.exhaustive_evaluation:
                     self.evaluation_engine.evaluate(self.model)
                     self.evaluation_engine.log_results(self.iteration)
@@ -267,6 +294,7 @@ class TrainerBaseline:
                 running_loss = 0.8*running_loss + 0.2*loss.item()
             progress_bar.set_description(f"Train loss: {running_loss:.4f}")
 
+    ###=== Evaluation Functions ===###
     @log_function
     def evaluation_epoch(self) -> None:
         """

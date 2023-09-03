@@ -108,7 +108,7 @@ def load_model_from_checkpoint(exp_name,
                                   epoch, 
                                    optimizer=None,
                                     scheduler=None):
-    cp_dir = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'checkpoints', f'checkpoint_{epoch}.pth')
+    cp_dir = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'checkpoints', f'checkpoint_epoch_{epoch}.pth')
     try:
         cp_data = torch.load(cp_dir)
         model.load_state_dict(cp_data['model_state_dict'])
