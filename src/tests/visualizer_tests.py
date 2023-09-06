@@ -24,22 +24,35 @@ def test_visualizer():
         target_length=1,
         down_sampling_factor=2,
         sequence_spacing=0,
-        return_label=True,
+        return_label=False,
         is_train=True,
     )
 
-    # Grab three random sequences from the dataset
-    seq1, label1 = dataset[random.randint(0, len(dataset) - 1)]
-    seq2, label2 = dataset[random.randint(0, len(dataset) - 1)]
-    seq3, label3 = dataset[random.randint(0, len(dataset) - 1)]
+    # Adjust amount of sequences to be displayed
+    seq_amount = 2
+
+    # Adjust amount of frames to be displayed
+    frame_amount = 10
+
+    # Grab random sequences from the dataset
+    sequences = [
+        dataset[random.randint(0, len(dataset) - 1)] for _ in range(seq_amount)
+    ]
+    # Create sequence names
+    sequence_names = [f"seq{i}" for i in range(seq_amount)]
 
     visualizer = Visualizer()
 
     # Visualize sequences
     visualizer.compare_sequences_plotly(
-        ["seq1", "seq2"],
-        [seq1[:6], seq2[:6]],
+        sequence_names=sequence_names,
+        sequences=sequences,
         title_text="Test Sequence",
+        figsize=(4000, 1000),
+        time_steps_ms=[
+            [f"{i * 100}" for i in range(sequences[j].shape[0])]
+            for j in range(len(sequences))
+        ],
     )
 
     pass

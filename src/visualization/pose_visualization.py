@@ -219,7 +219,18 @@ def create_skeleton_subplot(
     ax.view_init(elev=0, azim=-90)
 
 
-def create_skeleton_subplot_plotly(subplot, position_data, skeleton_structure):
+def create_skeleton_subplot_plotly(
+    subplot, position_data, skeleton_structure, show_joints=False
+):
+    """
+    Add data creating a skeleton to a subplot.
+
+    @param subplot: The subplot to add the data to.
+    @param position_data: The data to add to the subplot.
+    @param skeleton_structure: The skeleton structure to use for the data.
+    @param show_joints: Whether to show the joints in the plot.
+
+    """
     # Extract joint positions
     joint_positions = position_data
 
@@ -227,11 +238,12 @@ def create_skeleton_subplot_plotly(subplot, position_data, skeleton_structure):
     for joint_name, joint_position in joint_positions.items():
         joint_positions[joint_name] = joint_position.numpy()
 
-    # # Create scatter plot for each joint within the subplot
-    # for joint_name, joint_position in joint_positions.items():
-    #     subplot.x += joint_position[0]
-    #     subplot.y += joint_position[2]
-    #     subplot.z += joint_position[1]
+    if show_joints:
+        # Create scatter plot for each joint within the subplot
+        for joint_name, joint_position in joint_positions.items():
+            subplot.x += joint_position[0]
+            subplot.y += joint_position[2]
+            subplot.z += joint_position[1]
 
     # Define lines connecting joints within the subplot
     for id, (cur_frame, par_frame) in skeleton_structure.items():
@@ -242,4 +254,7 @@ def create_skeleton_subplot_plotly(subplot, position_data, skeleton_structure):
         subplot.x += (start_pos[0], end_pos[0], None)
         subplot.y += (start_pos[2], end_pos[2], None)
         subplot.z += (start_pos[1], end_pos[1], None)
+
+
+    # Return the subplot
     return subplot
