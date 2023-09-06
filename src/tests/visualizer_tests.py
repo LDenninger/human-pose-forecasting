@@ -29,14 +29,15 @@ def test_visualizer():
     )
 
     # Adjust amount of sequences to be displayed
-    seq_amount = 2
+    seq_amount = 4
 
     # Adjust amount of frames to be displayed
-    frame_amount = 10
+    frame_amount = 20
 
     # Grab random sequences from the dataset
     sequences = [
-        dataset[random.randint(0, len(dataset) - 1)] for _ in range(seq_amount)
+        dataset[random.randint(0, len(dataset) - 1)][:frame_amount]
+        for _ in range(seq_amount)
     ]
     # Create sequence names
     sequence_names = [f"seq{i}" for i in range(seq_amount)]
@@ -48,10 +49,9 @@ def test_visualizer():
         sequence_names=sequence_names,
         sequences=sequences,
         title_text="Test Sequence",
-        figsize=(4000, 1000),
-        time_steps_ms=[
-            [f"{i * 100}" for i in range(sequences[j].shape[0])]
-            for j in range(len(sequences))
+        time_steps_ms=[f"{i * 100}" for i in range(sequences[0].shape[0])],
+        prediction_positions=[
+            (i * 4 + 10) % sequences[0].shape[0] for i in range(len(sequences))
         ],
     )
 
