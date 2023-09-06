@@ -51,9 +51,6 @@ def evaluate_distribution_metrics(
         # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
         predictions = correct_rotation_matrix(predictions)
 
-    predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
-    targets = torch.reshape(targets, (*targets.shape[:-2], 9))
-
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")

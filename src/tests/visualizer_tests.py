@@ -32,7 +32,7 @@ def test_visualizer():
     seq_amount = 4
 
     # Adjust amount of frames to be displayed
-    frame_amount = 20
+    frame_amount = 50
 
     # Grab random sequences from the dataset
     sequences = [

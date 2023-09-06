@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 
 # Local application imports
 from ..data_utils import *
-from ..evaluation import euler_angle_error, geodesic_distance
+from ..evaluation import *
 
 
 def test_metrics():
@@ -53,6 +53,17 @@ def test_metrics():
     angle_90_degrees = geodesic_distance(frame, frame_90_degrees)
 
     pass
+
+
+def test_distribution_metrics():
+    # Create 64x41x99 tensor with random values
+    batch = torch.rand((64, 41, 99))
+
+    results = {}
+
+    # Test power spectrum
+    # Test 1 - Test if calculating something works at all
+    results["power_spectrum"] = power_spectrum(batch)
 
 
 if __name__ == "__main__":
