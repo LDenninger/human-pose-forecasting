@@ -65,28 +65,19 @@ Train a model: `train -exp [exp. name] -run [run name]` <br/>
 
 # ToDo
 
-    1) Data loader for evaluation
-        -> A dataloader that can variable load sequences dependent on sequence spacing, predicition length (in ms and frames), action etc.
-    2) Data loader for the AIS dataset
-    3) EvaluationEngine
-        - evaluate on different prediction lengths -> see original paper
-        - add visualizations to evaluation
-    3) Skeleton models
-        - models for 21 and 16 joint skeletons
-        - interpolation between the skeleton models
-    4) Visualization
-        - visualize the predictions in 2D as an image
-        - Interactive 3D visualization as a video -> addition to what we already have
-    5) Make project runnable with GPU scheduler from bender cluster
-    6) Transformer model implementations
-        - vanilla transformer
-        - sequential transformer
-    7) Losses
-        - implement the other losses 
-    8) 6D rotation representation implementation
-    9) Trainer and training pipeline for the AIS dataset
-    
-    At the end:
-        1) Notebook to present the project
-        2) Redo some documentation and comments
-        3) Write report
+    1) PyTorch dataloader for the AIS dataset
+    2) Long-term prediction evaluation in the EvaluationEngine
+        * here we might need a slightly different dataloader
+        * implement the distribution metrics
+    3) Implement the s22 skeleton
+        * H36M skeleton with all joints removed that do not move
+        * we have to look which joints exactly dont move
+    4) Conversion between s26 and the other skeletons
+    5) Add ability for absolute positions that are not centered at the hip
+        * for rotation: add hip position as the first joint
+        * for positions: use absolute positions
+        * Here we might need to adapt the computation of losses and metrics since the position has another dimension
+    6) Add possibility to evaluate the metrics on a per-joint basis
+        * Using noise on joints evaluate how good our model predicts previously not seen joints
+    7) Learned positional encodings
+    8) Separate positional encoding for temporal and spatial domain
