@@ -140,3 +140,11 @@ class H36MDataset(Dataset):
         return valid_indices
     
     
+    def get_mean_variance(self):
+        """
+            Computes the mean and variance over the data for normalization
+        """
+        mean = torch.mean(self.data, dim=0)
+        var = torch.var(self.data, dim=0)
+        return mean, var
+        

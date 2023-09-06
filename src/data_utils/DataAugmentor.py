@@ -7,6 +7,8 @@ import torch.nn.functional as F
 from functools import reduce
 from typing import Optional
 
+from ..utils import print_
+
 class DataAugmentor(nn.Module):
 
     def __init__(self, 
@@ -17,6 +19,8 @@ class DataAugmentor(nn.Module):
                       timestep_cutout_prob: Optional[int] = 0.0):
         super().__init__()
         self.normalize = normalize
+        self.norm_mean = None
+        self.norm_var = None
         self.reverse_prob = reverse_prob
         self.snp_noise_prob = snp_noise_prob
         self.joint_cutout_prob = joint_cutout_prob
@@ -31,6 +35,19 @@ class DataAugmentor(nn.Module):
         """
         return self.pipeline(x)
     
+    def reverse_normalization(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Unnormalizes an output tensor from the model.        
+        """
+        if self.norm_mean is None or self.norm_var is None:
+            print_("Mean and variance are not set. Normalization is not performed.", "warn")
+            return x
+        return x*self.norm_var + self.norm_mean
+    
+    def set_mean_var(self, mean: float, var: float) -> None:
+        self.norm_mean = mean
+        self.norm_var = var
+    
     def processing_pipeline(self, *funcs):
         """
             Returns a function that applies a sequence of data augmentation steps in a pipeline.
@@ -38,7 +55,10 @@ class DataAugmentor(nn.Module):
         return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
     
     def _normalize(self, x: torch.Tensor) -> torch.Tensor:
-        return F.normalize(x, dim=-1)
+        if self.norm_mean is None or self.norm_var is None:
+            print_("Mean and variance are not set. Normalization is not performed.", "warn")
+            return x
+        return (x-self.norm_mean) / self.norm_var
     
     def _snp_noise(self, x: torch.Tensor) -> torch.Tensor:
         noise_mask = torch.rand(x.shape[:-1], device=x.device) < self.snp_noise_prob
@@ -62,7 +82,8 @@ class DataAugmentor(nn.Module):
         if torch.rand(1) < self.reverse_prob:
             return torch.flip(x, dims=[-1])
         return x
-    
+    def _blank_processing(self, x: torch.Tensor) -> torch.Tensor:
+        return x
     def __init_pipeline(self):
         """
             Returns a sequence of functions to apply the data augmentation
@@ -78,4 +99,6 @@ class DataAugmentor(nn.Module):
             pipeline.append(self._joint_noise)
         if self.timestep_cutout_prob > 0:
             pipeline.append(self._timestep_noise)
+        if len(pipeline) == 0:
+            pipeline.append(self._blank_processing)
         return self.processing_pipeline(*pipeline)

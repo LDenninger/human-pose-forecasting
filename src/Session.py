@@ -175,6 +175,7 @@ class Session:
             drop_last=True,
             num_workers=self.num_threads,
         )
+        mean, var = dataset.get_mean_variance()
         self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
         p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
         print_(p_str)
@@ -185,6 +186,7 @@ class Session:
             joint_cutout_prob=self.config['data_augmentation']['joint_cutout_prob'],
             timestep_cutout_prob=self.config['data_augmentation']['timestep_cutout_prob']
         )
+        self.data_augmentor.set_mean_var(mean, var)
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
@@ -280,6 +282,8 @@ class Session:
             self.scheduler(self.iteration)
             # Forward pass through the network
             output = self.model(seed_data)
+            if self.config['data_augmentation']['normalize']:
+                output = self.data_augmentor.reverse_normalization(output)
             # Compute loss using the target data
             loss = self.loss(output, target_data)
             # Backward pass through the network
