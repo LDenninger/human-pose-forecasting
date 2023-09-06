@@ -64,7 +64,14 @@
         "training_size": 1000,
         "validation_size": 1000,
         "test_size": 1000,
-        "reverse_prob": 0.0,
-        "normalize": false
+        "reverse_prob": 0.5
+    },
+    "data_augmentation": {
+        "normalize": true,
+        "reverse_prob": 0.5,
+        "snp_noise_prob": 0.0,
+        "joint_cutout_prob": 0.0,
+        "timestep_cutout_prob": 0.0   
     }
+
 }

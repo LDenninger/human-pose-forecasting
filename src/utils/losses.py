@@ -11,6 +11,7 @@ from typing import Optional, Literal
 from abc import abstractmethod
 
 from .transformations import get_conv_to_rotation_matrix, matrix_to_axis_angle
+from .logging import print_
 
 
 ######===== Base Module =====#####
@@ -152,3 +153,44 @@ class Rotation6DLoss(LossBase):
         loss = torch.sum(torch.abs(output - target), dim=-1)
         return self.reduction_func(loss)
 
+class AbsolutePositionLoss(LossBase):
+
+    def __init__(self,
+                  weight_factor: float,
+                  reduction: Optional[Literal['mean','sum']] = 'mean',
+                   rotation_loss: Optional[Literal['mse','geodesic','euler','quaternion','rotation6d']] = 'mse',
+                    rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
+        self.weight_factor = weight_factor
+        self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
+        if rotation_loss == "mse":
+            self.rotation_loss = PerJointMSELoss(org_representation=rot_representation)
+        elif rotation_loss == 'geodesic':
+            self.rotation_loss = GeodesicLoss(org_representation=rot_representation, reduction=reduction)
+        elif rotation_loss == 'euler':
+            if rot_representation!= 'euler':
+                print_('Euler loss only works with euler rotation representation.', 'warn')
+            self.rotation_loss = EulerLoss(reduction)
+        elif rotation_loss == 'quaternion':
+            if rot_representation!= 'quaternion':
+                print_('Quaternion loss only works with quaternion rotation representation.', 'warn')
+            self.rotation_loss = QuaternionLoss(reduction)
+        elif rotation_loss == 'rotation6d':
+            if rot_representation!= 'rotation6d':
+                print_('Rotation6D loss only works with rotation6d rotation representation.', 'warn')
+            self.rotation_loss = Rotation6DLoss(reduction)
+        else:
+            raise ValueError(f"Loss {rotation_loss} is not supported.")
+        
+    def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+
+        output_pos = output[:,:,0,:3]
+        output_rot = output[:,:,1:]
+        target_pos = target[:,:,0,:3]
+        target_rot = target[:,:,1:]
+        loss_rot = self.rotation_loss(output_rot, target_rot)
+        loss_pos = F.mse_loss(output_pos, target_pos, reduction='none')
+        loss_pos = torch.sum(loss_pos, dim=-1) # Sum over position dimensions
+        loss_pos = torch.sqrt(loss_pos) # mse over all position dimensions
+        loss_pos = self._reduce_sum_and_mean(loss_pos)
+        loss = loss_rot + self.weight_factor * loss_pos
+        return loss
