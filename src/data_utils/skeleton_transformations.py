@@ -56,7 +56,7 @@ def _parse_datum(frame: torch.Tensor, skeleton_structure: dict, indices: dict, c
     frame_repr = torch.stack(frame_repr)
     return frame_repr
 
-def parse_sequence_efficient_to_s26(seq: torch.Tensor, conversion_func: callable) -> torch.Tensor:
+def parse_sequence_efficient_to_s26(seq: torch.Tensor, conversion_func: callable, absolute: Optional[bool] = False) -> torch.Tensor:
     """
         Parse a single datum of joint angles in the H36M dataset format to a skeleton representaion.
 
@@ -67,39 +67,43 @@ def parse_sequence_efficient_to_s26(seq: torch.Tensor, conversion_func: callable
             conversion_func (callable): Function to convert from axis angle representation to the given representation
 
     """
-    seq_repr = torch.FloatTensor(seq.shape[0],26,3)
-    seq_repr[:,0] =  seq[:,[3, 4, 5]]
-    seq_repr[:,1] =  seq[:,[6, 7, 8]]
-    seq_repr[:,2] =  seq[:,[9, 10, 11]]
-    seq_repr[:,3] =  seq[:,[12, 13, 14]]
-    seq_repr[:,4] =  seq[:,[15, 16, 17]]
-    seq_repr[:,5] =  seq[:,[21, 22, 23]]
-    seq_repr[:,6] =  seq[:,[24, 25, 26]]
-    seq_repr[:,7] =  seq[:,[27, 28, 29]]
-    seq_repr[:,8] =  seq[:,[30, 31, 32]]
-    seq_repr[:,9] = seq[:,[36, 37, 38]]
-    seq_repr[:,10] = seq[:,[39, 40, 41]]
-    seq_repr[:,11] = seq[:,[42, 43, 44]]
-    seq_repr[:,12] = seq[:,[45, 46, 47]]
-    seq_repr[:,13] = seq[:,[48, 49, 50]]
-    seq_repr[:,14] = seq[:,[51, 52, 53]]
-    seq_repr[:,15] = seq[:,[54, 55, 56]]
-    seq_repr[:,16] = seq[:,[57, 58, 59]]
-    seq_repr[:,17] = seq[:,[60, 61, 62]]
-    seq_repr[:,18] = seq[:,[63, 64, 65]]
-    seq_repr[:,19] = seq[:,[69, 70, 71]]
-    seq_repr[:,20] = seq[:,[75, 76, 77]]
-    seq_repr[:,21] = seq[:,[78, 79, 80]]
-    seq_repr[:,22] = seq[:,[81, 82, 83]]
-    seq_repr[:,23] = seq[:,[84, 85, 86]]
-    seq_repr[:,24] = seq[:,[87, 88, 89]]
-    seq_repr[:,25] = seq[:,[93, 94, 95]]
+    inds = torch.arange(27)
+    seq_repr = torch.FloatTensor(seq.shape[0],(27 if absolute else 26),3)
+
+    if absolute:
+        joints = 27
+
+    seq_repr[:, 1] = seq[:, [3, 4, 5]]
+    seq_repr[:, 2] = seq[:, [6, 7, 8]]
+    seq_repr[:, 3] = seq[:, [9, 10, 11]]
+    seq_repr[:, 4] = seq[:, [12, 13, 14]]
+    seq_repr[:, 5] = seq[:, [15, 16, 17]]
+    seq_repr[:, 6] = seq[:, [21, 22, 23]]
+    seq_repr[:, 7] = seq[:, [24, 25, 26]]
+    seq_repr[:, 8] = seq[:, [27, 28, 29]]
+    seq_repr[:, 9] = seq[:, [30, 31, 32]]
+    seq_repr[:, 10] = seq[:, [36, 37, 38]]
+    seq_repr[:, 11] = seq[:, [39, 40, 41]]
+    seq_repr[:, 12] = seq[:, [42, 43, 44]]
+    seq_repr[:, 13] = seq[:, [45, 46, 47]]
+    seq_repr[:, 14] = seq[:, [48, 49, 50]]
+    seq_repr[:, 15] = seq[:, [51, 52, 53]]
+    seq_repr[:, 16] = seq[:, [54, 55, 56]]
+    seq_repr[:, 17] = seq[:, [57, 58, 59]]
+    seq_repr[:, 18] = seq[:, [60, 61, 62]]
+    seq_repr[:, 19] = seq[:, [63, 64, 65]]
+    seq_repr[:, 20] = seq[:, [69, 70, 71]]
+    seq_repr[:, 21] = seq[:, [75, 76, 77]]
+    seq_repr[:, 22] = seq[:, [78, 79, 80]]
+    seq_repr[:, 23] = seq[:, [81, 82, 83]]
+    seq_repr[:, 24] = seq[:, [84, 85, 86]]
+    seq_repr[:, 25] = seq[:, [87, 88, 89]]
     seq_repr = torch.flatten(seq_repr, 0, 1)
     seq_repr = conversion_func(seq_repr)
     seq_repr = torch.reshape(seq_repr,(seq.shape[0], 26, -1))
     return seq_repr
 
-def h36m_forward_kinematics(data: torch.Tensor, representation: Literal['axis', 'mat', 'quat', '6d']) -> torch.Tensor:
+def h36m_forward_kinematics(data: torch.Tensor, representation: Literal['axis', 'mat', 'quat', '6d'], absolute: Optional[bool] = False) -> torch.Tensor:
     """
         Compute the forward kinematics of the h36m skeleton model from a given representation.
         The functions returns the joint positions
@@ -131,6 +135,8 @@ def h36m_forward_kinematics(data: torch.Tensor, representation: Literal['axis', 
         if joint_id == 0:
             # Set the position and rotation of the base frame, the hip
             joint_positions[:,joint_id] = offset[i].unsqueeze(0)
+            if absolute:
+                joint_positions[:,joint_id] += data[:, [0,1,2]]
             joint_rotations[:,joint_id] = data[:, joint_id]
             continue
         # Retrieve data from the previously processed parent frame
@@ -180,3 +186,5 @@ def parse_sequence_to_s19(seq: torch.Tensor, conversion_func: callable) -> torch
     parent_seq = seq[:, parent_ids]
     seq = conversion_func(seq, parent_seq)
     return seq
+
+def 

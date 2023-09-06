@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from typing import Optional
 from tqdm import tqdm
 
-from .data_utils import getDataset, H36M_DATASET_ACTIONS
+from .data_utils import getDataset, H36M_DATASET_ACTIONS, DataAugmentor
 from .utils import *
 from .models import PosePredictor, getModel
 from .evaluation import EvaluationEnginePassive, EvaluationEngineActive
@@ -178,6 +178,13 @@ class Session:
         self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
         p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
         print_(p_str)
+        self.data_augmentor = DataAugmentor(
+            normalize=self.config['data_augmentation']['normalize'],
+            reverse_prob=self.config['data_augmentation']['reverse_prob'],
+            snp_noise_prob=self.config['data_augmentation']['snp_noise_prob'],
+            joint_cutout_prob=self.config['data_augmentation']['joint_cutout_prob'],
+            timestep_cutout_prob=self.config['data_augmentation']['timestep_cutout_prob']
+        )
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
@@ -267,6 +274,7 @@ class Session:
                 break
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
+            seed_data = self.data_augmentor(seed_data)
             # Update the learning rate according to the schedule
             self.optimizer.zero_grad()
             self.scheduler(self.iteration)

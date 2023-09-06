@@ -275,48 +275,6 @@ VLP_SKELETON_STRUCTURE = {
 VLP_PARENTS=[-1, 0, 1, 2, 3, 1, 5, 6, 1, 8, 9, 10, 8, 12, 13, 0, 0, 15, 16]
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #####===== Additional Skeleton Definitions =====#####
 ###=== Stacked Hourglass Skeleton ===###
 # Stacked Hourglass produces 16 joints. These are the names.
