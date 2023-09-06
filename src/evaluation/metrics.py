@@ -8,40 +8,35 @@ import numpy as np
 import torch
 from typing import Optional, Literal, Union, List
 
-from ..utils import print_, matrix_to_euler_angles, matrix_to_axis_angle, get_conv_to_rotation_matrix, correct_rotation_matrix
+from ..utils import (
+    print_,
+    matrix_to_euler_angles,
+    matrix_to_axis_angle,
+    get_conv_to_rotation_matrix,
+    correct_rotation_matrix,
+)
 from ..data_utils import h36m_forward_kinematics
+
 #####===== General Evaluation Constants =====#####
 ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
 
 
 #####===== Evaluation Functions =====#####
 
-def evaluate_distribution_metrics(predictions: torch.Tensor,
-                                   metrics: List[str] = None,
-                                    reduction: Optional[Literal['mean', 'sum', 'mse', None]] = None,
-                                     representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
-    """
-        Evaluate the distribution metrics for long predictions.
-    """
-    pass
 
-
-
-def evaluate_distance_metrics(
-                              predictions: torch.tensor, 
-                               targets: torch.tensor, 
-                                metrics: List[str] = None,
-                                 reduction: Optional[Literal['mean', 'sum', 'mse', None]] = None,
-                                  representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
+def evaluate_distribution_metrics(
+    predictions: torch.Tensor,
+    metrics: List[str] = None,
+    reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
+    representation: Optional[Literal["axis", "mat", "quat", "6d"]] = "mat",
+):
     """
-        Compute the pair-wise distance metrics between single joints.
-    
+    Evaluate the distribution metrics for long predictions.
     """
     METRICS_IMPLEMENTED = {
-        'geodesic_distance': geodesic_distance,
-        'positional_mse': positional_mse,
-        'euler_error': euler_angle_error,
-        'auc': accuracy_under_curve
+        "power_spectrum": power_spectrum,
+        "ps_entropy": ps_entropy,
+        "ps_kld": ps_kld,
     }
 
     if metrics is None:
@@ -52,27 +47,72 @@ def evaluate_distance_metrics(
     predictions = conversion_func(predictions)
     targets = conversion_func(targets)
 
-    if representation == 'mat':
+    if representation == "mat":
         # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
         predictions = correct_rotation_matrix(predictions)
-        
+
     predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
     targets = torch.reshape(targets, (*targets.shape[:-2], 9))
-    
+
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
-            print_(f'Metric {metric} not implemented.')
-        if metric == 'auc':
+            print_(f"Metric {metric} not implemented.")
+        results[metric] = METRICS_IMPLEMENTED[metric](predictions).item()
+
+    pass
+
+
+def evaluate_distance_metrics(
+    predictions: torch.tensor,
+    targets: torch.tensor,
+    metrics: List[str] = None,
+    reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
+    representation: Optional[Literal["axis", "mat", "quat", "6d"]] = "mat",
+):
+    """
+    Compute the pair-wise distance metrics between single joints.
+
+    """
+    METRICS_IMPLEMENTED = {
+        "geodesic_distance": geodesic_distance,
+        "positional_mse": positional_mse,
+        "euler_error": euler_angle_error,
+        "auc": accuracy_under_curve,
+    }
+
+    if metrics is None:
+        metrics = METRICS_IMPLEMENTED.keys()
+
+    results = {}
+    conversion_func = get_conv_to_rotation_matrix(representation)
+    predictions = conversion_func(predictions)
+    targets = conversion_func(targets)
+
+    if representation == "mat":
+        # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
+        predictions = correct_rotation_matrix(predictions)
+
+    predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
+    targets = torch.reshape(targets, (*targets.shape[:-2], 9))
+
+    for metric in metrics:
+        if metric not in METRICS_IMPLEMENTED.keys():
+            print_(f"Metric {metric} not implemented.")
+        if metric == "auc":
             # Compute the joint positions using forward kinematics
-            prediction_positions, _ = h36m_forward_kinematics(predictions, 'mat') 
-            target_positions, _ = h36m_forward_kinematics(targets, 'mat')
+            prediction_positions, _ = h36m_forward_kinematics(predictions, "mat")
+            target_positions, _ = h36m_forward_kinematics(targets, "mat")
             # Scale to meters for evaluation
             prediction_positions /= 1000
             target_positions /= 1000
-            results[metric] = accuracy_under_curve(prediction_positions, target_positions)
+            results[metric] = accuracy_under_curve(
+                prediction_positions, target_positions
+            )
         else:
-            results[metric] = METRICS_IMPLEMENTED[metric](predictions, targets, reduction=reduction).item()
-    
+            results[metric] = METRICS_IMPLEMENTED[metric](
+                predictions, targets, reduction=reduction
+            ).item()
+
     return results
 
 
@@ -80,10 +120,10 @@ def evaluate_distance_metrics(
 def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     """
     # seq = seq[:, :, 0:-1:12, :]  # 5 fps for amass (in 60 fps)
-    
+
     Args:
       seq: (batch_size, n_joints, seq_len, feature_size)
-  
+
     Returns:
         (n_joints, seq_len, feature_size)
     """
@@ -91,15 +131,17 @@ def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     n_joints = seq.shape[1]
 
     seq_t = torch.transpose(seq, [0, 2, 1, 3])
-    dims_to_use = torch.where((torch.reshape(seq_t, [-1, n_joints, feature_size]).std(0) >= 1e-4).all(dim=-1))[0]
+    dims_to_use = torch.where(
+        (torch.reshape(seq_t, [-1, n_joints, feature_size]).std(0) >= 1e-4).all(dim=-1)
+    )[0]
     seq_t = seq_t[:, :, dims_to_use]
 
     seq_t = torch.reshape(seq_t, [seq_t.shape[0], seq_t.shape[1], 1, -1])
     seq = torch.transpose(seq_t, [0, 2, 1, 3])
-    
+
     seq_fft = torch.fft.fft(seq, dim=2)
-    seq_ps = torch.abs(seq_fft)**2
-    
+    seq_ps = torch.abs(seq_fft) ** 2
+
     seq_ps_global = seq_ps.sum(dim=0) + 1e-8
     seq_ps_global /= seq_ps_global.sum(dim=1, keepdims=True)
     return seq_ps_global
@@ -107,7 +149,7 @@ def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
 
 def ps_entropy(seq_ps):
     """
-    
+
     Args:
         seq_ps: (n_joints, seq_len, feature_size)
 
@@ -117,7 +159,7 @@ def ps_entropy(seq_ps):
 
 
 def ps_kld(seq_ps_from, seq_ps_to):
-    """ Calculates KL(seq_ps_from, seq_ps_to).
+    """Calculates KL(seq_ps_from, seq_ps_to).
     Args:
         seq_ps_from:
         seq_ps_to:
@@ -129,23 +171,31 @@ def ps_kld(seq_ps_from, seq_ps_to):
 
 #####===== Pair-Wise Distance Metrics =====#####
 
-def accuracy_under_curve(predictions: torch.tensor, 
-                           targets: torch.tensor, 
-                            thresholds: List[float] = ACC_THRESHOLDS) -> torch.tensor:
+
+def accuracy_under_curve(
+    predictions: torch.tensor,
+    targets: torch.tensor,
+    thresholds: List[float] = ACC_THRESHOLDS,
+) -> torch.tensor:
     """
-        Area und the Curve metric to measure the accuracy at different thresholds.
+    Area und the Curve metric to measure the accuracy at different thresholds.
     """
 
     accs = []
     for threshold in thresholds:
-        accs.append(accuracy_at_threshold(predictions, targets, threshold, 'mean').item())
-    auc = np.mean(accs)*100
+        accs.append(
+            accuracy_at_threshold(predictions, targets, threshold, "mean").item()
+        )
+    auc = np.mean(accs) * 100
     return auc
 
-def accuracy_at_threshold(predictions: torch.tensor, 
-                           targets: torch.tensor, 
-                            thresh: float,
-                             reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
+
+def accuracy_at_threshold(
+    predictions: torch.tensor,
+    targets: torch.tensor,
+    thresh: float,
+    reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
+) -> Union[torch.tensor, float]:
     """
     Percentage of correct keypoints.
     Args:
@@ -161,9 +211,11 @@ def accuracy_at_threshold(predictions: torch.tensor,
     return _reduce(pck, reduction)
 
 
-def geodesic_distance(predictions: torch.tensor,
-                      targets: torch.tensor,
-                       reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
+def geodesic_distance(
+    predictions: torch.tensor,
+    targets: torch.tensor,
+    reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
+) -> Union[torch.tensor, float]:
     """
     Computes the angular distance between the target and predicted rotations. We define this as the angle that is
     required to rotate one rotation into the other. This essentially computes || log(R_diff) || where R_diff is the
@@ -180,16 +232,18 @@ def geodesic_distance(predictions: torch.tensor,
     preds, _ = _fix_dimensions(predictions)
     targs, orig_shape = _fix_dimensions(targets)
     # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
-    r = torch.matmul(preds, targs.transpose(-2,-1))
+    r = torch.matmul(preds, targs.transpose(-2, -1))
     angles = matrix_to_axis_angle(r)
     angles = torch.linalg.vector_norm(angles, dim=-1)
 
     return _reduce(angles.view(*orig_shape), reduction)
 
 
-def positional_mse(predictions: torch.tensor,
-                    targets: torch.tensor,
-                     reduction: Optional[Literal['mean','sum','mse',None]] = None) -> Union[torch.tensor,float]:
+def positional_mse(
+    predictions: torch.tensor,
+    targets: torch.tensor,
+    reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
+) -> Union[torch.tensor, float]:
     """
     Computes the Euclidean distance between joints in 3D space.
     Args:
@@ -199,12 +253,16 @@ def positional_mse(predictions: torch.tensor,
     Returns:
         The Euclidean distance for each joint as a torch tensor of shape (..., n_joints)
     """
-    return _reduce(torch.sqrt(torch.sum((predictions - targets) ** 2, dim=-1)), reduction)
+    return _reduce(
+        torch.sqrt(torch.sum((predictions - targets) ** 2, dim=-1)), reduction
+    )
 
 
-def euler_angle_error(predictions: torch.tensor,
-                      targets: torch.tensor,
-                       reduction: Optional[Literal['mean','sum','mse',None]] = None) -> torch.tensor:
+def euler_angle_error(
+    predictions: torch.tensor,
+    targets: torch.tensor,
+    reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
+) -> torch.tensor:
     """
     Computes the Euler angle error using pytorch3d.
     Args:
@@ -239,31 +297,36 @@ def euler_angle_error(predictions: torch.tensor,
     # reshape to original
     return _reduce(euc_error, reduction)
 
+
 #####===== Helper Functions =====#####
 
-def _reduce(input, reduction: Literal['mean','sum','mse', None] = None):
+
+def _reduce(input, reduction: Literal["mean", "sum", "mse", None] = None):
     """
-        Reduce the output of the quantitative metrics to a scalar.
+    Reduce the output of the quantitative metrics to a scalar.
     """
     if reduction is None:
         return input
-    if reduction == 'mean':
+    if reduction == "mean":
         return torch.mean(input)
-    elif reduction =='sum':
+    elif reduction == "sum":
         return torch.sum(input)
-    elif 'mse':
+    elif "mse":
         return torch.mean(torch.sqrt(torch.sum((input) ** 2, dim=-1)))
     else:
         raise NotImplementedError
 
-def _fix_dimensions(input: torch.Tensor,):
+
+def _fix_dimensions(
+    input: torch.Tensor,
+):
     """
-        Fix input dimensions by flattening the leading dimensions and eventually stacking a flattened rotation matrix.
+    Fix input dimensions by flattening the leading dimensions and eventually stacking a flattened rotation matrix.
     """
     shape = input.shape
     if shape[-1] == 9:
-        return torch.reshape(input, (-1,3,3)), input.shape[:-1]
+        return torch.reshape(input, (-1, 3, 3)), input.shape[:-1]
     elif shape[-1] == 3 and shape[-2] == 3:
-        return input.view(-1,3,3), input.shape[:-2]
+        return input.view(-1, 3, 3), input.shape[:-2]
     else:
-        print_(f'Evaluation functions received invalid input shape: {shape}')
+        print_(f"Evaluation functions received invalid input shape: {shape}")
