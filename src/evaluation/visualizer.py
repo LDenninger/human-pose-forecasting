@@ -1,5 +1,6 @@
 import time
 from typing import List, Tuple
+import math
 
 import torch
 from matplotlib import pyplot as plt
@@ -110,11 +111,11 @@ class Visualizer:
         time_steps_ms: List[List[int]],
         prediction_positions: List[int] = None,
         title_text: str = "",
-        figsize: Tuple[int, int] = (4000, 1000),
         save_path: str = None,
         line_width: int = 4,
-        color: str = "green",
+        colors: Tuple[str, str] = ("green", "blue"),
         show_joints: bool = False,
+        size: int = 500,
     ):
         """
         Visualize comparison of predicted sequence and ground truth sequence in 3D plotly.
@@ -122,13 +123,15 @@ class Visualizer:
         @param sequence_names: List of sequence names - ['gt', 'pred']
         @param sequences: List of sequences - [gt_seq, pred_seq]
         @param prediction_positions: List of positions of where prediction starts in the sequence
-        @param time_steps_ms: List of List of time steps in milliseconds for each sequence
+        @param time_steps_ms: List of time steps in milliseconds for each sequence
         @param title_text: Title of the plot
         @param figsize: Size of the figure (width, height) in pixels
         @param save_path: Path to save the figure to
         @param line_width: Width of the lines in the plot
-        @param color: Color of the lines in the plot
+        @param colors: Tuple of two colors of the lines in the plot. First one is the color the ground truth should have, second one is the color the prediction should have.
         @param show_joints: Whether to show the joints in the plot
+        @param size: Size of the plot (roughly in pixels, gets multiplied by aspect (so 500 with two rows equates a 4000x1000 plot))
+
 
 
         """
@@ -140,9 +143,20 @@ class Visualizer:
         nrows = len(sequences)
         ncols = sequences[0].shape[0]
 
+        max_sequence_length = max([sequence.shape[0] for sequence in sequences])
+
+        # Calculate aspect ratio of the plot (0.215 came from trial and error)
+        aspect = (0.215 * max_sequence_length, len(sequences))
+
+        # Round size up to the nearest multiple of 100
+        figsize = (
+            math.ceil(aspect[0] * size / 100) * 100,
+            math.ceil(aspect[1] * size / 100) * 100,
+        )
+
         # Flatten time_steps_ms if it is not None
         if time_steps_ms is not None:
-            time_steps_ms = [item for sublist in time_steps_ms for item in sublist]
+            time_steps_ms = time_steps_ms
 
         # Create a figure with no gaps between subplots
         fig = make_subplots(
@@ -154,13 +168,21 @@ class Visualizer:
             subplot_titles=time_steps_ms,
         )
 
+        # Create y positions as mean points between each row
+        y_positions = calculate_mean_points(nrows)
+
         # Loop through the sequences and frames
         for i, (name, sequence) in enumerate(zip(sequence_names, sequences)):
+            prediction_position = (
+                prediction_positions[i] if prediction_positions else math.inf
+            )
             for j in range(ncols):
                 # Set joints of skeleton to those in the sequence
                 self.skeleton(sequence[j])
                 # Get joint positions from skeleton
                 joint_positions = self.skeleton.getJointPositions(incl_names=True)
+                # Get color based on prediction_position
+                color = colors[0] if j < prediction_position else colors[1]
                 # Fill subplot with skeleton and additional information
                 subplot = create_skeleton_subplot_plotly(
                     go.Scatter3d(
@@ -174,19 +196,23 @@ class Visualizer:
                     H36M_SKELETON_STRUCTURE,
                     show_joints=show_joints,
                 )
+
                 # Add newly created subplot to figure
                 fig.add_trace(subplot, row=i + 1, col=j + 1)
 
-        # Add sequence name to the left of each row
-        for i, name in enumerate(sequence_names):
+            # Calculate the y-coordinate for the annotation to position it correctly
+            y_coord = y_positions[len(y_positions) - i - 1] + 100 / figsize[1]
+
+            # Add row name to the left of each row
             fig.add_annotation(
                 xref="paper",
                 yref="paper",
-                x=-0.1,
-                y=1 - (i + 1) / nrows + 0.5 / nrows,
+                x=-(70 / figsize[0]),
+                y=y_coord,
                 text=name,
                 showarrow=False,
                 font=dict(size=24),
+                textangle=-90,  # Rotate text 90 degrees counter-clockwise
             )
 
         # Set title, disable legend and adjust size
@@ -195,6 +221,7 @@ class Visualizer:
             showlegend=False,
             width=figsize[0],
             height=figsize[1],
+            margin=dict(l=100, r=0, b=0, t=100, pad=0),
         )
         # Remove axes and background and ticks
         fig.update_scenes(
@@ -213,3 +240,16 @@ class Visualizer:
             fig.write_image(
                 f"compare_sequences_plotly_{ncols}_{figsize[0]}_{figsize[1]}.png"
             )
+
+
+def calculate_mean_points(n):
+    interval_width = 1 / n  # Calculate the width of each interval
+    mean_points = []  # Initialize a list to store the mean points
+
+    for i in range(n):
+        start = i * interval_width  # Calculate the starting point of the interval
+        end = (i + 1) * interval_width  # Calculate the ending point of the interval
+        mean = (start + end) / 2  # Calculate the mean point for the interval
+        mean_points.append(mean)  # Append the mean point to the list
+
+    return mean_points
