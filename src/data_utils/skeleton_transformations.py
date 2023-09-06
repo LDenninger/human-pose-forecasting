@@ -71,33 +71,36 @@ def parse_sequence_efficient_to_s26(seq: torch.Tensor, conversion_func: callable
     seq_repr = torch.FloatTensor(seq.shape[0],(27 if absolute else 26),3)
 
     if absolute:
-        joints = 27
+        seq_repr[:, inds[0]] = seq[:, [0, 1, 2]]
+    else:
+        inds = inds - 1
 
-    seq_repr[:, 1] = seq[:, [3, 4, 5]]
-    seq_repr[:, 2] = seq[:, [6, 7, 8]]
-    seq_repr[:, 3] = seq[:, [9, 10, 11]]
-    seq_repr[:, 4] = seq[:, [12, 13, 14]]
-    seq_repr[:, 5] = seq[:, [15, 16, 17]]
-    seq_repr[:, 6] = seq[:, [21, 22, 23]]
-    seq_repr[:, 7] = seq[:, [24, 25, 26]]
-    seq_repr[:, 8] = seq[:, [27, 28, 29]]
-    seq_repr[:, 9] = seq[:, [30, 31, 32]]
-    seq_repr[:, 10] = seq[:, [36, 37, 38]]
-    seq_repr[:, 11] = seq[:, [39, 40, 41]]
-    seq_repr[:, 12] = seq[:, [42, 43, 44]]
-    seq_repr[:, 13] = seq[:, [45, 46, 47]]
-    seq_repr[:, 14] = seq[:, [48, 49, 50]]
-    seq_repr[:, 15] = seq[:, [51, 52, 53]]
-    seq_repr[:, 16] = seq[:, [54, 55, 56]]
-    seq_repr[:, 17] = seq[:, [57, 58, 59]]
-    seq_repr[:, 18] = seq[:, [60, 61, 62]]
-    seq_repr[:, 19] = seq[:, [63, 64, 65]]
-    seq_repr[:, 20] = seq[:, [69, 70, 71]]
-    seq_repr[:, 21] = seq[:, [75, 76, 77]]
-    seq_repr[:, 22] = seq[:, [78, 79, 80]]
-    seq_repr[:, 23] = seq[:, [81, 82, 83]]
-    seq_repr[:, 24] = seq[:, [84, 85, 86]]
-    seq_repr[:, 25] = seq[:, [87, 88, 89]]
+    seq_repr[:, inds[1]] = seq[:, [3, 4, 5]]
+    seq_repr[:, inds[2]] = seq[:, [6, 7, 8]]
+    seq_repr[:, inds[3]] = seq[:, [9, 10, 11]]
+    seq_repr[:, inds[4]] = seq[:, [12, 13, 14]]
+    seq_repr[:, inds[5]] = seq[:, [15, 16, 17]]
+    seq_repr[:, inds[6]] = seq[:, [21, 22, 23]]
+    seq_repr[:, inds[7]] = seq[:, [24, 25, 26]]
+    seq_repr[:, inds[8]] = seq[:, [27, 28, 29]]
+    seq_repr[:, inds[9]] = seq[:, [30, 31, 32]]
+    seq_repr[:, inds[10]] = seq[:, [36, 37, 38]]
+    seq_repr[:, inds[11]] = seq[:, [39, 40, 41]]
+    seq_repr[:, inds[12]] = seq[:, [42, 43, 44]]
+    seq_repr[:, inds[13]] = seq[:, [45, 46, 47]]
+    seq_repr[:, inds[14]] = seq[:, [48, 49, 50]]
+    seq_repr[:, inds[15]] = seq[:, [51, 52, 53]]
+    seq_repr[:, inds[16]] = seq[:, [54, 55, 56]]
+    seq_repr[:, inds[17]] = seq[:, [57, 58, 59]]
+    seq_repr[:, inds[18]] = seq[:, [60, 61, 62]]
+    seq_repr[:, inds[19]] = seq[:, [63, 64, 65]]
+    seq_repr[:, inds[20]] = seq[:, [69, 70, 71]]
+    seq_repr[:, inds[21]] = seq[:, [75, 76, 77]]
+    seq_repr[:, inds[22]] = seq[:, [78, 79, 80]]
+    seq_repr[:, inds[23]] = seq[:, [81, 82, 83]]
+    seq_repr[:, inds[24]] = seq[:, [84, 85, 86]]
+    seq_repr[:, inds[25]] = seq[:, [87, 88, 89]]
+
     seq_repr = torch.flatten(seq_repr, 0, 1)
     seq_repr = conversion_func(seq_repr)
     seq_repr = torch.reshape(seq_repr,(seq.shape[0], 26, -1))
@@ -136,7 +139,7 @@ def h36m_forward_kinematics(data: torch.Tensor, representation: Literal['axis', 
             # Set the position and rotation of the base frame, the hip
             joint_positions[:,joint_id] = offset[i].unsqueeze(0)
             if absolute:
-                joint_positions[:,joint_id] += data[:, [0,1,2]]
+                joint_positions[:,joint_id] += data[:, 0]
             joint_rotations[:,joint_id] = data[:, joint_id]
             continue
         # Retrieve data from the previously processed parent frame
@@ -187,4 +190,35 @@ def parse_sequence_to_s19(seq: torch.Tensor, conversion_func: callable) -> torch
     seq = conversion_func(seq, parent_seq)
     return seq
 
-def 
+def parse_visionlab3dpose_to_SH(seq: torch.Tensor, conversion_func: callable) -> torch.Tensor:
+    """
+        This functions parses the VisionLab3DPose dataset to the Stacked Hourglass representation.
+        We assume to be given raw joint positions.
+    """
+    seq = seq[:,:19]
+    sh_repr = torch.zeros(seq.shape[0], 16, 3)
+    # Simply copy existing joints
+    sh_repr[:,0] = seq[:, 11]
+    sh_repr[:,1] = seq[:, 10]
+    sh_repr[:,2] = seq[:, 9]
+    sh_repr[:,3] = seq[:, 12]
+    sh_repr[:,4] = seq[:, 13]
+    sh_repr[:,5] = seq[:, 14]
+    sh_repr[:,6] = seq[:, 8]
+    sh_repr[:,8] = seq[:, 1]
+    sh_repr[:,10] = seq[:, 4]
+    sh_repr[:,11] = seq[:, 3]
+    sh_repr[:,12] = seq[:, 2]
+    sh_repr[:,13] = seq[:, 5]
+    sh_repr[:,14] = seq[:, 6]
+    sh_repr[:,15] = seq[:, 0]
+    # Interpolate the spine/belly button
+    # we assume it to be in the middle between the neck and the hip
+    sh_repr[:,7] = sh_repr[:,6] + ((sh_repr[:,8] - sh_repr[:,6]) / 2)
+    # Interpolate the head frame to sit between the right and left ear
+    # The head frame is move up by half the distance between the nose and the neck
+    # This is an approximation to the head position of the H36M dataset where it sits on top of the head.
+    sh_repr[:,9] = seq[:,18]+((seq[:,17]-seq[:,18]) / 2)
+    offset = ((seq[:,0]-seq[:,1])/2)
+    sh_repr[:,9] += offset
+    return sh_repr

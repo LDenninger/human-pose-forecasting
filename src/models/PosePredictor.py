@@ -45,11 +45,12 @@ class PosePredictor(nn.Module):
                     positional_encoding_config: dict,
                      transformer_config: dict, 
                       num_joints: int,
-                       seq_len: int,
-                        num_blocks: int,
-                         emb_dim: int,
-                          joint_dim: int,
-                           input_dropout: float = 0.0,
+                       incl_abs_position: bool,
+                        seq_len: int,
+                         num_blocks: int,
+                          emb_dim: int,
+                           joint_dim: int,
+                            input_dropout: float = 0.0,
                     ) -> None:
         
         super(PosePredictor, self).__init__()
@@ -57,6 +58,9 @@ class PosePredictor(nn.Module):
         # Initial linear layer for embedding each joint into the embedding space
 
         self.joint_encoder = PointWiseLinear(joint_dim, emb_dim, num_joints)
+        if incl_abs_position: 
+            self.position_encoder = nn.Linear(3, emb_dim)
+            self.position_decoder = nn.Linear(emb_dim, 3)
 
         #self.jointEncoding = [nn.Linear(joint_dim, emb_dim) for _ in range(num_joints)]
         # Positional encoding on the joints
@@ -74,6 +78,7 @@ class PosePredictor(nn.Module):
         self.num_blocks = num_blocks
         self.emb_dim = emb_dim
         self.joint_dim = joint_dim
+        self.incl_abs_position = incl_abs_position
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -85,7 +90,14 @@ class PosePredictor(nn.Module):
         """
         # Joint embedding
         out = torch.clone(x)
-        out = self.joint_encoder(out)
+        if self.incl_abs_position:
+            pos = out[:,:,0,:3]
+            rot = out[:,:,1:,:]
+            rot = self.joint_encoder(rot)
+            pos = self.position_encoder(pos)
+            out = torch.cat([pos, rot], dim=2)
+        else:
+            out = self.joint_encoder(out)
 
         # Temporal positional encoding
         out = self.positionalEncoding(out)
@@ -93,7 +105,14 @@ class PosePredictor(nn.Module):
         # Attention layers
         out = self.attnBlocks(out)
         # Final decoding to retrieve the original joint representation
-        out = self.joint_decoder(out)
+        if self.incl_abs_position:
+            pos = out[:,:,0,:3]
+            rot = out[:,:,1:,:]
+            rot = self.joint_decoder(rot)
+            pos = self.position_decoder(pos)
+            out = torch.cat([pos, rot], dim=2)
+        else:
+            out = self.joint_decoder(out)
         # Final residual connection
         out = out + x
         return out

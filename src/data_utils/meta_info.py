@@ -249,6 +249,24 @@ VLP_NAMES[24] = 'rbToe'  #unused
 VLP_NAMES[25] = 'rsToe'  #unused
 VLP_NAMES[26] = 'rHeel'  #unused
 
+SH_NAMES = ['']*16
+SH_NAMES[0]  = 'RFoot'
+SH_NAMES[1]  = 'RKnee'
+SH_NAMES[2]  = 'RHip'
+SH_NAMES[3]  = 'LHip'
+SH_NAMES[4]  = 'LKnee'
+SH_NAMES[5]  = 'LFoot'
+SH_NAMES[6]  = 'Hip'
+SH_NAMES[7]  = 'Spine'
+SH_NAMES[8]  = 'Thorax'
+SH_NAMES[9]  = 'Head'
+SH_NAMES[10] = 'RWrist'
+SH_NAMES[11] = 'RElbow'
+SH_NAMES[12] = 'RShoulder'
+SH_NAMES[13] = 'LShoulder'
+SH_NAMES[14] = 'LElbow'
+SH_NAMES[15] = 'LWrist'
+
 VLP_SKELETON_STRUCTURE = {
     0: {'nose', 'root'},
     1: {'neck', 'nose'},
@@ -278,20 +296,4 @@ VLP_PARENTS=[-1, 0, 1, 2, 3, 1, 5, 6, 1, 8, 9, 10, 8, 12, 13, 0, 0, 15, 16]
 #####===== Additional Skeleton Definitions =====#####
 ###=== Stacked Hourglass Skeleton ===###
 # Stacked Hourglass produces 16 joints. These are the names.
-SH_NAMES = ['']*16
-SH_NAMES[0]  = 'RFoot'
-SH_NAMES[1]  = 'RKnee'
-SH_NAMES[2]  = 'RHip'
-SH_NAMES[3]  = 'LHip'
-SH_NAMES[4]  = 'LKnee'
-SH_NAMES[5]  = 'LFoot'
-SH_NAMES[6]  = 'Hip'
-SH_NAMES[7]  = 'Spine'
-SH_NAMES[8]  = 'Thorax'
-SH_NAMES[9]  = 'Head'
-SH_NAMES[10] = 'RWrist'
-SH_NAMES[11] = 'RElbow'
-SH_NAMES[12] = 'RShoulder'
-SH_NAMES[13] = 'LShoulder'
-SH_NAMES[14] = 'LElbow'
-SH_NAMES[15] = 'LWrist'
+
