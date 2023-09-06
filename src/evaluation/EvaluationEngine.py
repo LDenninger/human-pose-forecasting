@@ -8,7 +8,7 @@ from prettytable import PrettyTable
 from typing import Optional, Dict, Any, List, Union, Literal
 
 from ..utils import print_, log_function, LOGGER
-from ..data_utils import H36M_DATASET_ACTIONS, H36M_STEP_SIZE_MS, H36MDataset, SkeletonModel32, h36m_forward_kinematics
+from ..data_utils import H36M_DATASET_ACTIONS, H36M_STEP_SIZE_MS, H36MDataset, SkeletonModel32, h36m_forward_kinematics, DataAugmentor
 from .metrics import evaluate_distance_metrics, geodesic_distance, positional_mse, euler_angle_error, accuracy_under_curve
 
 
@@ -36,17 +36,26 @@ class EvaluationEngineActive:
             Initialize the active evaluation engine.
         """
         self.device = torch.device(device)
+        self.initialized = False
+
 
     @log_function
     def initialize_evaluation(self, 
-                               batches_per_action: int,
-                                seed_length: int,
-                                 prediction_timesteps: List[int],
-                                  down_sampling_factor: int = 1,
-                                    actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
-                                     skeleton_model: Optional[Literal['s26', None]] = None,
-                                      rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
-                                       batch_size: Optional[int] = 32,) -> None:
+                                        batches_per_action: int,
+                                         seed_length: int,
+                                          prediction_timesteps: List[int],
+                                           down_sampling_factor: int = 1,
+                                             actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
+                                              skeleton_model: Optional[Literal['s26', None]] = None,
+                                               rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
+                                                batch_size: Optional[int] = 32,
+                                                 normalize: Optional[bool]=False) -> None:
+        """
+            Initialize the standard evaluation evaluating per-joint metrics.
+        """
+        if self.initialized:
+            print_('The evaluation engine has already been initialized.','warn')
+            return
         print_('Initializing the evaluation engine for an exhaustive evaluation...')
         ##== Data Structures ==##
         self.datasets = {}
@@ -62,9 +71,6 @@ class EvaluationEngineActive:
         self.batches_per_action = batches_per_action
         self.evaluation_finished = False
         self.total_iterations = batches_per_action * len(actions)
-
-        ##== Dataset Parameters ==##
-        self.seed_length = seed_length
         # Set the target frames and reachable timesteps given the time intervals between frames
         self.target_frames = np.ceil(np.array(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)).astype(int)
         self.target_timesteps = (self.target_frames * (H36M_STEP_SIZE_MS * down_sampling_factor)).tolist()
@@ -73,7 +79,11 @@ class EvaluationEngineActive:
             print_(f'Goal prediction timesteps: {self.prediction_timesteps} not reachable using timesteps: {self.target_timesteps}', 'warn')
         self.last_target_frame = max(self.target_frames)
         self.target_length = math.ceil(max(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor))
+
+        ##== Dataset Parameters ==##
+        self.seed_length = seed_length
         self.skeleton_model = skeleton_model
+        self.normalize = normalize
 
         self.rot_representation = rot_representation
         self.down_sampling_factor = down_sampling_factor
@@ -89,7 +99,6 @@ class EvaluationEngineActive:
                 down_sampling_factor=self.down_sampling_factor,
                 skeleton_model=skeleton_model,
                 rot_representation=rot_representation
-
             )
 
     def reset(self) -> None:
@@ -162,18 +171,23 @@ class EvaluationEngineActive:
 
         for action, dataset in self.datasets.items():
             data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=2)
-            if mode == 'standard':
-                self.evaluation_loop(action, model, data_loader)
+            self.data_augmentor = DataAugmentor(normalize=self.normalize)
+            if self.normalize:
+                mean, var = dataset.get_mean_variance()
+                self.data_augmentor.set_mean_var(mean, var)
+            self.evaluation_loop(action, model, data_loader)
         self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
     
     @torch.no_grad()
-    def evaluation_loop(self, action: str, model: torch.nn.Module, data_loader: torch.utils.data.DataLoader) -> None:
+    def evaluation_loop(self, action: str,
+                         model: torch.nn.Module,
+                           data_loader: torch.utils.data.DataLoader,
+                             mode: Optional[Literal['standard', 'long_prediction']] = 'standard') -> None:
         """
             A single evaluation loop for an action.
-        
         """
 
         model.eval()
@@ -195,7 +209,7 @@ class EvaluationEngineActive:
             # Load data
             data = data.to(self.device)
             # Set input for the model
-            cur_input = data[:, :self.seed_length]
+            cur_input = self.data_augmentor(data[:, :self.seed_length])
             # Predict future frames in an auto-regressive manner
             for i in range(1, self.last_target_frame+1):
                 # Compute the output
@@ -203,7 +217,11 @@ class EvaluationEngineActive:
                 # Check if we want to compute metrics for this timestep
                 if i in self.target_frames:
                     # Compute the implemented metrics
-                    predictions[i].append(output[:,-1].detach().cpu())
+                    if self.normalize:
+                        pred = self.data_augmentor.reverse_normalization(output[:,-1].detach().cpu())
+                    else:
+                        pred = output[:,-1].detach().cpu()
+                    predictions[i].append(pred)
                     targets[i].append(data[:,self.seed_length + i - 1].detach().cpu())
                 # Update model input for auto-regressive prediction
                 cur_input = output
@@ -213,6 +231,7 @@ class EvaluationEngineActive:
             timestep_prediction = torch.flatten(torch.stack(predictions[frame]), start_dim=0, end_dim=1)
             timestep_target = torch.flatten(torch.stack(targets[frame]), start_dim=0, end_dim=1)
             self.evaluation_results[action][timestep] = evaluate_distance_metrics(timestep_prediction, timestep_target, reduction='mean', representation=self.rot_representation)
+
 
     #####===== Utility Functions =====#####
             

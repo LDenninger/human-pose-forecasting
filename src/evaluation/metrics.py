@@ -15,12 +15,28 @@ ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
 
 
 #####===== Evaluation Functions =====#####
+
+def evaluate_distribution_metrics(predictions: torch.Tensor,
+                                   metrics: List[str] = None,
+                                    reduction: Optional[Literal['mean', 'sum', 'mse', None]] = None,
+                                     representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
+    """
+        Evaluate the distribution metrics for long predictions.
+    """
+    pass
+
+
+
 def evaluate_distance_metrics(
                               predictions: torch.tensor, 
                                targets: torch.tensor, 
                                 metrics: List[str] = None,
                                  reduction: Optional[Literal['mean', 'sum', 'mse', None]] = None,
                                   representation: Optional[Literal['axis', 'mat', 'quat', '6d']] = 'mat'):
+    """
+        Compute the pair-wise distance metrics between single joints.
+    
+    """
     METRICS_IMPLEMENTED = {
         'geodesic_distance': geodesic_distance,
         'positional_mse': positional_mse,
