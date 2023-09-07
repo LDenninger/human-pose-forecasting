@@ -13,7 +13,7 @@ from typing import Literal
 
 #####===== Outside Helper Functions =====#####
 
-def get_conv_from_rotation_matrix(representation=Literal['axis', 'mat', 'quat', '6d', 'euler']):
+def get_conv_from_axis_angle(representation=Literal['axis', 'mat', 'quat', '6d', 'euler']):
     """
         Get conversion function from rotation matrix to an arbitrary 3D rotation representations.
     """
@@ -27,6 +27,23 @@ def get_conv_from_rotation_matrix(representation=Literal['axis', 'mat', 'quat', 
         return axis_angle_to_rotation_6d
     elif representation == 'euler':
         return axis_angle_to_euler_angles
+    else:
+        raise ValueError(f'Unknown representation {representation}')
+    
+def get_conv_from_rotation_matrix(representation=Literal['axis', 'mat', 'quat', '6d', 'euler']):
+    """
+        Get conversion function from rotation matrix to an arbitrary 3D rotation representations.
+    """
+    if representation == 'axis':
+        return matrix_to_axis_angle
+    elif representation =='mat':
+        return unflatten_rotation_matrix
+    elif representation == 'quat':
+        return matrix_to_quaternion
+    elif representation == '6d':
+        return matrix_to_rotation_6d
+    elif representation == 'euler':
+        return matrix_to_euler_angles
     else:
         raise ValueError(f'Unknown representation {representation}')
     

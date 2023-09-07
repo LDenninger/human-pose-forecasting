@@ -40,7 +40,7 @@ class H36MDataset(Dataset):
                            sequence_spacing: int=0,
                             reverse_prob: Optional[float] = 0.0,
                              skeleton_model: Optional[Literal['s26', None]] = None,
-                              rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', None]] = None,
+                              rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos', None]] = None,
                                return_label: Optional[bool] = False,
                                 is_train: Optional[bool]=True,
                                  debug: Optional[bool]=False):

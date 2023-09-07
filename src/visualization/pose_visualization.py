@@ -112,11 +112,9 @@ def visualize_skeleton(position_data, skeleton_structure, title_text=""):
     plt.show()
 
 
-def compare_skeleton(
-    position_data_1, position_data_2, skeleton_structure, title_text=""
-):
+def compare_skeleton(position_data_1, position_data_2, skeleton_structure_1, skeleton_structure_2, title_text=""):
     """
-    Compare two skeleton models. The first model is painted green and the second model is painted red.
+        Compare two skeleton models. The first model is painted green and the second model is painted red.
     """
 
     def update(frame):
@@ -145,7 +143,7 @@ def compare_skeleton(
                 c=JOINT_COLOR_MAP[joint_name],
             )
 
-        for id, (cur_frame, par_frame) in skeleton_structure.items():
+        for id, (cur_frame, par_frame) in skeleton_structure_1.items():
             if cur_frame == "hip":
                 continue
             start_pos = joint_positions_1[cur_frame].numpy() / 100.0
@@ -156,7 +154,10 @@ def compare_skeleton(
                 [start_pos[1], end_pos[1]],
                 c="g",
             )
-
+            
+        for id, (cur_frame, par_frame) in skeleton_structure_2.items():
+            if cur_frame == "hip":
+                continue
             start_pos = joint_positions_2[cur_frame].numpy() / 100.0
             end_pos = joint_positions_2[par_frame].numpy() / 100.0
             ax.plot(

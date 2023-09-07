@@ -10,7 +10,7 @@ def test_h36m_data_loading():
     RETURN_TENSOR = False
 
 
-    data, meta_dir = load_data_h36m(PERSON_IDS, ACTION_STR, SUB_ACTION_ID, RETURN_TENSOR)
+    data, meta_dir = load_data_h36m(return_tensor=True)
 
     # Compute some diagnostic information about the data
     num_sequences = len(data)
@@ -25,7 +25,7 @@ def test_h36m_data_loading():
     for seq in data:
         for frame in seq:
             total_num_frames += 1
-            sum_per_dim += frame
+            sum_per_dim += frame.numpy()
 
     mean_per_dim = sum_per_dim / total_num_frames
     active_angles = np.where(mean_per_dim != 0.0)

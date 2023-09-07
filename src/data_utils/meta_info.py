@@ -70,6 +70,7 @@ H36M_NAMES[29] = 'site' # dead
 H36M_NAMES[30] = 'rWristEnd' # no angle, final joint
 H36M_NAMES[31] = 'site' # dead
 
+
 ###=== Joint Indices ===###
 # These indices are used to retrieve the joint data from the 99-dimensional vector
 # Positions [0,1,2] are the position of the hip with respect to the root frame
@@ -139,6 +140,8 @@ H36M_REDUCED_ANGLE_INDICES = {
     25: 'rWristEnd'
 }
 
+
+
 H36M_REVERSED_REDUCED_ANGLE_INDICES = {v:k for k, v in H36M_REDUCED_ANGLE_INDICES.items()}
 
 
@@ -196,7 +199,7 @@ H36M_REDUCED_SKELETON_STRUCTURE = {
     17: ('lWrist', 'lElbow'),
     18: ('lThumb', 'lWrist'),
     19: ('lWristEnd', 'lWrist'),
-    20: ('rShoulderAnchor', 'spine1'),
+    20: ('rShoulderAnchor','spine1'),
     21: ('rShoulder', 'rShoulderAnchor'),
     22: ('rElbow', 'rShoulder'),
     23: ('rWrist', 'rElbow'),
@@ -204,8 +207,91 @@ H36M_REDUCED_SKELETON_STRUCTURE = {
     25: ('rWristEnd', 'rWrist')
 }
 
+H36M_REDUCED_IND_TO_CHILD = {
+    0: [1,5],
+    1: [2],
+    2: [3],
+    3: [4],
+    4: [],
+    5: [6],
+    6: [7],
+    7: [8],
+    8: [],
+    9: [10],
+    10: [11, 14, 20],
+    11: [12],
+    12: [13],
+    13: [],
+    14: [15],
+    15: [16],
+    16: [17],
+    17: [18,19],
+    18: [],
+    19: [],
+    20: [21],
+    21: [22],
+    22: [23],
+    23: [24,25],
+    24: [],
+    25: [],
+}
+
 H36M_BASELINE_PARENTS = np.array([0, 1, 2, 3, 4, 5, 1, 7, 8, 9, 10, 1, 12, 13, 14, 15, 13, 17, 18, 19, 20, 21, 20, 23, 13, 25, 26, 27, 28, 29, 28, 31]) - 1
 
+#####===== Non-redundant Skeleton =====#####
+# This skeleton has all the redundant joints removed from the H36M skeleton
+# Joints: 21
+H36M_NON_REDUNDANT_INDICES = {
+    0: 'hip',
+    1: 'rHip',
+    2: 'rKnee',
+    3: 'rAnkle',
+    4: 'rToe',
+    5: 'lHip',
+    6: 'lKnee',
+    7: 'lAnkle',
+    8: 'lToe',
+    9: 'spine1',
+    10: 'thorax',
+    11: 'neck',
+    12: 'head',
+    13: 'lShoulder',
+    14: 'lElbow',
+    15: 'lWrist',
+    16: 'lWristEnd',
+    17: 'rShoulder',
+    18: 'rElbow',
+    19: 'rWrist',
+    20: 'rWristEnd'
+}
+
+H36M_REVERSED_NON_REDUNDANT_ANGLE_INDICES = {v:k for k, v in H36M_NON_REDUNDANT_INDICES.items()}
+
+H36M_NON_REDUNDANT_SKELETON_STRUCTURE = {
+    0: ('hip', 'root'),
+    1: ('rHip', 'hip'),
+    2: ('rKnee', 'rHip'),
+    3: ('rAnkle', 'rKnee'),
+    4: ('rToe', 'rAnkle'),
+    5: ('lHip', 'hip'),
+    6: ('lKnee', 'lHip'),
+    7: ('lAnkle', 'lKnee'),
+    8: ('lToe', 'lAnkle'),
+    9: ('spine1', 'hip'),
+    10: ('thorax', 'spine1'),
+    11: ('neck', 'thorax'),
+    12: ('head', 'neck'),
+    13: ('lShoulder', 'thorax'),
+    14: ('lElbow', 'lShoulder'),
+    15: ('lWrist', 'lElbow'),
+    16: ('lWristEnd', 'lWrist'),
+    17: ('rShoulder', 'thorax'),
+    18: ('rElbow', 'rShoulder'),
+    19: ('rWrist', 'rElbow'),
+    20: ('rWristEnd', 'rWrist')
+}
+
+H36M_NON_REDUNDANT_ABS_INDICES = [0,1,2,3,4,6,7,8,9,12,13,14,15,17,18,19,22,25,26,27,30]
 
 
 ###=== Bone Length ===###
@@ -249,23 +335,6 @@ VLP_NAMES[24] = 'rbToe'  #unused
 VLP_NAMES[25] = 'rsToe'  #unused
 VLP_NAMES[26] = 'rHeel'  #unused
 
-SH_NAMES = ['']*16
-SH_NAMES[0]  = 'RFoot'
-SH_NAMES[1]  = 'RKnee'
-SH_NAMES[2]  = 'RHip'
-SH_NAMES[3]  = 'LHip'
-SH_NAMES[4]  = 'LKnee'
-SH_NAMES[5]  = 'LFoot'
-SH_NAMES[6]  = 'Hip'
-SH_NAMES[7]  = 'Spine'
-SH_NAMES[8]  = 'Thorax'
-SH_NAMES[9]  = 'Head'
-SH_NAMES[10] = 'RWrist'
-SH_NAMES[11] = 'RElbow'
-SH_NAMES[12] = 'RShoulder'
-SH_NAMES[13] = 'LShoulder'
-SH_NAMES[14] = 'LElbow'
-SH_NAMES[15] = 'LWrist'
 
 VLP_SKELETON_STRUCTURE = {
     0: {'nose', 'root'},
@@ -297,3 +366,39 @@ VLP_PARENTS=[-1, 0, 1, 2, 3, 1, 5, 6, 1, 8, 9, 10, 8, 12, 13, 0, 0, 15, 16]
 ###=== Stacked Hourglass Skeleton ===###
 # Stacked Hourglass produces 16 joints. These are the names.
 
+SH_NAMES = ['']*16
+SH_NAMES[0]  = 'rFoot'
+SH_NAMES[1]  = 'rKnee'
+SH_NAMES[2]  = 'rHip'
+SH_NAMES[3]  = 'lHip'
+SH_NAMES[4]  = 'lKnee'
+SH_NAMES[5]  = 'lFoot'
+SH_NAMES[6]  = 'hip'
+SH_NAMES[7]  = 'spine1'
+SH_NAMES[8]  = 'thorax'
+SH_NAMES[9]  = 'head'
+SH_NAMES[10] = 'rWrist'
+SH_NAMES[11] = 'rElbow'
+SH_NAMES[12] = 'rShoulder'
+SH_NAMES[13] = 'lShoulder'
+SH_NAMES[14] = 'lElbow'
+SH_NAMES[15] = 'lWrist'
+
+SH_SKELETON_STRUCTURE = {
+    6: ('hip', 'root'),
+    2: ('rHip', 'hip'),
+    1: ('rKnee', 'rHip'),
+    0: ('rFoot', 'rKnee'),
+    3: ('lHip', 'hip'),
+    4: ('lKnee', 'lHip'),
+    5: ('lFoot', 'lKnee'),
+    7: ('spine', 'hip'),
+    8: ('thorax', 'spine'),
+    9: ('head', 'thorax'),
+    13: ('lShoulder', 'thorax'),
+    14: ('lElbow', 'lShoulder'),
+    15: ('lWrist', 'lElbow'),
+    12: ('rShoulder', 'thorax'),
+    11: ('rElbow', 'rShoulder'),
+    10: ('rWrist', 'rElbow'),
+}

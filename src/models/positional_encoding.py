@@ -7,6 +7,9 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+# Maximal: 50fps
+# 100
+# 200 
 
 class PositionalEncodingSinusoidal(nn.Module):
     """

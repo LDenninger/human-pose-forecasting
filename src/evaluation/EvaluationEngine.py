@@ -242,6 +242,8 @@ class EvaluationEngineActive:
             for i in range(1, self.last_target_frame + 1):
                 # Compute the output
                 output = model(cur_input)
+                prediction = output[..., -1,:]
+                target = data[:, self.seed_length + i - 2] # [batch_size, num_joints, joint_dim]
                 # Check if we want to compute metrics for this timestep
                 if i in self.target_frames:
                     # Compute the implemented metrics
@@ -252,11 +254,14 @@ class EvaluationEngineActive:
                     else:
                         pred = output[:, -1].detach().cpu()
                     predictions[i].append(pred)
-                    targets[i].append(data[:, self.seed_length + i - 1].detach().cpu())
+                    targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
                 # Update model input for auto-regressive prediction
                 cur_input = output
         # Compute the distance metrics for each timestep
         for frame in self.target_frames:
+            predictions = torch.stack(predictions)# [seq_len, batch_size, num_joints, joint_dim]
+            predictions = torch.transpose(predictions, 0, 1) # [seq_len, batch_size, num_joints, joint_dim]
+
             timestep = frame * (H36M_STEP_SIZE_MS * self.down_sampling_factor)
             timestep_prediction = torch.flatten(
                 torch.stack(predictions[frame]), start_dim=0, end_dim=1
