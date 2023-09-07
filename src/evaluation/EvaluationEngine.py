@@ -24,6 +24,9 @@ from .metrics import (
     accuracy_under_curve,
 )
 
+from .visualizer import(
+    compare_sequences_plotly
+)
 
 METRICS_IMPLEMENTED = {
     "geodesic_distance": geodesic_distance,
@@ -61,6 +64,7 @@ class EvaluationEngineActive:
         rot_representation: Optional[Literal["axis", "mat", "quat", "6d", None]] = None,
         batch_size: Optional[int] = 32,
         normalize: Optional[bool] = False,
+        visualizations_per_batch: Optional[int] = 0,
     ) -> None:
         """
         Initialize the standard evaluation evaluating per-joint metrics.
@@ -83,6 +87,7 @@ class EvaluationEngineActive:
         self.batches_per_action = batches_per_action
         self.evaluation_finished = False
         self.total_iterations = batches_per_action * len(actions)
+        self.visualizations_per_batch = visualizations_per_batch
         # Set the target frames and reachable timesteps given the time intervals between frames
         self.target_frames = np.ceil(
             np.array(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)
@@ -270,6 +275,28 @@ class EvaluationEngineActive:
                 reduction="mean",
                 representation=self.rot_representation,
             )
+        if self.visualizations_per_batch > 0:
+            # Create visualizations
+            for frame in self.target_frames:
+                predictions = torch.stack(predictions[frame], start_dim=0, end_dim=1)  # [seq_len, batch_size, num_joints, joint_dim]
+                predictions = torch.transpose(predictions, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
+                # Get as many batches as specified in self.visualizations_per_batch
+                predictions = predictions[:self.visualizations_per_batch]
+                targets = torch.stack(targets[frame], start_dim=0, end_dim=1)  # [seq_len, batch_size, num_joints, joint_dim]
+                targets = torch.transpose(targets, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
+                # Get first 4 batches
+                targets = targets[:self.visualizations_per_batch]
+                # Create visualizations
+                for i in range(self.visualizations_per_batch):
+                    comparison_img = compare_sequences_plotly(
+                        sequence_names=["ground truth", "prediction"],
+                        sequences=[targets[i], predictions[i]],
+                        time_steps_ms=self.target_timesteps,
+                    )
+                    # Log comparison image
+                    logger = LOGGER
+                    if logger is not None:
+                        logger.log_image(name=f"{action}/{frame}/{i}", image=comparison_img) 
 
     #####===== Utility Functions =====#####
 
