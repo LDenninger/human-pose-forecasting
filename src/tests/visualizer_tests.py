@@ -2,6 +2,8 @@ import time
 import random
 
 import torch
+import numpy as np
+from PIL import Image
 
 from ..data_utils import (
     SkeletonModel32,
@@ -45,7 +47,7 @@ def test_visualizer():
     visualizer = Visualizer()
 
     # Visualize sequences
-    visualizer.compare_sequences_plotly(
+    img = visualizer.compare_sequences_plotly(
         sequence_names=sequence_names,
         sequences=sequences,
         title_text="Test Sequence",
@@ -54,5 +56,8 @@ def test_visualizer():
             (i * 4 + 10) % sequences[0].shape[0] for i in range(len(sequences))
         ],
     )
+
+    # Show image which is in numpy format
+    Image.fromarray(img).show()
 
     pass

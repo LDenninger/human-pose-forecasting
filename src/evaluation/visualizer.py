@@ -6,9 +6,11 @@ import torch
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 import plotly.graph_objects as go
-import plotly.express as px
+import plotly.io as pio
+import io
+from PIL import Image
 from plotly.subplots import make_subplots
-from IPython.display import Image
+import numpy as np
 
 from ..data_utils import (
     SkeletonModel32,
@@ -236,10 +238,17 @@ class Visualizer:
 
         if save_path is not None:
             fig.write_image(save_path)
-        else:
-            fig.write_image(
-                f"compare_sequences_plotly_{ncols}_{figsize[0]}_{figsize[1]}.png"
-            )
+
+        # Use Plotly's to_image method to convert the figure to an image
+        fig_data = pio.to_image(fig, format="png")
+
+        # Convert the binary image data to a Pillow Image object
+        image = Image.open(io.BytesIO(fig_data))
+
+        # Convert the Pillow Image to a numpy array
+        image_array = np.array(image)
+
+        return image_array
 
 
 def calculate_mean_points(n):
