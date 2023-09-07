@@ -13,6 +13,7 @@ import numpy as np
 import json
 import torch
 import torch.nn as nn
+import torchvision
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union, Literal
 import traceback
 from datetime import datetime
@@ -393,6 +394,10 @@ class Logger(object):
                 image = np.transpose(image, (1, 2, 0))
             elif len(image.shape) == 4:
                 image = np.transpose(image, (0, 2, 3, 1))
+        try:
+            torchvision.utils.save_image(image, self.vis_path / f"{name}.png")
+        except: 
+            print_(f"Failed to save image {name} to {self.vis_path}.")
         wandbImage = wandb.Image(image)
         wandb.log({name: wandbImage}, step=step)
     
