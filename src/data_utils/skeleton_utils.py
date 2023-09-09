@@ -18,7 +18,8 @@ from .meta_info import (
     SH_SKELETON_STRUCTURE,
     H36M_REDUCED_ANGLE_INDICES,
     SH_NAMES,
-    VLP_NAMES
+    VLP_NAMES,
+    H36M_NON_REDUNDANT_PARENT_IDS
 
 )
 #####===== Helper Functions =====#####
@@ -131,6 +132,7 @@ def convert_s26_to_s21(seq: torch.Tensor,
             # Adjust relative rotations
             if not pos_rep:
                 rot_mat_cut = to_rotmat(seq[...,(ind-i),:])
+                
                 # Iterate through all children joints of the joint to be removed
                 for child_ind in H36M_REDUCED_IND_TO_CHILD[ind]:
                     # Query the rotation to get the rotation of the children joint wrt to its new parent
