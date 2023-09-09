@@ -15,7 +15,9 @@ from ..data_utils import (
     axis_angle_to_matrix,
 )
 from ..visualization import visualize_skeleton, compare_skeleton
-from ..evaluation import Visualizer
+from ..evaluation import (
+    compare_sequences_plotly
+)
 
 
 def test_visualizer():
@@ -44,10 +46,8 @@ def test_visualizer():
     # Create sequence names
     sequence_names = [f"seq{i}" for i in range(seq_amount)]
 
-    visualizer = Visualizer()
-
     # Visualize sequences
-    img = visualizer.compare_sequences_plotly(
+    img = compare_sequences_plotly(
         sequence_names=sequence_names,
         sequences=sequences,
         title_text="Test Sequence",
