@@ -81,7 +81,7 @@ def main():
     if args.penc:
         test_pose_encoding_decoding()
     if args.metrics:
-        test_metrics()
+        test_distribution_metrics()
     if args.visualizer:
         test_visualizer()
 

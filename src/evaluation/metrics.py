@@ -63,11 +63,11 @@ def evaluate_distribution_metrics(
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
         if metric == "ps_entropy":
-            results[metric] = METRICS_IMPLEMENTED[metric](predictions).item()
+            results[metric] = METRICS_IMPLEMENTED[metric](power_spec_pred)
         elif metric == "ps_kld":
             results[metric] = METRICS_IMPLEMENTED[metric](
                 power_spec_targ, power_spec_pred
-            ).item()
+            )
 
     return results
 
@@ -147,14 +147,14 @@ def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     feature_size = seq.shape[-1]
     n_joints = seq.shape[1]
 
-    seq_t = torch.transpose(seq, [0, 2, 1, 3])
+    seq_t = seq.permute(0, 2, 1, 3)
     dims_to_use = torch.where(
         (torch.reshape(seq_t, [-1, n_joints, feature_size]).std(0) >= 1e-4).all(dim=-1)
     )[0]
     seq_t = seq_t[:, :, dims_to_use]
 
     seq_t = torch.reshape(seq_t, [seq_t.shape[0], seq_t.shape[1], 1, -1])
-    seq = torch.transpose(seq_t, [0, 2, 1, 3])
+    seq = seq_t.permute(0, 2, 1, 3)
 
     seq_fft = torch.fft.fft(seq, dim=2)
     seq_ps = torch.abs(seq_fft) ** 2
