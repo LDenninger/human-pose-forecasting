@@ -274,7 +274,6 @@ def euler_angle_error(
     Returns:
         The Euler angle error as a torch tensor of shape (..., )
     """
-
     preds, _ = _fix_dimensions(predictions)
     targs, orig_shape = _fix_dimensions(targets)
     shape = predictions.shape
@@ -286,14 +285,10 @@ def euler_angle_error(
     euler_preds = torch.reshape(euler_preds, (*shape[:-1], 3))
     euler_targs = torch.reshape(euler_targs, (*shape[:-1], 3))
 
-    # reshape to (-1, n_joints*3) to be consistent with previous work
-    euler_preds = euler_preds.view(-1, shape[-3] * 3)
-    euler_targs = euler_targs.view(-1, shape[-3] * 3)
-
     # l2 error on euler angles
-    idx_to_use = torch.where(torch.std(euler_targs, dim=0) > 1e-4)[0]
-    euc_error = torch.pow(euler_targs[:, idx_to_use] - euler_preds[:, idx_to_use], 2)
-    euc_error = torch.sqrt(torch.sum(euc_error, dim=1))  # (-1, ...)
+    id_to_use = torch.where(torch.mean(torch.std(euler_targs, dim=0),dim=-1) > 1e-04)
+    euc_error = torch.pow(euler_targs[id_to_use] - euler_preds[id_to_use], 2)
+    euc_error = torch.sqrt(torch.sum(euc_error, dim=-1))  # (-1, ...)
 
     # reshape to original
     return _reduce(euc_error, reduction)
