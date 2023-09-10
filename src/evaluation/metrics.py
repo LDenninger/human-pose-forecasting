@@ -26,15 +26,21 @@ ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
 
 def evaluate_distribution_metrics(
     predictions: torch.Tensor,
+    targets: torch.Tensor,
     metrics: List[str] = None,
     reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
-    representation: Optional[Literal["axis", "mat", "quat", "6d"]] = "mat",
 ):
     """
     Evaluate the distribution metrics for long predictions.
+
+    Args:
+        predictions: torch tensor of predicted joints in shape (seq_len, batch_size, num_joints, joint_dim)
+        targets: torch tensor of target joints in shape (seq_len, batch_size, num_joints, joint_dim)
+        metrics: List of metrics to evaluate. If None, all implemented metrics are evaluated.
+        reduction: Reduction to apply to the metrics. If None, no reduction is applied.
+
     """
     METRICS_IMPLEMENTED = {
-        "power_spectrum": power_spectrum,
         "ps_entropy": ps_entropy,
         "ps_kld": ps_kld,
     }
@@ -43,20 +49,27 @@ def evaluate_distribution_metrics(
         metrics = METRICS_IMPLEMENTED.keys()
 
     results = {}
-    conversion_func = get_conv_to_rotation_matrix(representation)
-    predictions = conversion_func(predictions)
-    targets = conversion_func(targets)
 
-    if representation == "mat":
-        # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
-        predictions = correct_rotation_matrix(predictions)
+    # Compute the power spectrum of the predictions
+    # For that we need to reshape the predictions to (batch_size, num_joints, seq_len, joint_dim)
+    power_spec_pred = torch.permute(predictions, (1, 2, 0, 3))
+    power_spec_pred = power_spectrum(power_spec_pred)
+
+    # Compute the power spectrum of the targets
+    power_spec_targ = torch.permute(targets, (1, 2, 0, 3))
+    power_spec_targ = power_spectrum(power_spec_targ)
 
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
-        results[metric] = METRICS_IMPLEMENTED[metric](predictions).item()
+        if metric == "ps_entropy":
+            results[metric] = METRICS_IMPLEMENTED[metric](predictions).item()
+        elif metric == "ps_kld":
+            results[metric] = METRICS_IMPLEMENTED[metric](
+                power_spec_targ, power_spec_pred
+            ).item()
 
-    pass
+    return results
 
 
 def evaluate_distance_metrics(
@@ -81,7 +94,7 @@ def evaluate_distance_metrics(
         metrics = METRICS_IMPLEMENTED.keys()
 
     results = {}
-    if representation != 'pos':
+    if representation != "pos":
         conversion_func = get_conv_to_rotation_matrix(representation)
         predictions = conversion_func(predictions)
         targets = conversion_func(targets)
@@ -89,7 +102,7 @@ def evaluate_distance_metrics(
     if representation == "mat":
         # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
         predictions = correct_rotation_matrix(predictions)
-    if representation != 'pos':
+    if representation != "pos":
         predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
         targets = torch.reshape(targets, (*targets.shape[:-2], 9))
 
@@ -99,7 +112,9 @@ def evaluate_distance_metrics(
         if metric == "auc":
             # Compute the joint positions using forward kinematics
             if representation != "pos":
-                prediction_positions, _ = h36m_forward_kinematics(predictions, representation)
+                prediction_positions, _ = h36m_forward_kinematics(
+                    predictions, representation
+                )
                 target_positions, _ = h36m_forward_kinematics(targets, representation)
             else:
                 prediction_positions = predictions
