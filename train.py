@@ -45,7 +45,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
-QUEUED = True # Activate the usage of the training queue
+QUEUED = False # Activate the usage of the training queue
 EXPERIMENT_NAMES = ['representation_study']*8
 RUN_NAMES = ['baseline_1', '6d_abs_1', '6d_geo_1', 'baseline_geo_1', 'position_abs_1', 'position_rel_1', 'quat_abs_1', 'quat_geo_1']
 

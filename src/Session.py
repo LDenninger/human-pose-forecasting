@@ -195,7 +195,7 @@ class Session:
             joint_cutout_prob=self.config['data_augmentation']['joint_cutout_prob'],
             timestep_cutout_prob=self.config['data_augmentation']['timestep_cutout_prob']
         )
-        self.data_augmentor.set_mean_var(mean, var)
+        self.data_augmentor.set_mean_var(mean.to(self.device), var.to(self.device))
 
     @log_function
     def load_checkpoint(self, checkpoint: str):

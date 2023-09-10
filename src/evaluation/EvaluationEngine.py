@@ -238,7 +238,7 @@ class EvaluationEngineActive:
             self.data_augmentor = DataAugmentor(normalize=self.normalize)
             if self.normalize:
                 mean, var = dataset.get_mean_variance()
-                self.data_augmentor.set_mean_var(mean, var)
+                self.data_augmentor.set_mean_var(mean.to(self.device), var.to(self.device))
             self.evaluation_loop(action, model, data_loader)
         if self.split_actions:
             self._compute_overall_means()
@@ -301,25 +301,25 @@ class EvaluationEngineActive:
             timestep_target = torch.stack(targets[frame])
             if self.calculate_distribution_metrics:
                 # Needs stacked tensor instead of flattened one
-                self.evaluation_results[action][timestep]["distribution_metrics"] = evaluate_distribution_metrics(
+                self.evaluation_results[action][timestep].update(evaluate_distribution_metrics(
                     timestep_prediction,
                     timestep_target,
                     reduction="mean",
                     metrics=self.distribution_metric_names,
-                )
+                ))
             timestep_prediction = torch.flatten(
                 timestep_prediction, start_dim=0, end_dim=1
             )
             timestep_target = torch.flatten(
                 timestep_target, start_dim=0, end_dim=1
             )
-            self.evaluation_results[action][timestep]["distance_metrics"] = evaluate_distance_metrics(
+            self.evaluation_results[action][timestep].update(evaluate_distance_metrics(
                 timestep_prediction,
                 timestep_target,
                 reduction="mean",
                 metrics=self.metric_names,
                 representation=self.representation,
-            )
+            ))
             
         if self.visualizations_per_batch > 0:
             # Create visualizations

@@ -39,10 +39,11 @@ class DataAugmentor(nn.Module):
         """
             Unnormalizes an output tensor from the model.        
         """
+        device = x.device
         if self.norm_mean is None or self.norm_var is None:
             print_("Mean and variance are not set. Normalization is not performed.", "warn")
             return x
-        return x*self.norm_var + self.norm_mean
+        return x*self.norm_var.to(device) + self.norm_mean.to(device)
     
     def set_mean_var(self, mean: float, var: float) -> None:
         self.norm_mean = mean
