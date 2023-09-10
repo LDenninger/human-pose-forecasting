@@ -68,6 +68,19 @@ class PerJointMSELoss(LossBase):
         loss = torch.sqrt(loss) # mse over all rotation dimensions
         return self._reduce_sum_and_mean(loss)
     
+class PositionMSE(LossBase):
+    """
+        Module to compute the mean squared error between joint positions
+    """
+    def __init__(self):
+        super(PositionMSE, self).__init__()
+
+    def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+        loss = torch.sum(loss, dim=-1) # Sum over rotation dimensions
+        loss = torch.sqrt(loss) # mse over all rotation dimensions
+        return self._reduce_mean(loss)
+    
 class GeodesicLoss(LossBase):
     """
         Module to compute the geodesic loss on an arbitrary rotation representation.

@@ -3,7 +3,7 @@
     "batch_size": 32,
     "num_epochs": 20,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 200,
+    "num_eval_iterations": 20,
     "seq_length": 75,
     "checkpoint_frequency": 1,
     "model": {
@@ -35,7 +35,7 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "mse"
+        "type": "position_mse"
     },
     "lr_scheduler": {
         "type": "baseline",
@@ -46,12 +46,12 @@
         "num_joints": 21
     },
     "joint_representation": {
-        "type": "mat",
+        "type": "pos",
         "absolute": false,
-        "joint_dim": 9
+        "joint_dim": 3
     },
     "evaluation": {
-        "metrics": ["geodesic_distance", "positional_mse", "euler_angle", "auc"],
+        "metrics": ["positional_mse", "auc"],
         "frequency": 1,
         "exhaustive_evaluation": true,
         "timesteps": [100,200,300,400]

@@ -92,7 +92,10 @@ class Session:
     ###=== Initialization Functions ===###
 
     @log_function
-    def initialize_evaluation(self, exhaustive_evaluation: Optional[bool] = None) -> bool:
+    def initialize_evaluation(self, 
+                              exhaustive_evaluation: Optional[bool] = None, 
+                              split_actions: Optional[bool]=False,
+                              dataset: Literal['h36m','ais'] = 'h36m') -> bool:
         """
             Initialize the evaluation procedure and load the corresponding data
         """
@@ -101,16 +104,22 @@ class Session:
             self.exhaustive_evaluation = self.config['evaluation']['exhaustive_evaluation']
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
         if self.exhaustive_evaluation:
-            self.evaluation_engine = EvaluationEngineActive(self.device)
-            self.evaluation_engine.initialize_evaluation(
-                batches_per_action=self.config['num_eval_iterations'],
-                seed_length = self.config['dataset']['seed_length'],
+            self.evaluation_engine = EvaluationEngineActive(
+                iterations = self.config['num_eval_iterations'],
                 prediction_timesteps = self.config['evaluation']['timesteps'],
+                metric_names=self.config['evaluation']['metrics'],
+                device=self.device)
+            self.evaluation_engine.load_data(
+                dataset=dataset,
+                seed_length = self.config['dataset']['seed_length'],
                 down_sampling_factor=self.config['dataset']['downsampling_factor'],
+                split_actions=split_actions,
                 stacked_hourglass = True if self.config['skeleton']['type']=='s16' else False,
+                normalize=self.config['data_augmentation']['normalize'],
                 representation= self.config['joint_representation']['type']
+
             )
-            self.num_eval_iterations = self.evaluation_engine.total_iterations
+            self.num_eval_iterations = self.config['num_eval_iterations']
             print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
         else:
             self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
@@ -225,7 +234,7 @@ class Session:
         if self.test_loader is None and not self.exhaustive_evaluation:
             print_("Cannot train without a test loader.", 'error')
             return False
-        
+        import ipdb; ipdb.set_trace()
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
         if self.evaluate_model:
             print_(f"Initial Evaluation:")
@@ -236,7 +245,7 @@ class Session:
                 self.metric_tracker.reset()
                 self.evaluation_epoch()
             self._print_epoch_results()
-
+        import ipdb; ipdb.set_trace()
         for self.epoch in range(1, self.config['num_epochs'] + 1):
             print_(f"Epoch {self.epoch}/{self.config['num_epochs']}", 'info')
             # Reset the tracked metrics for the new epoch

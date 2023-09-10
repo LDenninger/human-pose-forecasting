@@ -35,7 +35,7 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "mse"
+        "type": "position_mse"
     },
     "lr_scheduler": {
         "type": "baseline",
@@ -46,12 +46,12 @@
         "num_joints": 21
     },
     "joint_representation": {
-        "type": "position",
+        "type": "pos",
         "absolute": true,
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["geodesic_distance", "positional_mse", "euler_angle", "auc"],
+        "metrics": ["positional_mse", "auc"],
         "frequency": 1,
         "exhaustive_evaluation": true,
         "timesteps": [100,200,300,400]

@@ -3,7 +3,7 @@
     "batch_size": 32,
     "num_epochs": 20,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 200,
+    "num_eval_iterations": 30,
     "seq_length": 75,
     "checkpoint_frequency": 1,
     "model": {
@@ -50,7 +50,7 @@
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["geodesic_distance", "positional_mse", "euler_angle", "auc"],
+        "metrics": ["geodesic_distance", "positional_mse", "euler_error", "auc"],
         "frequency": 1,
         "exhaustive_evaluation": true,
         "timesteps": [100,200,300,400]

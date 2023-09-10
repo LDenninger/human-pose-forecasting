@@ -81,16 +81,17 @@ def evaluate_distance_metrics(
         metrics = METRICS_IMPLEMENTED.keys()
 
     results = {}
-    conversion_func = get_conv_to_rotation_matrix(representation)
-    predictions = conversion_func(predictions)
-    targets = conversion_func(targets)
+    if representation != 'pos':
+        conversion_func = get_conv_to_rotation_matrix(representation)
+        predictions = conversion_func(predictions)
+        targets = conversion_func(targets)
 
     if representation == "mat":
         # If we directly predict rotation matrices we have to make sure they are actually a rotation matrix
         predictions = correct_rotation_matrix(predictions)
-
-    predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
-    targets = torch.reshape(targets, (*targets.shape[:-2], 9))
+    if representation != 'pos':
+        predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
+        targets = torch.reshape(targets, (*targets.shape[:-2], 9))
 
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():

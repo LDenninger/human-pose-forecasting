@@ -74,6 +74,7 @@ def test_h36m_forward_kinematics():
         down_sampling_factor=2,
         sequence_spacing=0,
         return_label=False,
+        raw_data=True,
         is_train=True,
         debug=True
     )
@@ -82,7 +83,7 @@ def test_h36m_forward_kinematics():
     for seq in dataset:
         position_list = []
         baseline_position_list = []
-        seq_positions, seq_rotation = h36m_forward_kinematics(seq, representation='axis', hip_as_root=True)
+        seq_positions, seq_rotation = h36m_forward_kinematics(seq, representation='axis', hip_as_root=False)
 
         for i in range(seq.shape[0]):
             # import ipdb; ipdb.set_trace()
@@ -103,7 +104,7 @@ def test_h36m_forward_kinematics():
         time.sleep(3)
         # visualize_skeleton(baseline_position_list, H36M_SKELETON_STRUCTURE, title_text = title_info)
         compare_skeleton(
-            baseline_position_list,
+            position_list,
             position_list,
             H36M_SKELETON_STRUCTURE,
             H36M_SKELETON_STRUCTURE,

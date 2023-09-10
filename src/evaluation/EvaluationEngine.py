@@ -45,52 +45,40 @@ class EvaluationEngineActive:
     Here we compute all defined metrics, instead of a small subset.
     """
 
-    def __init__(self, device: str = "cpu"):
+    def __init__(self,
+                iterations: int,
+                prediction_timesteps: List[int],
+                metric_names: List[str],
+                visualizations_per_batch: Optional[int] = 0, 
+                device: str = "cpu"):
         """
         Initialize the active evaluation engine.
         """
+        ##== Evaluation Parameters ==##
+        self.prediction_timesteps = prediction_timesteps
+        self.iterations = iterations
+        self.evaluation_finished = False
+        self.metric_names = metric_names
+        self.visualizations_per_batch = visualizations_per_batch
         self.device = torch.device(device)
         self.initialized = False
 
-    @log_function
-    def initialize_evaluation(
-        self,
-        batches_per_action: int,
-        seed_length: int,
-        prediction_timesteps: List[int],
-        down_sampling_factor: int = 1,
-        actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
-        representation: Optional[Literal["axis", "mat", "quat", "6d", "pos", None]] = None,
-        stacked_hourglass: Optional[bool] = False,
-        batch_size: Optional[int] = 32,
-        normalize: Optional[bool] = False,
-        visualizations_per_batch: Optional[int] = 0,
-    ) -> None:
-        """
-        Initialize the standard evaluation evaluating per-joint metrics.
-        """
-        if self.initialized:
-            print_("The evaluation engine has already been initialized.", "warn")
-            return
-        print_("Initializing the evaluation engine for an exhaustive evaluation...")
-        ##== Data Structures ==##
-        self.datasets = {}
-        self.evaluation_results = {}
-        for a in actions + ["overall"]:
-            self.evaluation_results[a] = {}
-            for timestep in prediction_timesteps:
-                self.evaluation_results[a][timestep] = {}
-                for metric_names in METRICS_IMPLEMENTED.keys():
-                    self.evaluation_results[a][timestep][metric_names] = []
-        ##== Evaluation Parameters ==##
-        self.prediction_timesteps = prediction_timesteps
-        self.batches_per_action = batches_per_action
-        self.evaluation_finished = False
-        self.total_iterations = batches_per_action * len(actions)
-        self.visualizations_per_batch = visualizations_per_batch
+
+    def load_data(self,
+            dataset: Literal['h36m', 'ais'],
+            seed_length: int,
+            down_sampling_factor: int = 1,
+            actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
+            split_actions: Optional[bool] = False,
+            representation: Optional[Literal["axis", "mat", "quat", "6d", "pos", None]] = None,
+            stacked_hourglass: Optional[bool] = False,
+            batch_size: Optional[int] = 32,
+            normalize: Optional[bool] = False,
+    ):
+        
         # Set the target frames and reachable timesteps given the time intervals between frames
         self.target_frames = np.ceil(
-            np.array(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)
+            np.array(self.prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)
         ).astype(int)
         self.target_timesteps = (
             self.target_frames * (H36M_STEP_SIZE_MS * down_sampling_factor)
@@ -103,40 +91,81 @@ class EvaluationEngineActive:
             )
         self.last_target_frame = max(self.target_frames)
         self.target_length = math.ceil(
-            max(prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)
+            max(self.prediction_timesteps) / (H36M_STEP_SIZE_MS * down_sampling_factor)
         )
-
         ##== Dataset Parameters ==##
         self.seed_length = seed_length
         self.normalize = normalize
-
+        self.split_actions = split_actions
         self.representation = representation
         self.down_sampling_factor = down_sampling_factor
         self.actions = actions
         self.batch_size = batch_size
         print_(f"Load the evaluation data for each action")
+
+        self.total_iterations = self.iterations
+
         ##== Load Action dataset ==##
-        for a in self.actions:
-            self.datasets[a] = H36MDataset(
-                actions=[a],
-                seed_length=self.seed_length,
-                target_length=self.target_length,
-                down_sampling_factor=self.down_sampling_factor,
-                stacked_hourglass=stacked_hourglass,
-                rot_representation=representation,
-            )
+        if dataset == 'h36m':
+            if split_actions:
+                self.datasets = {}
+                for a in self.actions:
+                    self.datasets[a] = H36MDataset(
+                        actions=[a],
+                        seed_length=self.seed_length,
+                        target_length=self.target_length,
+                        down_sampling_factor=self.down_sampling_factor,
+                        stacked_hourglass=stacked_hourglass,
+                        rot_representation=representation,
+                        is_train=False
+                    )
+                self.evaluation_results = {}
+                for a in actions + ["overall"]:
+                    self.evaluation_results[a] = {}
+                    for timestep in self.target_timesteps:
+                        self.evaluation_results[a][timestep] = {}
+                        for metric_names in self.metric_names:
+                            self.evaluation_results[a][timestep][metric_names] = []
+            else:
+                self.datasets = {}
+                self.datasets['overall'] =  H36MDataset(
+                        actions=actions,
+                        seed_length=self.seed_length,
+                        target_length=self.target_length,
+                        down_sampling_factor=self.down_sampling_factor,
+                        stacked_hourglass=stacked_hourglass,
+                        rot_representation=representation,
+                        is_train=False
+                    )
+                self.evaluation_results = {}
+                self.evaluation_results['overall'] = {}
+                for timestep in self.target_timesteps:
+                    self.evaluation_results['overall'][timestep] = {}
+                    for metric_names in self.metric_names:
+                        self.evaluation_results['overall'][timestep][metric_names] = []
+        elif dataset == 'ais':
+            return
+
 
     def reset(self) -> None:
         """
         Reset the evaluation engine.
         """
-        self.evaluation_results = {}
-        for a in self.actions + ["overall"]:
-            self.evaluation_results[a] = {}
+        if self.split_actions:
+            self.evaluation_results = {}
+            for a in self.actions + ["overall"]:
+                self.evaluation_results[a] = {}
+                for timestep in self.target_timesteps:
+                    self.evaluation_results[a][timestep] = {}
+                    for metric_names in self.metric_names:
+                        self.evaluation_results[a][timestep][metric_names] = []
+        else:
+            self.evaluation_results = {}
+            self.evaluation_results['overall'] = {}
             for timestep in self.target_timesteps:
-                self.evaluation_results[a][timestep] = {}
-                for metric_names in METRICS_IMPLEMENTED.keys():
-                    self.evaluation_results[a][timestep][metric_names] = []
+                self.evaluation_results['overall'][timestep] = {}
+                for metric_names in self.metric_names:
+                    self.evaluation_results['overall'][timestep][metric_names] = []
         self.evaluation_finished = False
 
     def print(self) -> None:
@@ -156,9 +185,10 @@ class EvaluationEngineActive:
         if logger is None:
             print_(f"No logger defined, cannot log evaluation results")
         data_dir = {}
-        for a in self.actions + ["overall"]:
+        actions = self.actions + ["overall"] if self.split_actions else ['overall']
+        for a in actions:
             for p in self.target_timesteps:
-                for m in METRICS_IMPLEMENTED.keys():
+                for m in self.metric_names:
                     data_dir[f"{a}/{p}/{m}"] = self.evaluation_results[a][p][m]
         logger.log(data_dir, step)
 
@@ -196,7 +226,6 @@ class EvaluationEngineActive:
 
         model.eval()
         print_(f"Start evaluation on actions: {self.actions}")
-
         for action, dataset in self.datasets.items():
             data_loader = torch.utils.data.DataLoader(
                 dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
@@ -206,7 +235,8 @@ class EvaluationEngineActive:
                 mean, var = dataset.get_mean_variance()
                 self.data_augmentor.set_mean_var(mean, var)
             self.evaluation_loop(action, model, data_loader)
-        self._compute_overall_means()
+        if self.split_actions:
+            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -226,7 +256,7 @@ class EvaluationEngineActive:
         # Initialize progress bar
         dataset = self.datasets[action]
         data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
-        progress_bar = tqdm(enumerate(data_loader), total=self.batches_per_action)
+        progress_bar = tqdm(enumerate(data_loader), total=self.iterations)
         progress_bar.set_description(f"Evaluation {action}")
 
         predictions = {}
@@ -236,7 +266,7 @@ class EvaluationEngineActive:
             targets[i] = []
 
         for batch_idx, data in progress_bar:
-            if batch_idx == self.batches_per_action:
+            if batch_idx == self.iterations:
                 break
             # Load data
             data = data.to(self.device)
@@ -246,8 +276,6 @@ class EvaluationEngineActive:
             for i in range(1, self.last_target_frame + 1):
                 # Compute the output
                 output = model(cur_input)
-                prediction = output[..., -1,:]
-                target = data[:, self.seed_length + i - 2] # [batch_size, num_joints, joint_dim]
                 # Check if we want to compute metrics for this timestep
                 if i in self.target_frames:
                     # Compute the implemented metrics
@@ -263,9 +291,6 @@ class EvaluationEngineActive:
                 cur_input = output
         # Compute the distance metrics for each timestep
         for frame in self.target_frames:
-            predictions = torch.stack(predictions)# [seq_len, batch_size, num_joints, joint_dim]
-            predictions = torch.transpose(predictions, 0, 1) # [seq_len, batch_size, num_joints, joint_dim]
-
             timestep = frame * (H36M_STEP_SIZE_MS * self.down_sampling_factor)
             timestep_prediction = torch.flatten(
                 torch.stack(predictions[frame]), start_dim=0, end_dim=1
@@ -277,6 +302,7 @@ class EvaluationEngineActive:
                 timestep_prediction,
                 timestep_target,
                 reduction="mean",
+                metrics=self.metric_names,
                 representation=self.representation,
             )
         if self.visualizations_per_batch > 0:
@@ -300,7 +326,7 @@ class EvaluationEngineActive:
                     # Log comparison image
                     logger = LOGGER
                     if logger is not None:
-                        logger.log_image(name=f"{action}/{frame}/{i}", image=comparison_img) 
+                        logger.log_image(name=f"{action}_{frame}_{i}", image=comparison_img) 
 
     #####===== Utility Functions =====#####
 
@@ -340,7 +366,7 @@ class EvaluationEngineActive:
             else:
                 print_(f"Evaluation results for action {a}:")
             table = PrettyTable()
-            table.field_names = ["Pred. length"] + list(METRICS_IMPLEMENTED.keys())
+            table.field_names = ["Pred. length"] + list(self.metric_names)
             for pred_length in self.evaluation_results[a].keys():
                 table.add_row(
                     [pred_length]

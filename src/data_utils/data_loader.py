@@ -59,8 +59,8 @@ class H36MDatasetBase(Dataset):
         """
             Computes the mean and variance over the data for normalization
         """
-        mean = torch.mean(self.data, dim=0)
-        var = torch.var(self.data, dim=0)
+        mean = torch.mean(self.data)
+        var = torch.var(self.data)
         return mean, var
     
     def _compute_valid_indices(self):
@@ -124,6 +124,7 @@ class H36MDataset(H36MDatasetBase):
                     absolute_position: Optional[bool] = False,
                     return_label: Optional[bool] = False,
                     is_train: Optional[bool]=True,
+                    raw_data: Optional[bool] = False,
                     debug: Optional[bool]=False):
         """
             Initialize the H36M dataset. This loads the data from the H36M dataset to torch tensors.
@@ -156,14 +157,16 @@ class H36MDataset(H36MDatasetBase):
             self.valid_indices, self.labels = self.valid_indices
 
         # Write the data into a flattened tensor for easier indexing
+
         self.data = self._flatten_data(self.data)
-        if rot_representation != 'pos':
-            self.data = parse_h36m_to_s26(self.data, get_conv_from_axis_angle(rot_representation))
-        else:
-            self.data, _ = h36m_forward_kinematics(self.data, 'axis', hip_as_root=not absolute_position)
-            self.data = convert_s26_to_s21(self.data, interpolate=False)
-            if stacked_hourglass:
-                self.data = convert_s21_to_s16(self.data, interpolate=False)
+        if not raw_data:
+            if rot_representation != 'pos':
+                self.data = parse_h36m_to_s26(self.data, get_conv_from_axis_angle(rot_representation))
+            else:
+                self.data, _ = h36m_forward_kinematics(self.data, 'axis', hip_as_root=not absolute_position)
+                self.data = convert_s26_to_s21(self.data, interpolate=False)
+                if stacked_hourglass:
+                    self.data = convert_s21_to_s16(self.data, interpolate=False)
             
         self.full_length = len(self.data)
 
@@ -172,7 +175,7 @@ class H36MDataset(H36MDatasetBase):
         sequence = self.data[seq_start:(seq_start + self.seed_length + self.target_length)]
         # Reverse the sequence with given probability
         if self.reverse_prob != 0.0 and torch.randn(1).item() < self.reverse_prob:
-            sequence = torch.flip(sequence, 0)
+            sequence = torch.flip(sequence, dims=(0,))
         if self.return_label:
             return sequence, self.labels[x]
         return sequence

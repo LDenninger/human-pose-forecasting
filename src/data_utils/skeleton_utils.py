@@ -248,7 +248,7 @@ def convert_s26_to_s16(seq: torch.Tensor,
 
 def h36m_forward_kinematics(data: torch.Tensor, 
                              representation: Literal['axis', 'mat', 'quat', '6d'], 
-                              hip_as_root: Optional[bool] = False,
+                              hip_as_root: Optional[bool] = True,
                                hip_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
     """
         Compute the forward kinematics of the h36m skeleton model from a given representation.
@@ -402,7 +402,7 @@ def _remove_joints(seq: torch.Tensor, inds: List[int]):
         Removes the by the indices given joints from the sequence.
     """
     for i, ind in enumerate(inds):
-        seq = torch.cat([seq[...,0:(ind-i),:], seq[...,(ind-i)+1:,:]])
+        seq = torch.cat([seq[...,0:(ind-i),:], seq[...,(ind-i)+1:,:]], dim=-2)
     return seq
 
 def _transform_representation(seq: torch.Tensor, conversion_func: Optional[callable] = None) -> torch.Tensor:
