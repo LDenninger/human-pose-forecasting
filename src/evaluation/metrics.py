@@ -62,13 +62,15 @@ def evaluate_distribution_metrics(
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
-        if metric == "ps_entropy":
-            results[metric] = METRICS_IMPLEMENTED[metric](power_spec_pred)
+        elif metric == "ps_entropy":
+            results[metric] = METRICS_IMPLEMENTED[metric](power_spec_pred).squeeze()
         elif metric == "ps_kld":
             results[metric] = METRICS_IMPLEMENTED[metric](
                 power_spec_targ, power_spec_pred
-            )
-
+            ).squeeze()
+        if reduction is not None:
+            results[metric] = _reduce(results[metric], reduction)
+    
     return results
 
 

@@ -49,7 +49,9 @@ class EvaluationEngineActive:
                 iterations: int,
                 prediction_timesteps: List[int],
                 metric_names: List[str],
-                visualizations_per_batch: Optional[int] = 0, 
+                distribution_metric_names: List[str] = ["ps_entropy", "ps_kld"],
+                visualizations_per_batch: int = 0,
+                calculate_distribution_metrics: bool = False, 
                 device: str = "cpu"):
         """
         Initialize the active evaluation engine.
@@ -59,7 +61,9 @@ class EvaluationEngineActive:
         self.iterations = iterations
         self.evaluation_finished = False
         self.metric_names = metric_names
+        self.distribution_metric_names = distribution_metric_names
         self.visualizations_per_batch = visualizations_per_batch
+        self.calculate_distribution_metrics = calculate_distribution_metrics
         self.device = torch.device(device)
         self.initialized = False
 
@@ -298,7 +302,7 @@ class EvaluationEngineActive:
             timestep_target = torch.flatten(
                 torch.stack(targets[frame]), start_dim=0, end_dim=1
             )
-            self.evaluation_results[action][timestep] = evaluate_distance_metrics(
+            self.evaluation_results[action][timestep]["distance_metrics"] = evaluate_distance_metrics(
                 timestep_prediction,
                 timestep_target,
                 reduction="mean",
@@ -326,7 +330,20 @@ class EvaluationEngineActive:
                     # Log comparison image
                     logger = LOGGER
                     if logger is not None:
-                        logger.log_image(name=f"{action}_{frame}_{i}", image=comparison_img) 
+                        logger.log_image(name=f"{action}_{frame}_{i}", image=comparison_img)
+        if self.calculate_distribution_metrics:
+            for frame in self.target_frames:
+                timestep = frame * (H36M_STEP_SIZE_MS * self.down_sampling_factor)
+                timestep_prediction = torch.stack(predictions[frame])
+                timestep_target = torch.stack(targets[frame])
+                self.evaluation_results[action][timestep]["distribution_metrics"] = evaluate_distribution_metrics(
+                    timestep_prediction,
+                    timestep_target,
+                    reduction="mean",
+                    metrics=self.distribution_metric_names,
+                )
+
+
 
     #####===== Utility Functions =====#####
 
