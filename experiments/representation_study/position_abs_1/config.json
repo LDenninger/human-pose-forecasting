@@ -3,9 +3,9 @@
     "batch_size": 32,
     "num_epochs": 20,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 200,
+    "num_eval_iterations": 100,
     "seq_length": 75,
-    "checkpoint_frequency": 1,
+    "checkpoint_frequency": 5,
     "model": {
         "type": "st_transformer",
         "num_blocks": 8,
@@ -35,7 +35,8 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "position_mse"
+        "type": "position_mse",
+        "reduction": "sum"
     },
     "lr_scheduler": {
         "type": "baseline",
@@ -48,7 +49,7 @@
     "joint_representation": {
         "type": "pos",
         "absolute": true,
-        "joint_dim": 9
+        "joint_dim": 3
     },
     "evaluation": {
         "metrics": ["positional_mse", "auc"],

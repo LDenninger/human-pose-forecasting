@@ -76,7 +76,6 @@ def evaluate_distance_metrics(
         "euler_error": euler_angle_error,
         "auc": accuracy_under_curve,
     }
-
     if metrics is None:
         metrics = METRICS_IMPLEMENTED.keys()
 
@@ -99,8 +98,8 @@ def evaluate_distance_metrics(
         if metric == "auc":
             # Compute the joint positions using forward kinematics
             if representation != "pos":
-                prediction_positions, _ = h36m_forward_kinematics(predictions, representation)
-                target_positions, _ = h36m_forward_kinematics(targets, representation)
+                prediction_positions, _ = h36m_forward_kinematics(predictions, 'mat')
+                target_positions, _ = h36m_forward_kinematics(targets, 'mat')
             else:
                 prediction_positions = predictions
                 target_positions = targets

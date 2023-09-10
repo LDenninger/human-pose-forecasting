@@ -234,7 +234,6 @@ class Session:
         if self.test_loader is None and not self.exhaustive_evaluation:
             print_("Cannot train without a test loader.", 'error')
             return False
-        import ipdb; ipdb.set_trace()
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
         if self.evaluate_model:
             print_(f"Initial Evaluation:")
@@ -245,7 +244,6 @@ class Session:
                 self.metric_tracker.reset()
                 self.evaluation_epoch()
             self._print_epoch_results()
-        import ipdb; ipdb.set_trace()
         for self.epoch in range(1, self.config['num_epochs'] + 1):
             print_(f"Epoch {self.epoch}/{self.config['num_epochs']}", 'info')
             # Reset the tracked metrics for the new epoch

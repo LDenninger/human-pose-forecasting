@@ -39,6 +39,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
         session.num_iterations = 10
         session.num_eval_iterations = 10
         session.num_epochs = 5
+        session.evaluation_engine.iterations = 10
     # Train the model
     session.train()
 

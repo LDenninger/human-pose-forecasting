@@ -1,11 +1,11 @@
 {
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 20,
+    "num_epochs": 15,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 20,
+    "num_eval_iterations": 100,
     "seq_length": 75,
-    "checkpoint_frequency": 1,
+    "checkpoint_frequency": 5,
     "model": {
         "type": "st_transformer",
         "num_blocks": 8,
