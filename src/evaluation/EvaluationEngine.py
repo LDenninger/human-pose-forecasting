@@ -18,6 +18,7 @@ from ..data_utils import (
 )
 from .metrics import (
     evaluate_distance_metrics,
+    evaluate_distribution_metrics,
     geodesic_distance,
     positional_mse,
     euler_angle_error,
