@@ -57,14 +57,12 @@ def test_metrics():
 
 def test_distribution_metrics():
     # Create 64x41x99 tensor with random values
-    batch = torch.rand((64, 41, 99))
+    batch_pred = torch.rand((41, 64, 33, 3))
+    batch_gt = torch.rand((41, 64, 33, 3))
 
-    results = {}
-
-    # Test power spectrum
-    # Test 1 - Test if calculating something works at all
-    results["power_spectrum"] = power_spectrum(batch)
+    results = evaluate_distribution_metrics(batch_pred, batch_gt)
+    print(results)
 
 
 if __name__ == "__main__":
-    test_metrics()
+    test_distribution_metrics()
