@@ -93,8 +93,8 @@ def evaluate_distance_metrics(
     }
     if metrics is None:
         metrics = METRICS_IMPLEMENTED.keys()
-
     results = {}
+
     if representation != "pos":
         conversion_func = get_conv_to_rotation_matrix(representation)
         predictions = conversion_func(predictions)

@@ -43,7 +43,11 @@ class DataAugmentor(nn.Module):
         if self.norm_mean is None or self.norm_var is None:
             print_("Mean and variance are not set. Normalization is not performed.", "warn")
             return x
-        return x*self.norm_var.to(device) + self.norm_mean.to(device)
+        unnorm_x = x*self.norm_var.to(device) + self.norm_mean.to(device)
+        if torch.isnan(unnorm_x).any():
+            nan_ind = torch.isnan(unnorm_x)
+            unnorm_x.masked_fill_(nan_ind, 0.0)
+        return unnorm_x
     
     def set_mean_var(self, mean: float, var: float) -> None:
         self.norm_mean = mean

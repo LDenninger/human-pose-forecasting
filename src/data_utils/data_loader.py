@@ -59,8 +59,8 @@ class H36MDatasetBase(Dataset):
         """
             Computes the mean and variance over the data for normalization
         """
-        mean = torch.mean(self.data, dim=0)
-        var = torch.var(self.data, dim=0)
+        mean = torch.mean(self.data, dim=0) + torch.finfo(torch.float32).eps
+        var = torch.var(self.data, dim=0) + torch.finfo(torch.float32).eps
         return mean, var
     
     def _compute_valid_indices(self):
