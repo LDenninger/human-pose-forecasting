@@ -103,7 +103,7 @@ def parse_h36m_to_s26(seq: torch.Tensor, conversion_func: Optional[callable] = N
 
 def convert_s26_to_s21(seq: torch.Tensor, 
                         conversion_func: Optional[callable] = None,
-                          relative: Optional[bool] = False,
+                          interpolate: Optional[bool] = False,
                            rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos', None]] = None) -> torch.Tensor:
     """
         This functions takes the full skeleton of the h36m and removes the following redundant joints:
@@ -113,7 +113,7 @@ def convert_s26_to_s21(seq: torch.Tensor,
         This function is specifically designed for the H36M dataset.
     """
     ind_to_cut = [9,14,18,20,24]
-    if not relative: 
+    if not interpolate: 
         # If we have absolute angles wrt a fixed anchor frame, we can simply remove joints as we like
         seq = _remove_joints(seq, ind_to_cut)
     else:
@@ -190,14 +190,14 @@ def convert_s21_to_s26(seq: torch.Tensor, conversion_func: Optional[callable] = 
 
 def convert_s21_to_s16(seq: torch.Tensor, 
                         conversion_func: Optional[callable] = None,
-                          relative: Optional[bool] = False,
+                          interpolate: Optional[bool] = False,
                            rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos', None]] = None):
     """
         Converts the reduced s21 skeleton to the stacked hourglass skeleton representation.
         This simply removes the last joints of each limb and the neck joint.
     """
     ind_to_cut = [4,8,11,16,20]
-    if not relative:
+    if not interpolate:
         seq = _remove_joints(seq, ind_to_cut)
     else:
         # If we use relative angles wrt to the parent joint, we have to interpolate across removed joints.
@@ -261,6 +261,7 @@ def h36m_forward_kinematics(data: torch.Tensor,
         shape = list(data.shape[:-1]) + [26]
         if len(data.shape) > 2:
             data = torch.flatten(data, start_dim=0, end_dim=-2)
+        hip_pos = data[:,[0,1,2]]
         data = parse_h36m_to_s26(data, conversion_func)
         data = torch.reshape(data, (*data.shape[:-1], 3, 3))
     else:

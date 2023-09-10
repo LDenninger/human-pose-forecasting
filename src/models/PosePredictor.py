@@ -7,7 +7,7 @@
 import torch
 import torch.nn as nn
 import math
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from .transformer import SpatioTemporalTransformer, getTransformerBlock
 from .positional_encoding import PositionalEncodingSinusoidal
@@ -18,7 +18,7 @@ def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
     """
         Construct and return a model given the run configuration.
     """
-    if config['model']['type'] == 'baseline':
+    if config['model']['type'] == 'st_transformer':
         model = PosePredictor(
             positional_encoding_config=config['model']['positional_encoding'],
             transformer_config=config['model']['transformer'],
@@ -45,12 +45,13 @@ class PosePredictor(nn.Module):
                     positional_encoding_config: dict,
                      transformer_config: dict, 
                       num_joints: int,
-                       incl_abs_position: bool,
                         seq_len: int,
                          num_blocks: int,
                           emb_dim: int,
                            joint_dim: int,
                             input_dropout: float = 0.0,
+                             incl_abs_position: Optional[bool] = False,
+
                     ) -> None:
         
         super(PosePredictor, self).__init__()

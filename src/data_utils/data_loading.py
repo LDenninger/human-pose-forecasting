@@ -53,15 +53,12 @@ def read_file_h36m(person_id: int, action_str: str, sub_action_id: int = None, r
 def load_data_h36m(  person_id: list = H36M_DATASET_PERSONS,
                 action_str: list = H36M_DATASET_ACTIONS,
                 sub_action_id: list = [1,2],
-                 skeleton: Optional[Literal['s26']] = None,
-                  representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos']] = 'axis',
-                   absolute_rotation: Optional[bool] = False,
-                    absolute_position: Optional[bool] = False,
-                     center_at_hip: Optional[bool] = False,
-                      return_tensor: bool=False,
-                       return_seq_tensor: bool=True,
-                        show_progress=True,
-                         return_reverse_meta=False):
+                representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos']] = 'axis',
+                return_tensor: bool=False,
+                return_seq_tensor: bool=True,
+                show_progress=True,
+                raw_data: Optional[bool] = False,
+                return_reverse_meta=False):
     """
         Load the data from the Human3.6M dataset.
 
@@ -124,12 +121,10 @@ def load_data_h36m(  person_id: list = H36M_DATASET_PERSONS,
                 }
                 # Parse into a specific skeleton structure
                 # If a skeleton is provided we are also able to transform to another representation
-                if skeleton is not None:
-                    if skeleton=='s26':
-                        conversion_func = get_conv_from_rotation_matrix(representation)
-                        new_data = parse_sequence_efficient_to_s26(torch.stack(new_data), conversion_func, absolute=absolute_position)
-                    else:
-                        raise ValueError(f'Unknown skeleton {skeleton}')
+                if not raw_data:
+                    conversion_func = get_conv_from_rotation_matrix(representation)
+                    new_data = parse_h36m_to_s26(torch.stack(new_data), conversion_func)
+
                 elif return_seq_tensor:
                     new_data = torch.stack(new_data)
 

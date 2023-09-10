@@ -89,7 +89,7 @@ class DataAugmentor(nn.Module):
             Returns a sequence of functions to apply the data augmentation
         """
         pipeline = []
-        if self.reverse:
+        if self.reverse_prob > 0:
             pipeline.append(self._reverse)
         if self.normalize:
             pipeline.append(self._normalize)

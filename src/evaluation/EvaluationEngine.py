@@ -60,8 +60,8 @@ class EvaluationEngineActive:
         prediction_timesteps: List[int],
         down_sampling_factor: int = 1,
         actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
-        skeleton_model: Optional[Literal["s26", None]] = None,
-        rot_representation: Optional[Literal["axis", "mat", "quat", "6d", None]] = None,
+        representation: Optional[Literal["axis", "mat", "quat", "6d", "pos", None]] = None,
+        stacked_hourglass: Optional[bool] = False,
         batch_size: Optional[int] = 32,
         normalize: Optional[bool] = False,
         visualizations_per_batch: Optional[int] = 0,
@@ -108,10 +108,9 @@ class EvaluationEngineActive:
 
         ##== Dataset Parameters ==##
         self.seed_length = seed_length
-        self.skeleton_model = skeleton_model
         self.normalize = normalize
 
-        self.rot_representation = rot_representation
+        self.representation = representation
         self.down_sampling_factor = down_sampling_factor
         self.actions = actions
         self.batch_size = batch_size
@@ -123,8 +122,8 @@ class EvaluationEngineActive:
                 seed_length=self.seed_length,
                 target_length=self.target_length,
                 down_sampling_factor=self.down_sampling_factor,
-                skeleton_model=skeleton_model,
-                rot_representation=rot_representation,
+                stacked_hourglass=stacked_hourglass,
+                rot_representation=representation,
             )
 
     def reset(self) -> None:
@@ -278,7 +277,7 @@ class EvaluationEngineActive:
                 timestep_prediction,
                 timestep_target,
                 reduction="mean",
-                representation=self.rot_representation,
+                representation=self.representation,
             )
         if self.visualizations_per_batch > 0:
             # Create visualizations

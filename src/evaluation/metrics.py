@@ -64,7 +64,7 @@ def evaluate_distance_metrics(
     targets: torch.tensor,
     metrics: List[str] = None,
     reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
-    representation: Optional[Literal["axis", "mat", "quat", "6d"]] = "mat",
+    representation: Optional[Literal["axis", "mat", "quat", "6d", "pos"]] = "mat",
 ):
     """
     Compute the pair-wise distance metrics between single joints.
@@ -97,8 +97,12 @@ def evaluate_distance_metrics(
             print_(f"Metric {metric} not implemented.")
         if metric == "auc":
             # Compute the joint positions using forward kinematics
-            prediction_positions, _ = h36m_forward_kinematics(predictions, "mat")
-            target_positions, _ = h36m_forward_kinematics(targets, "mat")
+            if representation != "pos":
+                prediction_positions, _ = h36m_forward_kinematics(predictions, representation)
+                target_positions, _ = h36m_forward_kinematics(targets, representation)
+            else:
+                prediction_positions = predictions
+                target_positions = targets
             # Scale to meters for evaluation
             prediction_positions /= 1000
             target_positions /= 1000

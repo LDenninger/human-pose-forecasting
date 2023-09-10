@@ -107,8 +107,8 @@ class Session:
                 seed_length = self.config['dataset']['seed_length'],
                 prediction_timesteps = self.config['evaluation']['timesteps'],
                 down_sampling_factor=self.config['dataset']['downsampling_factor'],
-                skeleton_model = self.config['skeleton']['type'],
-                rot_representation= self.config['joint_representation']['type']
+                stacked_hourglass = True if self.config['skeleton']['type']=='s16' else False,
+                representation= self.config['joint_representation']['type']
             )
             self.num_eval_iterations = self.evaluation_engine.total_iterations
             print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
