@@ -251,7 +251,10 @@ class Session:
             if self.exhaustive_evaluation:
                 self.evaluation_engine.reset()
             # Run a single epoch of training
-            self.train_epoch()
+            if self.config['training_scheme'] == 'single_step':
+                self.train_epoch_single_step()
+            elif self.config['training_scheme'] == 'auto_regressive':
+                self.train_epoch_auto_regressive()
             # Evaluation in pre-defined intervals
             if self.evaluate_model and self.epoch % self.config['evaluation']['frequency'] == 0:
                 if self.exhaustive_evaluation:
@@ -270,7 +273,7 @@ class Session:
         print_('Training finished!')
 
     @log_function
-    def train_epoch(self) -> None:
+    def train_epoch_single_step(self) -> None:
         """
             A single epoch of training.
             The training results are saved through the MetricTracker and later retrieved.
@@ -284,15 +287,67 @@ class Session:
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
             seed_data = self.data_augmentor(seed_data)
+            target_data = self.data_augmentor(target_data)
             # Update the learning rate according to the schedule
             self.optimizer.zero_grad()
             self.scheduler(self.iteration)
             # Forward pass through the network
             output = self.model(seed_data)
-            if self.config['data_augmentation']['normalize']:
-                output = self.data_augmentor.reverse_normalization(output)
+            #if self.config['data_augmentation']['normalize']:
+            #    output = self.data_augmentor.reverse_normalization(output)
             # Compute loss using the target data
             loss = self.loss(output, target_data)
+            # Backward pass through the network
+            loss.backward()
+            # Update model weights
+            self.optimizer.step()
+            # Update all the meta information
+            self.iteration += 1
+            # Update the metric tracker to track the metrics of a single epoch
+            self.metric_tracker.log('train_loss', loss.item())
+            self.metric_tracker.step_iteration()
+            # Update the logger
+            self.logger.log({
+                self.config['loss']['type']: loss.item()
+            }, step=self.iteration)
+            # Update the progress bar description
+            if batch_idx == 0:
+                running_loss = loss.item()
+            else:
+                running_loss = 0.8*running_loss + 0.2*loss.item()
+            progress_bar.set_description(f"Train loss: {running_loss:.4f}")
+    
+    def train_epoch_auto_regressive(self) -> None:
+        """
+            A single epoch of training.
+            The training results are saved through the MetricTracker and later retrieved.
+        """
+        self.model.train()
+        progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
+
+        for batch_idx, data in progress_bar:
+            if batch_idx==self.num_iterations:
+                break
+            # Load data to GPU and split into seed and target data
+            seed_data, target_data = self._prepare_data(data)
+            seed_data = self.data_augmentor(seed_data)
+            target_data = self.data_augmentor(target_data)
+            # Update the learning rate according to the schedule
+            self.optimizer.zero_grad()
+            self.scheduler(self.iteration)
+            predictions = []
+            # Forward pass through the network
+            cur_input = seed_data
+            for i in range(self.config['dataset']['target_length']):
+                output = self.model(cur_input)
+                predictions.append(output[...,-1,:])
+            
+            predictions = torch.stack(predictions)
+
+            #if self.config['data_augmentation']['normalize']:
+            #    output = self.data_augmentor.reverse_normalization(output)
+            # Compute loss using the target data
+            loss = self.loss(predictions, target_data)
             # Backward pass through the network
             loss.backward()
             # Update model weights

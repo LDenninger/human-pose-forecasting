@@ -25,15 +25,15 @@ class DataAugmentor(nn.Module):
         self.snp_noise_prob = snp_noise_prob
         self.joint_cutout_prob = joint_cutout_prob
         self.timestep_cutout_prob = timestep_cutout_prob
-        self.pipeline = self.__init_pipeline()
+        self.train_pipeline, self.eval_pipeline = self.__init_pipeline()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, is_train: Optional[bool] = True) -> torch.Tensor:
         """
             Apply pre-defined data augmentation steps to the input tensor.
 
             Input shape: [batch_size, seq_len, num_joints, joint_dim]
         """
-        return self.pipeline(x)
+        return self.train_pipeline(x) if is_train else self.eval_pipeline(x)
     
     def reverse_normalization(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -93,17 +93,22 @@ class DataAugmentor(nn.Module):
         """
             Returns a sequence of functions to apply the data augmentation
         """
-        pipeline = []
+        train_pipeline = []
+        eval_pipeline = []
         if self.reverse_prob > 0:
-            pipeline.append(self._reverse)
+            train_pipeline.append(self._reverse)
         if self.normalize:
-            pipeline.append(self._normalize)
+            train_pipeline.append(self._normalize)
+            eval_pipeline.append(self._normalize)
         if self.snp_noise_prob > 0:
-            pipeline.append(self._snp_noise)
+            train_pipeline.append(self._snp_noise)
         if self.joint_cutout_prob > 0:
-            pipeline.append(self._joint_noise)
+            train_pipeline.append(self._joint_noise)
         if self.timestep_cutout_prob > 0:
-            pipeline.append(self._timestep_noise)
-        if len(pipeline) == 0:
-            pipeline.append(self._blank_processing)
-        return self.processing_pipeline(*pipeline)
+            train_pipeline.append(self._timestep_noise)
+        if len(train_pipeline) == 0:
+            train_pipeline.append(self._blank_processing)
+        if len(eval_pipeline) == 0:
+            eval_pipeline.append(self._blank_processing)
+        
+        return self.processing_pipeline(*train_pipeline), self.processing_pipeline(*eval_pipeline)

@@ -144,7 +144,7 @@ class H36MDataset(H36MDatasetBase):
         ##== Meta Information ==##
         self.sequence_spacing = sequence_spacing
         self.down_sampling_factor = down_sampling_factor
-        self.reverse_prob = reverse_prob
+        self.reverse_prob = reverse_prob if is_train else 0.0
         self.return_label = return_label
 
         ##== Data Handling ==##
@@ -167,6 +167,7 @@ class H36MDataset(H36MDatasetBase):
                 self.data = convert_s26_to_s21(self.data, interpolate=False)
                 if stacked_hourglass:
                     self.data = convert_s21_to_s16(self.data, interpolate=False)
+                self.data /= 1000
             
         self.full_length = len(self.data)
 

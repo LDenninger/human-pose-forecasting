@@ -115,12 +115,13 @@ def evaluate_distance_metrics(
             if representation != "pos":
                 prediction_positions, _ = h36m_forward_kinematics(predictions, 'mat')
                 target_positions, _ = h36m_forward_kinematics(targets, 'mat')
+                prediction_positions /= 1000
+                target_positions /= 1000
             else:
                 prediction_positions = predictions
                 target_positions = targets
             # Scale to meters for evaluation
-            prediction_positions /= 1000
-            target_positions /= 1000
+
             results[metric] = accuracy_under_curve(
                 prediction_positions, target_positions
             )

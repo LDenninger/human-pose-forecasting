@@ -1,4 +1,5 @@
 {
+    "training_scheme": "single_step",
     "random_seed": 42,
     "batch_size": 32,
     "num_epochs": 20,

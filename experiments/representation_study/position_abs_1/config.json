@@ -1,4 +1,5 @@
 {
+    "training_scheme": "single_step",
     "random_seed": 42,
     "batch_size": 32,
     "num_epochs": 20,
@@ -70,7 +71,7 @@
     },
     "data_augmentation": {
         "normalize": true,
-        "reverse_prob": 0.5,
+        "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
         "joint_cutout_prob": 0.0,
         "timestep_cutout_prob": 0.0   
