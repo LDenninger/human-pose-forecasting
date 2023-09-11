@@ -8,7 +8,7 @@ from tqdm import tqdm
 from .data_utils import getDataset, H36M_DATASET_ACTIONS, DataAugmentor
 from .utils import *
 from .models import PosePredictor, getModel
-from .evaluation import EvaluationEnginePassive, EvaluationEngineActive
+from .evaluation import EvaluationEngine
 
 class Session:
     """
@@ -53,6 +53,7 @@ class Session:
             )
         # Modules
         self.model = None
+        self.evaluation_engine = EvaluationEngine(device=self.device)
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -93,6 +94,10 @@ class Session:
 
     @log_function
     def initialize_evaluation(self, 
+                              evaluation_type: List[str] = ['distance'],
+                              num_iterations: Optional[int] = None,
+                              distance_metrics: List[str] = None,
+                              distribution_metrics: List[str] = None,
                               split_actions: Optional[bool]=False,
                               dataset: Literal['h36m','ais'] = 'h36m') -> bool:
         """
@@ -100,24 +105,36 @@ class Session:
         """
         self.evaluate_model = True
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
-        self.evaluation_engine = EvaluationEngineActive(
-            iterations = self.config['num_eval_iterations'],
-            prediction_timesteps = self.config['evaluation']['timesteps'],
-            metric_names=self.config['evaluation']['metrics'],
-            device=self.device)
-        self.evaluation_engine.load_data(
-            dataset=dataset,
-            seed_length = self.config['dataset']['seed_length'],
-            down_sampling_factor=self.config['dataset']['downsampling_factor'],
-            split_actions=split_actions,
-            stacked_hourglass = True if self.config['skeleton']['type']=='s16' else False,
-            normalize=self.config['data_augmentation']['normalize'],
-            representation= self.config['joint_representation']['type']
+        if not self.evaluation_engine.data_loaded:
+            self._load_evaluation_data()
+        if 'distance' in evaluation_type:
+            self.evaluation_engine.initialize_distance_evaluation(
+                iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
+                prediction_timesteps = self.config['evaluation']['timesteps'],
+                metric_names=self.config['evaluation']['metrics'] if distance_metrics is None else distance_metrics,
+            )
+            self.num_eval_iterations = self.config['num_eval_iterations']
+            print_(f"Initialized an evaluation for joint distances with {self.evaluation_engine.num_iterations['distance_metric']}")
+        if 'distribution' in evaluation_type:
+            self.evaluation_engine.initialize_long_prediction_evaluation(
+                iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
+                prediction_timesteps = self.config['evaluation']['timesteps'],
+                metric_names=self.config['evaluation']['metrics'] if distribution_metrics is None else distribution_metrics,
+            )
+            self.num_eval_iterations = self.config['num_eval_iterations']
+            print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
 
-        )
-        self.num_eval_iterations = self.config['num_eval_iterations']
-        print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
-
+    @log_function
+    def initialize_visualization(self,
+                                 visualization_type: List[str] = ['2d'],
+                                 dataset: Literal['h36m','ais'] = 'h36m'):
+        if not self.evaluation_engine.data_loaded:
+            self._load_evaluation_data()
+        
+        if '2d' in visualization_type:
+            self.evaluation_engine.initialize_visualization_2d(
+                
+            )
     @log_function
     def initialize_model(self):
         """
@@ -368,3 +385,15 @@ class Session:
         if self.exhaustive_evaluation:
             print_(f'Exhaustive Evaluation Results:\n',)
             self.evaluation_engine.print()
+    
+    def _load_evaluation_data(self, dataset: Literal['h36m','ais'], split_actions: Optional[bool]=False):
+        self.evaluation_engine.load_data(
+            dataset=dataset,
+            seed_length = self.config['dataset']['seed_length'],
+            down_sampling_factor=self.config['dataset']['downsampling_factor'],
+            split_actions=split_actions,
+            skeleton_representation = self.config['skeleton']['type'],
+            normalize=self.config['data_augmentation']['normalize'],
+            representation= self.config['joint_representation']['type']
+
+        )

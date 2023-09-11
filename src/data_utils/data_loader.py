@@ -63,6 +63,16 @@ class H36MDatasetBase(Dataset):
         var = torch.var(self.data, dim=0) + torch.finfo(torch.float32).eps
         return mean, var
     
+    def set_attribute(self, name: torch.Tensor, value: torch.Tensor) -> None:
+        """
+            Set an attribute of the dataset.
+
+        """
+        if name in ['target_length', 'seed_length']:
+            setattr(self, name, value)
+
+            
+    
     def _compute_valid_indices(self):
         """
             Compute the valid start indices for sequences.
