@@ -72,14 +72,15 @@ class PositionMSE(LossBase):
     """
         Module to compute the mean squared error between joint positions
     """
-    def __init__(self):
+    def __init__(self, reduction: Optional[Literal['mean','sum']] = 'mean'):
         super(PositionMSE, self).__init__()
+        self.reduction_func = self._reduce_sum_and_mean if reduction == 'sum' else self._reduce_mean
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
         loss = torch.sum(loss, dim=-1) # Sum over rotation dimensions
         loss = torch.sqrt(loss) # mse over all rotation dimensions
-        return self._reduce_mean(loss)
+        return self.reduction_func(loss)
     
 class GeodesicLoss(LossBase):
     """

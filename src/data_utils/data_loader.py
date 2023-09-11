@@ -157,7 +157,6 @@ class H36MDataset(H36MDatasetBase):
             self.valid_indices, self.labels = self.valid_indices
 
         # Write the data into a flattened tensor for easier indexing
-
         self.data = self._flatten_data(self.data)
         if not raw_data:
             if rot_representation != 'pos':

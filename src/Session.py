@@ -340,9 +340,10 @@ class Session:
             cur_input = seed_data
             for i in range(self.config['dataset']['target_length']):
                 output = self.model(cur_input)
-                predictions.append(output[...,-1,:])
+                predictions.append(output[...,-1,:,:])
             
             predictions = torch.stack(predictions)
+            predictions = torch.transpose(predictions, 0,1)
 
             #if self.config['data_augmentation']['normalize']:
             #    output = self.data_augmentor.reverse_normalization(output)

@@ -56,7 +56,7 @@ def getLoss(config: str, rot_representation: Optional[Literal['axis', 'mat', 'qu
             print_('Rotation6D loss only works with rotation6d rotation representation.', 'warn')
         return Rotation6DLoss(config['reduction'])
     elif config['type'] == 'position_mse':
-        return PositionMSE()
+        return PositionMSE(config['reduction'])
     else:
         raise ValueError(f"Loss {config['type']} is not supported.")
     
