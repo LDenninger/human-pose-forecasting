@@ -93,54 +93,30 @@ class Session:
 
     @log_function
     def initialize_evaluation(self, 
-                              exhaustive_evaluation: Optional[bool] = None, 
                               split_actions: Optional[bool]=False,
                               dataset: Literal['h36m','ais'] = 'h36m') -> bool:
         """
             Initialize the evaluation procedure and load the corresponding data
         """
         self.evaluate_model = True
-        if exhaustive_evaluation is None:
-            self.exhaustive_evaluation = self.config['evaluation']['exhaustive_evaluation']
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
-        if self.exhaustive_evaluation:
-            self.evaluation_engine = EvaluationEngineActive(
-                iterations = self.config['num_eval_iterations'],
-                prediction_timesteps = self.config['evaluation']['timesteps'],
-                metric_names=self.config['evaluation']['metrics'],
-                device=self.device)
-            self.evaluation_engine.load_data(
-                dataset=dataset,
-                seed_length = self.config['dataset']['seed_length'],
-                down_sampling_factor=self.config['dataset']['downsampling_factor'],
-                split_actions=split_actions,
-                stacked_hourglass = True if self.config['skeleton']['type']=='s16' else False,
-                normalize=self.config['data_augmentation']['normalize'],
-                representation= self.config['joint_representation']['type']
+        self.evaluation_engine = EvaluationEngineActive(
+            iterations = self.config['num_eval_iterations'],
+            prediction_timesteps = self.config['evaluation']['timesteps'],
+            metric_names=self.config['evaluation']['metrics'],
+            device=self.device)
+        self.evaluation_engine.load_data(
+            dataset=dataset,
+            seed_length = self.config['dataset']['seed_length'],
+            down_sampling_factor=self.config['dataset']['downsampling_factor'],
+            split_actions=split_actions,
+            stacked_hourglass = True if self.config['skeleton']['type']=='s16' else False,
+            normalize=self.config['data_augmentation']['normalize'],
+            representation= self.config['joint_representation']['type']
 
-            )
-            self.num_eval_iterations = self.config['num_eval_iterations']
-            print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
-        else:
-            self.evaluation_engine = EvaluationEnginePassive(metric_names=self.config['evaluation']['metrics'], representation=self.config['joint_representation']['type'], keep_log=True)
-            dataset = getDataset(
-                self.config['dataset'],
-                joint_representation = self.config['joint_representation']['type'],
-                skeleton_model = self.config['skeleton']['type'],
-                is_train=False,
-                debug=self.debug
-            )
-            self.test_loader = DataLoader(
-                dataset=dataset,
-                batch_size=self.config['batch_size'],
-                shuffle=True,
-                drop_last=True,
-                num_workers=self.num_threads
-            )
-            self.len_test = len(self.test_loader)
-            self.num_eval_iterations = self.config['num_eval_iterations'] if self.config['num_eval_iterations']!=-1 else len(self.test_loader)
-            p_str = f'Loaded test data: Length: {len(dataset)}, Batched length: {len(self.test_loader)}, Iterations per epoch: {self.num_eval_iterations}'
-            print_(p_str)
+        )
+        self.num_eval_iterations = self.config['num_eval_iterations']
+        print_(f'Initialzed the active evaluation engine with a total of {self.num_eval_iterations} iterations per evaluation.')
 
     @log_function
     def initialize_model(self):
@@ -368,50 +344,6 @@ class Session:
             else:
                 running_loss = 0.8*running_loss + 0.2*loss.item()
             progress_bar.set_description(f"Train loss: {running_loss:.4f}")
-
-    ###=== Evaluation Functions ===###
-    @log_function
-    def evaluation_epoch(self) -> None:
-        """
-            A single epoch of a simple evaluation only considering one step predictions.
-            For a full evaluation we use our active evaluation engine.
-        """
-        self.model.eval()
-        progress_bar = tqdm(enumerate(self.test_loader), total=self.num_eval_iterations)
-        self.evaluation_engine.clear_log()
-
-        for batch_idx, data in progress_bar:
-            if batch_idx==self.num_eval_iterations:
-                break
-
-            # Load data to GPU and split into seed and target data
-            seed_data, target_data = self._prepare_data(data)
-            # Forward pass through the network
-            output = self.model(seed_data)
-            # Compute loss using the target data
-            loss = self.loss(output, target_data)
-            # Compute evaluation metrics
-            # TODO: Implement evaluation object
-
-            # Update all the meta information
-            self.metric_tracker.log('test_loss', loss.item())
-            self.metric_tracker.step_iteration()
-            # Save output and target to the evaluation engine
-            self.evaluation_engine.log(output=output[:,-1], target=target_data[:,-1])
-
-            # Update the progress bar description
-            if batch_idx == 0:
-                running_loss = loss.item()
-            else:
-                running_loss = 0.8*running_loss + 0.2*loss.item()
-            progress_bar.set_description(f"Eval loss: {running_loss:.4f}")
-        # Update the logger
-        eval_loss = self.metric_tracker.get_mean('test_loss')
-        eval_result = self.evaluation_engine.compute()
-        for name, val in eval_result.items():
-            self.metric_tracker.log(name, val)
-        eval_result['eval_loss'] = eval_loss
-        self.logger.log(eval_result, step=self.iteration)
     
     ###=== Utility Functions ===###
 

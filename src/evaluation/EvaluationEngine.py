@@ -25,7 +25,7 @@ from .metrics import (
     accuracy_under_curve,
 )
 
-from .visualizer import(
+from .visualization import(
     compare_sequences_plotly
 )
 
@@ -38,7 +38,7 @@ METRICS_IMPLEMENTED = {
 VISUALIZATION_IMPLEMENTED = {"3dpose": geodesic_distance}  # placeholder
 
 
-class EvaluationEngineActive:
+class EvaluationEngine:
     """
     Active evaluation engine that directly computes the model outputs.
     Doing so we are able to compute more high-level metrics on the H3.6M dataset.
@@ -58,6 +58,17 @@ class EvaluationEngineActive:
         Initialize the active evaluation engine.
         """
         ##== Evaluation Parameters ==##
+        self.visualization_2d_active = False
+        self.visualization_3d_active = False
+        self.long_predictions_active = False
+        self.distance_metric_active = False
+
+        self.prediction_timesteps{
+            "visualization_2d_active": None,
+            
+        }
+
+
         self.prediction_timesteps = prediction_timesteps
         self.iterations = iterations
         self.evaluation_finished = False
@@ -67,6 +78,16 @@ class EvaluationEngineActive:
         self.calculate_distribution_metrics = calculate_distribution_metrics
         self.device = torch.device(device)
         self.initialized = False
+
+    def initialize_distribution_evaluation(self,
+                                           iterations: int,
+                                           distribution_metric_names: List[str],
+                                           prediction_timesteps: List[int]):
+        """
+            Initialize the evaluation for long predictions using distribution metrics
+        """
+        self.iterations
+        self.distribution_metric_names = distribution_metric_names
 
 
     def load_data(self,
@@ -320,30 +341,124 @@ class EvaluationEngineActive:
                 metrics=self.metric_names,
                 representation=self.representation,
             ))
-            
-        if self.visualizations_per_batch > 0:
-            # Create visualizations
-            for frame in self.target_frames:
-                predictions = torch.stack(predictions[frame], start_dim=0, end_dim=1)  # [seq_len, batch_size, num_joints, joint_dim]
-                predictions = torch.transpose(predictions, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
-                # Get as many batches as specified in self.visualizations_per_batch
-                predictions = predictions[:self.visualizations_per_batch]
-                targets = torch.stack(targets[frame], start_dim=0, end_dim=1)  # [seq_len, batch_size, num_joints, joint_dim]
-                targets = torch.transpose(targets, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
-                # Get first 4 batches
-                targets = targets[:self.visualizations_per_batch]
-                # Create visualizations
-                for i in range(self.visualizations_per_batch):
-                    comparison_img = compare_sequences_plotly(
-                        sequence_names=["ground truth", "prediction"],
-                        sequences=[targets[i], predictions[i]],
-                        time_steps_ms=self.target_timesteps,
-                    )
-                    # Log comparison image
-                    logger = LOGGER
-                    if logger is not None:
-                        logger.log_image(name=f"{action}_{frame}_{i}", image=comparison_img)
 
+    def visualization_2d_loop(
+        self,
+        action: str,
+        num: int,
+        model: torch.nn.Module,
+        data_loader: torch.utils.data.DataLoader,
+    ):
+        if num == 0:
+            return
+
+        model.eval()
+        # Initialize progress bar
+        dataset = self.datasets[action]
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+
+        predictions = {}
+        targets = {}
+        for i in self.target_frames:
+            predictions[i] = []
+            targets[i] = []
+
+        num_batches = np.ceil(self.batch_size / num)
+
+        for batch_idx, data in num_batches:
+            if batch_idx == self.iterations:
+                break
+            # Load data
+            data = data.to(self.device)
+            # Set input for the model
+            cur_input = self.data_augmentor(data[:, : self.seed_length])
+            # Predict future frames in an auto-regressive manner
+            for i in range(1, self.last_target_frame + 1):
+                # Compute the output
+                output = model(cur_input)
+                # Check if we want to compute metrics for this timestep
+                if i in self.target_frames:
+                    # Compute the implemented metrics
+                    if self.normalize:
+                        pred = self.data_augmentor.reverse_normalization(
+                            output[:, -1].detach().cpu()
+                        )
+                    else:
+                        pred = output[:, -1].detach().cpu()
+                    predictions[i].append(pred)
+                    targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
+                # Update model input for auto-regressive prediction
+                cur_input = output
+        # Create visualizations
+        logger = LOGGER
+        for frame in self.target_frames:
+            predictions = torch.stack(predictions[frame], start_dim=0, end_dim=1)  # [seq_len, batch_size, num_joints, joint_dim]
+            predictions = torch.transpose(predictions, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
+            # Get as many batches as specified in self.visualizations_per_batch
+            predictions = predictions[num]
+            targets = torch.stack(targets[frame], start_dim=0, end_dim=1)  # [seq_len, batch_size, num_joints, joint_dim]
+            targets = torch.transpose(targets, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
+            # Get first 4 batches
+            targets = targets[num]
+            # Create visualizations
+            for i in range(num):
+                comparison_img = compare_sequences_plotly(
+                    sequence_names=["ground truth", "prediction"],
+                    sequences=[targets[i], predictions[i]],
+                    time_steps_ms=self.target_timesteps,
+                )
+                # Log comparison image
+                if logger is not None:
+                    logger.log_image(name=f"{action}_{frame}_{i}", image=comparison_img)
+    
+    def visualization_3d_loop(
+        self,
+        action: str,
+        num: int,
+        model: torch.nn.Module,
+        data_loader: torch.utils.data.DataLoader,
+    ):
+        if num == 0:
+            return
+
+        model.eval()
+        # Initialize progress bar
+        dataset = self.datasets[action]
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+
+        predictions = {}
+        targets = {}
+        for i in self.target_frames:
+            predictions[i] = []
+            targets[i] = []
+
+        num_batches = np.ceil(self.batch_size / num)
+
+        for batch_idx, data in num_batches:
+            if batch_idx == self.iterations:
+                break
+            # Load data
+            data = data.to(self.device)
+            # Set input for the model
+            cur_input = self.data_augmentor(data[:, : self.seed_length])
+            # Predict future frames in an auto-regressive manner
+            for i in range(1, self.last_target_frame + 1):
+                # Compute the output
+                output = model(cur_input)
+                # Check if we want to compute metrics for this timestep
+                if i in self.target_frames:
+                    # Compute the implemented metrics
+                    if self.normalize:
+                        pred = self.data_augmentor.reverse_normalization(
+                            output[:, -1].detach().cpu()
+                        )
+                    else:
+                        pred = output[:, -1].detach().cpu()
+                    predictions[i].append(pred)
+                    targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
+                # Update model input for auto-regressive prediction
+                cur_input = output
+        
 
 
 
