@@ -141,9 +141,12 @@ class EvaluationEngine:
         """
             Initialize the 2d visualization
         """
-        self.vis3d_max_length = max_length
-        self.target_frames['visualization_3d'] = target_frames.tolist()
+        target_frame = np.ceil(max_length / self.step_size).astype(int)
+        prediction_steps_real = (target_frame * self.step_size).tolist()
+        if prediction_steps_real!= max_length:
+            print_(f"Goal prediction timesteps: {max_length} not reachable using timesteps: {prediction_steps_real}","warn")
         self.prediction_timesteps['visualization_3d'] = prediction_steps_real
+        self.target_frames['visualization_3d'] = target_frame
         self.visualization_2d_active = True
 
 
@@ -395,7 +398,7 @@ class EvaluationEngine:
 
     ###=== Visualization Functions ===###
     def visualize(self, model: torch.nn.Module, num_visualizations: int = 1) -> None:
-
+        import ipdb; ipdb.set_trace()
         model.eval()
         if self.h36m_evaluation:
             print_(f"Start evaluation on H3.6M dataset using actions: {self.actions}")
@@ -428,6 +431,7 @@ class EvaluationEngine:
     ):
         if num == 0:
             return
+        import ipdb; ipdb.set_trace()
 
         model.eval()
         # Initialize progress bar

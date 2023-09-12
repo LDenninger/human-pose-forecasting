@@ -26,5 +26,10 @@ function setup() {
     echo "  Current run        ---> $CURRENT_RUN"
 }
 
+function sync_exp() {
+    machine="$1"
+    dest="$exp_path/$CURRENT_EXP/$CURRENT_RUN/checkpoints"
+
+}
 
 

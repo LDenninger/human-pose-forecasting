@@ -32,6 +32,7 @@ class Session:
         self.run_name = run_name
         self.debug = debug
         self.evaluate_model = False
+        self.visualize_model = False
         # Setup logging
         self.logger = LOGGER
         self.logger.initialize(
@@ -89,6 +90,13 @@ class Session:
             self.metric_tracker.reset()
             self.evaluation_epoch()
         self._print_epoch_results()
+    
+    def visualize(self, num_visualization: Optional[int] = 1) -> None:
+        """ Visualize the model. """
+        if not self.visualize_model:
+            print_('Visualization was not properly initialized!', 'error')
+            return
+        self.evaluation_engine.visualize(self.model)
 
     ###=== Initialization Functions ===###
 
@@ -106,7 +114,7 @@ class Session:
         self.evaluate_model = True
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
         if not self.evaluation_engine.data_loaded:
-            self._load_evaluation_data()
+            self._load_evaluation_data(dataset, split_actions)
         if 'distance' in evaluation_type:
             self.evaluation_engine.initialize_distance_evaluation(
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
@@ -127,14 +135,26 @@ class Session:
     @log_function
     def initialize_visualization(self,
                                  visualization_type: List[str] = ['2d'],
-                                 dataset: Literal['h36m','ais'] = 'h36m'):
+                                 prediction_timesteps: List[int] = None,
+                                 dataset: Literal['h36m','ais'] = 'h36m',
+                                 split_actions: Optional[bool]=False,
+                                 ):
         if not self.evaluation_engine.data_loaded:
-            self._load_evaluation_data()
+            self._load_evaluation_data(dataset, split_actions)
+        
+        if prediction_timesteps is None:
+            prediction_timesteps = self.config['evaluation']['timesteps']
         
         if '2d' in visualization_type:
             self.evaluation_engine.initialize_visualization_2d(
-                
+                prediction_timesteps=prediction_timesteps
             )
+            self.visualize_model = True
+        if '3d' in visualization_type:
+            self.evaluation_engine.initialize_visualization_3d(
+                max_length=prediction_timesteps[-1]
+            )
+            self.visualize_model = True
     @log_function
     def initialize_model(self):
         """

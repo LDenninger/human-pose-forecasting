@@ -16,3 +16,5 @@ wandb/*
 *.pt
 
 compare_sequences_plotly_*
+
+~
