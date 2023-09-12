@@ -186,6 +186,79 @@ def ps_kld(seq_ps_from, seq_ps_to):
     return torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), dim=1)
 
 
+def compute_npss(euler_gt_sequences, euler_pred_sequences):
+    """
+    Computing normalized Normalized Power Spectrum Similarity (NPSS)
+    
+    Args:
+        euler_gt_sequences: torch.Tensor of shape (batch_size, n_joints, seq_len, feature_size)
+        euler_pred_sequences: torch.Tensor of shape (batch_size, n_joints, seq_len, feature_size)
+
+    Returns:
+        power_weighted_emd: torch.Tensor
+    """
+    gt_fourier_coeffs = torch.zeros_like(euler_gt_sequences)
+    pred_fourier_coeffs = torch.zeros_like(euler_pred_sequences)
+    
+    # power vars
+    gt_power = torch.zeros_like(gt_fourier_coeffs)
+    pred_power = torch.zeros_like(pred_fourier_coeffs)
+    
+    # normalizing power vars
+    gt_norm_power = torch.zeros_like(gt_fourier_coeffs)
+    pred_norm_power = torch.zeros_like(pred_fourier_coeffs)
+    
+    cdf_gt_power = torch.zeros_like(gt_norm_power)
+    cdf_pred_power = torch.zeros_like(pred_norm_power)
+    
+    emd = torch.zeros(cdf_pred_power.shape[0:3:2])
+    
+    # used to store powers of feature_dims and sequences used for avg later
+    seq_feature_power = torch.zeros(euler_gt_sequences.shape[0:3:2])
+    power_weighted_emd = 0
+    
+    for s in range(euler_gt_sequences.shape[0]):
+        
+        for d in range(euler_gt_sequences.shape[2]):
+            gt_fourier_coeffs[s, :, d] = torch.fft.fft(
+                euler_gt_sequences[s, :, d])  # slice is 1D array
+            pred_fourier_coeffs[s, :, d] = torch.fft.fft(
+                euler_pred_sequences[s, :, d])
+            
+            # computing power of fft per sequence per dim
+            gt_power[s, :, d] = torch.square(
+                torch.abs(gt_fourier_coeffs[s, :, d]))
+            pred_power[s, :, d] = torch.square(
+                torch.abs(pred_fourier_coeffs[s, :, d]))
+            
+            # matching power of gt and pred sequences
+            gt_total_power = torch.sum(gt_power[s, :, d])
+            pred_total_power = torch.sum(pred_power[s, :, d])
+            
+            # computing seq_power and feature_dims power
+            seq_feature_power[s, d] = gt_total_power
+            
+            # normalizing power per sequence per dim
+            if gt_total_power != 0:
+                gt_norm_power[s, :, d] = gt_power[s, :, d] / gt_total_power
+            
+            if pred_total_power != 0:
+                pred_norm_power[s, :, d] = pred_power[s, :, d] / pred_total_power
+            
+            # computing cumsum over freq
+            cdf_gt_power[s, :, d] = torch.cumsum(gt_norm_power[s, :, d], dim=0)  # slice is 1D
+            cdf_pred_power[s, :, d] = torch.cumsum(pred_norm_power[s, :, d], dim=0)
+            
+            # computing EMD
+            emd[s, d] = torch.norm((cdf_pred_power[s, :, d] - cdf_gt_power[s, :, d]), p=1)
+    
+    # computing weighted emd (by sequence and feature powers)
+    power_weighted_emd = torch.average(emd, weights=seq_feature_power)
+    
+    return power_weighted_emd
+
+
+
 #####===== Pair-Wise Distance Metrics =====#####
 
 
