@@ -32,6 +32,7 @@ def compare_sequences_plotly(
     sequence_names: List[str],
     sequences: List[torch.Tensor],
     time_steps_ms: List[List[int]],
+    skeleton_structure: dict,
     prediction_positions: List[int] = None,
     title_text: str = "",
     save_path: str = None,
@@ -58,7 +59,7 @@ def compare_sequences_plotly(
     @return: Numpy array of the image
 
     """
-
+    import ipdb; ipdb.set_trace()
     # Make sure the number of sequence names, sequences and prediction positions are the same
     assert len(sequence_names) == len(sequences)
     if prediction_positions is not None:
@@ -68,8 +69,6 @@ def compare_sequences_plotly(
 
     max_sequence_length = max([sequence.shape[0] for sequence in sequences])
 
-    # Create skeleton model
-    skeleton = SkeletonModel32()
 
     # Calculate aspect ratio of the plot (0.215 came from trial and error)
     aspect = (0.215 * max_sequence_length, len(sequences))
@@ -103,10 +102,8 @@ def compare_sequences_plotly(
             prediction_positions[i] if prediction_positions else math.inf
         )
         for j in range(ncols):
-            # Set joints of skeleton to those in the sequence
-            skeleton(sequence[j])
             # Get joint positions from skeleton
-            joint_positions = skeleton.getJointPositions(incl_names=True)
+            joint_positions = sequence[j]
             # Get color based on prediction_position
             color = colors[0] if j < prediction_position else colors[1]
             # Fill subplot with skeleton and additional information
@@ -119,7 +116,7 @@ def compare_sequences_plotly(
                     line=dict(width=line_width, color=color),
                 ),
                 joint_positions,
-                H36M_SKELETON_STRUCTURE,
+                skeleton_structure,
                 show_joints=show_joints,
             )
 

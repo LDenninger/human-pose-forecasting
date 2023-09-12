@@ -107,6 +107,7 @@ class Session:
                               distance_metrics: List[str] = None,
                               distribution_metrics: List[str] = None,
                               split_actions: Optional[bool]=False,
+                              prediction_timesteps: Optional[List[int]] = None,
                               dataset: Literal['h36m','ais'] = 'h36m') -> bool:
         """
             Initialize the evaluation procedure and load the corresponding data
@@ -114,7 +115,7 @@ class Session:
         self.evaluate_model = True
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
         if not self.evaluation_engine.data_loaded:
-            self._load_evaluation_data(dataset, split_actions)
+            self._load_evaluation_data(dataset, split_actions, max(self.config['evaluation']['timesteps'] if prediction_timesteps is None else prediction_timesteps))
         if 'distance' in evaluation_type:
             self.evaluation_engine.initialize_distance_evaluation(
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
@@ -139,11 +140,11 @@ class Session:
                                  dataset: Literal['h36m','ais'] = 'h36m',
                                  split_actions: Optional[bool]=False,
                                  ):
-        if not self.evaluation_engine.data_loaded:
-            self._load_evaluation_data(dataset, split_actions)
-        
         if prediction_timesteps is None:
             prediction_timesteps = self.config['evaluation']['timesteps']
+
+        if not self.evaluation_engine.data_loaded:
+            self._load_evaluation_data(dataset, split_actions, max(prediction_timesteps))
         
         if '2d' in visualization_type:
             self.evaluation_engine.initialize_visualization_2d(
@@ -406,10 +407,14 @@ class Session:
             print_(f'Exhaustive Evaluation Results:\n',)
             self.evaluation_engine.print()
     
-    def _load_evaluation_data(self, dataset: Literal['h36m','ais'], split_actions: Optional[bool]=False):
+    def _load_evaluation_data(self, 
+                              dataset: Literal['h36m','ais'], 
+                              split_actions: Optional[bool]=False, 
+                              prediction_length: Optional[int]=None):
         self.evaluation_engine.load_data(
             dataset=dataset,
             seed_length = self.config['dataset']['seed_length'],
+            prediction_length = prediction_length,
             down_sampling_factor=self.config['dataset']['downsampling_factor'],
             split_actions=split_actions,
             skeleton_representation = self.config['skeleton']['type'],
