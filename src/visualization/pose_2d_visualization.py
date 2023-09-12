@@ -2,7 +2,7 @@ import torch
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec 
 import numpy as np
-from typing import List, Union, Optional, Tuple
+from typing import List, Union, Optional, Tuple, Literal
 
 from ..data_utils import h36m_forward_kinematics, H36M_REDUCED_SKELETON_STRUCTURE, H36M_REVERSED_REDUCED_ANGLE_INDICES
 

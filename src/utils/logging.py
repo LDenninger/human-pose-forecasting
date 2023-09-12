@@ -384,6 +384,7 @@ class Logger(object):
         """
             Log images to WandB.
         """
+        import ipdb; ipdb.set_trace()
         if not self.run_initialized or not self.log_external:
             return
         assert len(image.shape) in [3, 4], "Please provide images of shape [H, W, C], [B, H, W, C], [C, H, W] or [B, C, H, W]"
