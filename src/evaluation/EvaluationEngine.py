@@ -29,8 +29,7 @@ from .metrics import (
 )
 
 from .visualization import(
-    compare_sequences_plotly,
-    compare_skeleton
+    compare_sequences_plotly
 )
 
 METRICS_IMPLEMENTED = {
