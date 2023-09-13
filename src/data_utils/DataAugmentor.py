@@ -43,7 +43,7 @@ class DataAugmentor(nn.Module):
         if self.norm_mean is None or self.norm_var is None:
             print_("Mean and variance are not set. Normalization is not performed.", "warn")
             return x
-        unnorm_x = x*self.norm_var.to(device) + self.norm_mean.to(device)
+        unnorm_x = x*torch.sqrt(self.norm_var.to(device) )+ self.norm_mean.to(device)
         if torch.isnan(unnorm_x).any():
             nan_ind = torch.isnan(unnorm_x)
             unnorm_x.masked_fill_(nan_ind, 0.0)
@@ -63,7 +63,7 @@ class DataAugmentor(nn.Module):
         if self.norm_mean is None or self.norm_var is None:
             print_("Mean and variance are not set. Normalization is not performed.", "warn")
             return x
-        return (x-self.norm_mean) / self.norm_var
+        return (x-self.norm_mean) / torch.sqrt(self.norm_var)
     
     def _snp_noise(self, x: torch.Tensor) -> torch.Tensor:
         noise_mask = torch.rand(x.shape[:-1], device=x.device) < self.snp_noise_prob

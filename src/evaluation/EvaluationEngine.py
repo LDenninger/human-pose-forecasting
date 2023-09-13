@@ -231,7 +231,6 @@ class EvaluationEngine:
                 self.split_actions = split_actions
                 self.datasets = {}
                 self.datasets['overall'] =  H36MDataset(
-                        actions=actions,
                         seed_length=self.seed_length,
                         target_length=self.target_length,
                         sequence_spacing=sequence_spacing,
@@ -314,6 +313,13 @@ class EvaluationEngine:
                         data_dir[f"{a}/{p}/{m}"] = self.evaluation_results[eval_type][a][p][m]
         logger.log(data_dir, step)
 
+    def set_normalization(self, mean: torch.Tensor, var: torch.Tensor) -> None:
+        """
+        Set the mean and variance of the train dataset.
+        """
+        self.norm_mean = mean
+        self.norm_var = var
+
     #####===== Getter Functions =====#####
     def get_results(self):
         """
@@ -350,8 +356,7 @@ class EvaluationEngine:
                 )
                 self.data_augmentor = DataAugmentor(normalize=self.normalize)
                 if self.normalize:
-                    mean, var = dataset.get_mean_variance()
-                    self.data_augmentor.set_mean_var(mean.to(self.device), var.to(self.device))
+                    self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
                 if self.distance_metric_active:
                     self.evaluation_loop_distance(action, model, data_loader)
                 if self.long_predictions_active:
@@ -376,7 +381,7 @@ class EvaluationEngine:
         model.eval()
         # Initialize progress bar
         dataset = self.datasets[action]
-        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True, drop_last=True)
         progress_bar = tqdm(enumerate(data_loader), total=self.num_iterations['distance_metric'])
         progress_bar.set_description(f"Evaluation {action}")
 
