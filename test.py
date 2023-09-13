@@ -38,6 +38,9 @@ def parse_arguments():
         "--h36mfk", action="store_true", default=False, help="Test the h36m forward kinematics function"
     )
     parser.add_argument(
+        "--vis_bl", action="store_true", default=False, help="Test the baseline visualization function"
+    )
+    parser.add_argument(
         "--model", action="store_true", default=False, help="Test the Skeleton32 model"
     )
     parser.add_argument(
@@ -74,6 +77,8 @@ def main():
         test_s21_skeleton()
     if args.h36mfk:
         test_h36m_forward_kinematics()
+    if args.vis_bl:
+        test_baseline_visualization()
     if args.model:
         test_transformer()
     if args.comp:

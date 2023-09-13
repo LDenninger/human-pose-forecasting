@@ -13,6 +13,10 @@ from ..data_utils import (
     H36M_STEP_SIZE_MS,
     H36M_SKELETON_STRUCTURE,
     H36M_NON_REDUNDANT_SKELETON_STRUCTURE,
+    H36M_SKELETON_PARENTS,
+    SH_SKELETON_PARENTS,
+    VLP_PARENTS,
+    H36M_NON_REDUNDANT_PARENT_IDS,
     SH_SKELETON_STRUCTURE,
     H36MDataset,
     SkeletonModel32,
@@ -32,7 +36,7 @@ from .visualization import(
     compare_sequences_plotly,
 )
 
-from ..visualization import compare_skeleton
+from ..visualization import compare_skeleton, animate_pose_matplotlib
 
 METRICS_IMPLEMENTED = {
     "geodesic_distance": geodesic_distance,
@@ -151,7 +155,11 @@ class EvaluationEngine:
         self.prediction_timesteps['visualization_2d'] = prediction_steps_real
         self.visualization_2d_active = True
     
-    def initialize_visualization_3d(self, max_length: int):
+    def initialize_visualization_3d(self,
+                                    interactive: bool,
+                                    max_length: int,
+                                    overlay: Optional[bool]=False,
+                                    ):
         """
             Initialize the 2d visualization
         """
@@ -162,6 +170,8 @@ class EvaluationEngine:
         self.prediction_timesteps['visualization_3d'] = prediction_steps_real
         self.target_frames['visualization_3d'] = target_frame
         self.visualization_2d_active = True
+        self.interactive_visualization = interactive
+        self.overlay_visualization = overlay 
 
 
     def load_data(self,
@@ -616,14 +626,28 @@ class EvaluationEngine:
         targets = torch.stack(targets)
         targets = torch.transpose(targets, 0, 1)
         skeleton_structure = self._get_skeleton_model()
+        logger = LOGGER
+
         for i in num:
-            cur_pred = predictions[i]
-            cur_target = targets[i]
-            compare_skeleton(
-                cur_target,
-                cur_pred,
-                skeleton_structure,
-                skeleton_structure
+            cur_pred = predictions[i,...,[2,0,1]].numpy()
+            cur_target = targets[i,...,[2,0,1]].numpy()
+            if not self.interactive_visualization:
+                save_dir = logger.get_path('visualization')
+                fname = f"h36m_{action}_{i}" if self.h36m_evaluation else f"ais_{i}"
+            else:
+                save_dir = None
+                fname = None
+            parent_ids = self._get_skeleton_parents()
+            animate_pose_matplotlib(
+                positions = (cur_pred, cur_target),
+                colors = ('g', 'g'),
+                parents = parent_ids,
+                change_color_after_frame=(self.seed_length, None),
+                out_dir=save_dir,
+                fname = fname,
+                color_after_change='r',
+                overlay=self.overlay_visualization,
+                fps=25
             )
 
     #####===== Utility Functions =====#####
@@ -679,13 +703,23 @@ class EvaluationEngine:
                     )
                 print_(table)
     
-    def _get_skeleton_model(self) -> torch.nn.Module:
+    def _get_skeleton_model(self) -> dict:
         if self.skeleton_representation == "s26":
             return H36M_SKELETON_STRUCTURE
         elif self.skeleton_representation == "s21":
             return H36M_NON_REDUNDANT_SKELETON_STRUCTURE
         elif self.skeleton_representation == "s16":
             return SH_SKELETON_STRUCTURE
+        else:
+            raise ValueError(f"Unknown skeleton model: {self.skeleton_representation}")
+        
+    def _get_skeleton_parents(self) -> list:
+        if self.skeleton_representation == "s26":
+            return H36M_SKELETON_PARENTS
+        elif self.skeleton_representation == "s21":
+            return H36M_NON_REDUNDANT_PARENT_IDS.values()
+        elif self.skeleton_representation == "s16":
+            return SH_SKELETON_PARENTS
         else:
             raise ValueError(f"Unknown skeleton model: {self.skeleton_representation}")
 

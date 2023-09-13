@@ -207,6 +207,8 @@ H36M_REDUCED_SKELETON_STRUCTURE = {
     25: ('rWristEnd', 'rWrist')
 }
 
+H36M_SKELETON_PARENTS = [-1, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 12, 10, 14, 15, 16, 17, 17, 10, 20, 21, 22, 23, 23]
+
 H36M_REDUCED_IND_TO_CHILD = {
     0: [1,5],
     1: [2],
@@ -328,7 +330,6 @@ H36M_BONE_LENGTH = [0.000000,0.000000,0.000000,-132.948591,0.000000,0.000000,0.0
 # Active joints: 19
 VLP_DATASET_PATH = 'data/VisionLab3DPoses'
 
-
 ###=== Joint Names ===###
 VLP_NAMES = [''] * 27
 VLP_NAMES[0] = 'nose'
@@ -416,7 +417,7 @@ SH_SKELETON_STRUCTURE = {
     3: ('lHip', 'hip'),
     4: ('lKnee', 'lHip'),
     5: ('lFoot', 'lKnee'),
-    7: ('spine', 'hip'),
+    7: ('spine1', 'hip'),
     8: ('thorax', 'spine'),
     9: ('head', 'thorax'),
     13: ('lShoulder', 'thorax'),
@@ -426,3 +427,5 @@ SH_SKELETON_STRUCTURE = {
     11: ('rElbow', 'rShoulder'),
     10: ('rWrist', 'rElbow'),
 }
+
+SH_SKELETON_PARENTS = [1, 2, 6, 6, 3, 4, 6, 7, 8, 8, 13, 14, 8, 12, 11]
