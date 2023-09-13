@@ -113,6 +113,7 @@ class GeodesicLoss(LossBase):
 class EulerLoss(LossBase):
     """
         Module to compute a loss on euler angles using an absolute difference between two rotation.
+        import ipdb; ipdb.set_trace()
 
         Implementation according to: https://towardsdatascience.com/better-rotation-representations-for-accurate-pose-estimation-e890a7e1317f
     """

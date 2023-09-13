@@ -128,7 +128,7 @@ class Session:
             )
             self.num_eval_iterations = self.config['num_eval_iterations']
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
-
+        self.evaluation_engine.set_normalization(self.norm_mean, self.norm_var)
     @log_function
     def initialize_visualization(self,
                                  visualization_type: List[str] = ['2d'],
@@ -198,7 +198,7 @@ class Session:
             drop_last=True,
             num_workers=self.num_threads,
         )
-        mean, var = dataset.get_mean_variance()
+        self.norm_mean, self.norm_var = dataset.get_mean_variance()
         self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
         p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
         print_(p_str)
@@ -209,7 +209,7 @@ class Session:
             joint_cutout_prob=self.config['data_augmentation']['joint_cutout_prob'],
             timestep_cutout_prob=self.config['data_augmentation']['timestep_cutout_prob']
         )
-        self.data_augmentor.set_mean_var(mean.to(self.device), var.to(self.device))
+        self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
@@ -330,7 +330,6 @@ class Session:
         """
         self.model.train()
         progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
-
         for batch_idx, data in progress_bar:
             if batch_idx==self.num_iterations:
                 break
