@@ -44,7 +44,7 @@ def evaluate_distribution_metrics(
     METRICS_IMPLEMENTED = {
         "ps_entropy": ps_entropy,
         "ps_kld": ps_kld,
-        "npss": compute_npss,
+        "npss": npss,
     }
 
     if metrics is None:
@@ -86,7 +86,7 @@ def evaluate_distribution_metrics(
                 power_spec_targ, power_spec_pred
             ).squeeze()
         elif metric == "npss":
-            results[metric] = compute_npss(npss_preds, npss_targs)
+            results[metric] = npss(npss_preds, npss_targs)
         if reduction is not None:
             # Don't apply reduction to npss as it is a single value
             if metric != "npss":
@@ -207,7 +207,7 @@ def ps_kld(seq_ps_from, seq_ps_to):
     return torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), dim=1)
 
 
-def compute_npss(euler_gt_sequences, euler_pred_sequences):
+def npss(euler_gt_sequences, euler_pred_sequences):
     """
     Computing normalized Normalized Power Spectrum Similarity (NPSS)
     Taken from @github.com neural_temporal_models/blob/master/metrics.py#L51
