@@ -10,7 +10,14 @@ import numpy as np
 # Local application imports
 from ..data_utils import *
 from ..evaluation import evaluate_distribution_metrics, euler_angle_error, geodesic_distance
-
+from ..utils import (
+    print_,
+    matrix_to_euler_angles,
+    matrix_to_axis_angle,
+    get_conv_to_rotation_matrix,
+    correct_rotation_matrix,
+    get_conv_from_axis_angle
+)
 
 def test_metrics():
     # Create 26 x 3 x 3 tensor
@@ -63,6 +70,7 @@ def test_distribution_metrics():
 
     results = evaluate_distribution_metrics(batch_pred, batch_gt)
 
+
     # Create same shape np array with same values as tensors
     batch_pred_np = batch_pred.numpy()
     batch_gt_np = batch_gt.numpy()
@@ -83,18 +91,39 @@ def test_distribution_metrics():
     # Calculate ps_kld and remove singleton dimensions
     results_np["ps_kld"] = ps_kld(power_spec_gt, power_spec_pred).squeeze()
 
+    # Calculate npss
+    # Reshape to (batch_size, seq_len, num_joints * joint_dim)
+    npss_preds = get_conv_from_axis_angle("euler")(batch_pred, "ZYX").numpy()
+    npss_targs = get_conv_from_axis_angle("euler")(batch_gt, "ZYX").numpy()
+    batch_pred_np = np.transpose(npss_preds, (1, 0, 2, 3))
+    batch_pred_np = np.reshape(batch_pred_np, (batch_pred_np.shape[0], batch_pred_np.shape[1], -1))
+    batch_gt_np = np.transpose(npss_targs, (1, 0, 2, 3))
+    batch_gt_np = np.reshape(batch_gt_np, (batch_gt_np.shape[0], batch_gt_np.shape[1], -1))
+    results_np["npss"] = compute_npss(batch_gt_np, batch_pred_np)
+
+
+
+    
     # Round np results to same decimal amount as torch results
     for key in results_np.keys():
         # Loop over all numbers in the tensor and check if they are equal to the corresponding number in the np array
-        for i in range(results[key].shape[0]):
-            # Check if rounded values are equal
+        if not key == "npss":
+            for i in range(results[key].shape[0]):
+                # Check if rounded values are equal
+                if not np.isclose(
+                    np.round(results[key][i], 6), np.round(results_np[key][i], 6)
+                ):
+                    print(
+                        f"Tensor value: {results[key][i]}, np value: {results_np[key][i]}"
+                    )
+        else:
             if not np.isclose(
-                np.round(results[key][i], 6), np.round(results_np[key][i], 6)
+                np.round(results[key], 6), np.round(results_np[key], 6)
             ):
-                print(
-                    f"Tensor value: {results[key][i]}, np value: {results_np[key][i]}"
-                )
+                print(f"Tensor value: {results[key]}, np value: {results_np[key]}")
 
+    # Calculate mean of npss
+    results_np["npss"] = np.mean(results_np["npss"])
         
     
 
@@ -164,8 +193,8 @@ def compute_npss(euler_gt_sequences, euler_pred_sequences):
     5) EMD
     
     Args:
-        euler_gt_sequences:
-        euler_pred_sequences:
+        euler_gt_sequences: (batch_size, seq_len, num_joints * joint_dim)
+        euler_pred_sequences: (batch_size, seq_len, num_joints * joint_dim)
     Returns:
     """
     gt_fourier_coeffs = np.zeros(euler_gt_sequences.shape)

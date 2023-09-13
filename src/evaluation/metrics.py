@@ -14,6 +14,7 @@ from ..utils import (
     matrix_to_axis_angle,
     get_conv_to_rotation_matrix,
     correct_rotation_matrix,
+    get_conv_from_axis_angle
 )
 from ..data_utils import h36m_forward_kinematics
 
@@ -43,6 +44,7 @@ def evaluate_distribution_metrics(
     METRICS_IMPLEMENTED = {
         "ps_entropy": ps_entropy,
         "ps_kld": ps_kld,
+        "npss": compute_npss,
     }
 
     if metrics is None:
@@ -59,6 +61,21 @@ def evaluate_distribution_metrics(
     power_spec_targ = torch.permute(targets, (1, 2, 0, 3))
     power_spec_targ = power_spectrum(power_spec_targ)
 
+    # Compute npss
+    # For this we need to reshape the predictions and targets to (batch_size, seq_len, num_joints * joint_dim)
+    # Convert to euler angle representation from axis angle
+    npss_preds = get_conv_from_axis_angle("euler")(predictions, "ZYX")
+    npss_targs = get_conv_from_axis_angle("euler")(targets, "ZYX")
+    
+    npss_preds = torch.permute(npss_preds, (1, 0, 2, 3))
+    npss_preds = torch.reshape(npss_preds, (npss_preds.shape[0], npss_preds.shape[1], -1))
+    npss_targs = torch.permute(npss_targs, (1, 0, 2, 3))
+    npss_targs = torch.reshape(npss_targs, (npss_targs.shape[0], npss_targs.shape[1], -1))
+
+    # Convert both to numpy arrays
+    npss_preds = npss_preds.numpy()
+    npss_targs = npss_targs.numpy()
+
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
@@ -68,8 +85,12 @@ def evaluate_distribution_metrics(
             results[metric] = METRICS_IMPLEMENTED[metric](
                 power_spec_targ, power_spec_pred
             ).squeeze()
+        elif metric == "npss":
+            results[metric] = compute_npss(npss_preds, npss_targs)
         if reduction is not None:
-            results[metric] = _reduce(results[metric], reduction)
+            # Don't apply reduction to npss as it is a single value
+            if metric != "npss":
+                results[metric] = _reduce(results[metric], reduction)
     
     return results
 
@@ -189,71 +210,80 @@ def ps_kld(seq_ps_from, seq_ps_to):
 def compute_npss(euler_gt_sequences, euler_pred_sequences):
     """
     Computing normalized Normalized Power Spectrum Similarity (NPSS)
+    Taken from @github.com neural_temporal_models/blob/master/metrics.py#L51
+    
+    1) fourier coeffs
+    2) power of fft
+    3) normalizing power of fft dim-wise
+    4) cumsum over freq.
+    5) EMD
     
     Args:
-        euler_gt_sequences: torch.Tensor of shape (batch_size, n_joints, seq_len, feature_size)
-        euler_pred_sequences: torch.Tensor of shape (batch_size, n_joints, seq_len, feature_size)
-
+        euler_gt_sequences: (batch_size, seq_len, num_joints * joint_dim)
+        euler_pred_sequences: (batch_size, seq_len, num_joints * joint_dim)
     Returns:
-        power_weighted_emd: torch.Tensor
     """
-    gt_fourier_coeffs = torch.zeros_like(euler_gt_sequences)
-    pred_fourier_coeffs = torch.zeros_like(euler_pred_sequences)
+    gt_fourier_coeffs = np.zeros(euler_gt_sequences.shape)
+    pred_fourier_coeffs = np.zeros(euler_pred_sequences.shape)
     
     # power vars
-    gt_power = torch.zeros_like(gt_fourier_coeffs)
-    pred_power = torch.zeros_like(pred_fourier_coeffs)
+    gt_power = np.zeros((gt_fourier_coeffs.shape))
+    pred_power = np.zeros((gt_fourier_coeffs.shape))
     
     # normalizing power vars
-    gt_norm_power = torch.zeros_like(gt_fourier_coeffs)
-    pred_norm_power = torch.zeros_like(pred_fourier_coeffs)
+    gt_norm_power = np.zeros(gt_fourier_coeffs.shape)
+    pred_norm_power = np.zeros(gt_fourier_coeffs.shape)
     
-    cdf_gt_power = torch.zeros_like(gt_norm_power)
-    cdf_pred_power = torch.zeros_like(pred_norm_power)
+    cdf_gt_power = np.zeros(gt_norm_power.shape)
+    cdf_pred_power = np.zeros(pred_norm_power.shape)
     
-    emd = torch.zeros(cdf_pred_power.shape[0:3:2])
+    emd = np.zeros(cdf_pred_power.shape[0:3:2])
     
     # used to store powers of feature_dims and sequences used for avg later
-    seq_feature_power = torch.zeros(euler_gt_sequences.shape[0:3:2])
+    seq_feature_power = np.zeros(euler_gt_sequences.shape[0:3:2])
     power_weighted_emd = 0
     
     for s in range(euler_gt_sequences.shape[0]):
         
         for d in range(euler_gt_sequences.shape[2]):
-            gt_fourier_coeffs[s, :, d] = torch.fft.fft(
+            gt_fourier_coeffs[s, :, d] = np.fft.fft(
                 euler_gt_sequences[s, :, d])  # slice is 1D array
-            pred_fourier_coeffs[s, :, d] = torch.fft.fft(
+            pred_fourier_coeffs[s, :, d] = np.fft.fft(
                 euler_pred_sequences[s, :, d])
             
             # computing power of fft per sequence per dim
-            gt_power[s, :, d] = torch.square(
-                torch.abs(gt_fourier_coeffs[s, :, d]))
-            pred_power[s, :, d] = torch.square(
-                torch.abs(pred_fourier_coeffs[s, :, d]))
+            gt_power[s, :, d] = np.square(
+                np.absolute(gt_fourier_coeffs[s, :, d]))
+            pred_power[s, :, d] = np.square(
+                np.absolute(pred_fourier_coeffs[s, :, d]))
             
             # matching power of gt and pred sequences
-            gt_total_power = torch.sum(gt_power[s, :, d])
-            pred_total_power = torch.sum(pred_power[s, :, d])
+            gt_total_power = np.sum(gt_power[s, :, d])
+            pred_total_power = np.sum(pred_power[s, :, d])
+            # power_diff = gt_total_power - pred_total_power
+            
+            # adding power diff to zero freq of pred seq
+            # pred_power[s,0,d] = pred_power[s,0,d] + power_diff
             
             # computing seq_power and feature_dims power
             seq_feature_power[s, d] = gt_total_power
             
             # normalizing power per sequence per dim
             if gt_total_power != 0:
-                gt_norm_power[s, :, d] = gt_power[s, :, d] / gt_total_power
+                gt_norm_power[s, :, d] = gt_power[s, :, d]/gt_total_power
             
             if pred_total_power != 0:
-                pred_norm_power[s, :, d] = pred_power[s, :, d] / pred_total_power
+                pred_norm_power[s, :, d] = pred_power[s, :, d]/pred_total_power
             
             # computing cumsum over freq
-            cdf_gt_power[s, :, d] = torch.cumsum(gt_norm_power[s, :, d], dim=0)  # slice is 1D
-            cdf_pred_power[s, :, d] = torch.cumsum(pred_norm_power[s, :, d], dim=0)
+            cdf_gt_power[s, :, d] = np.cumsum(gt_norm_power[s, :, d])  # slice is 1D
+            cdf_pred_power[s, :, d] = np.cumsum(pred_norm_power[s, :, d])
             
             # computing EMD
-            emd[s, d] = torch.norm((cdf_pred_power[s, :, d] - cdf_gt_power[s, :, d]), p=1)
+            emd[s, d] = np.linalg.norm((cdf_pred_power[s, :, d] - cdf_gt_power[s, :, d]), ord=1)
     
     # computing weighted emd (by sequence and feature powers)
-    power_weighted_emd = torch.average(emd, weights=seq_feature_power)
+    power_weighted_emd = np.average(emd, weights=seq_feature_power)
     
     return power_weighted_emd
 
