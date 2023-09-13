@@ -267,7 +267,7 @@ def create_skeleton_subplot_plotly(
 
 def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, change_color_after_frame=None,
                        color_after_change=None, overlay=False, fps=60, step_size=40, out_dir=None, to_video=True, fname=None,
-                       keep_frames=True):
+                       keep_frames=True, show_axis=False, constant_limits=False):
     """
     Visualize motion given 3D positions. Can visualize several motions side by side. If the sequence lengths don't
     match, all animations are displayed until the shortest sequence length.
@@ -308,7 +308,6 @@ def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, chang
             ax.plot(joints[0:1, n, 0], joints[0:1, n, 1], joints[0:1, n, 2], '-o',
                     markersize=2.0, color=colors[i])[0] for n in range(1, n_joints)]
         all_lines.append(lines_j)
-
         ax.set_title(titles[i])
 
     # dirty hack to get equal axes behaviour
@@ -321,12 +320,16 @@ def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, chang
 
     for ax in axes:
         ax.set_aspect('equal')
-        ax.axis('off')
+        if not show_axis:
+            ax.axis('off')
 
         for xb, yb, zb in zip(Xb, Yb, Zb):
             ax.plot([xb], [yb], [zb], 'w')
 
-        ax.view_init(elev=0, azim=-56)
+        ax.view_init(elev=20, azim=-56)
+        if constant_limits:
+            ax.set_box_aspect([1.0, 1.0, 1.0])
+
 
     def on_move(event):
         # find which axis triggered the event

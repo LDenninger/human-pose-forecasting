@@ -166,23 +166,14 @@ def read_file_visionlab3DPoses(path: str, return_tensor: Optional[bool] = False)
         return torch.FloatTensor(joint_positions)
     return joint_positions
     
-def load_data_visionlab3DPoses(
-                                  representation: Optional[Literal['axis','mat', 'quat', '6d', 'pos']] = 'axis',
-                                    return_tensor: bool=True,
-                                    return_seq_tensor: bool=True,
-                                        show_progress=True,
-                                        return_reverse_meta=False):
+def load_data_visionlab3DPoses(absolute: Optional[bool] = False):
     file_paths = (P(os.getcwd()) / VLP_DATASET_PATH).rglob('**/*.json')
-    conversion_func = get_conv_from_vectors(representation)
     data = {}
-
     for path in file_paths:
         file_name = path.stem
         raw_data = read_file_visionlab3DPoses(path, return_tensor=True)
-        proc_data = parse_sequence_to_s19(raw_data, conversion_func)
-
+        proc_data = parse_ais3dposes_to_s16(raw_data, absolute)
         data[file_name] = proc_data
-    import ipdb; ipdb.set_trace()
 
     return data
 

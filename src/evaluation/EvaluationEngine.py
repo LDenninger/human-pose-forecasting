@@ -19,6 +19,7 @@ from ..data_utils import (
     H36M_NON_REDUNDANT_PARENT_IDS,
     SH_SKELETON_STRUCTURE,
     H36MDataset,
+    AISDataset,
     SkeletonModel32,
     h36m_forward_kinematics,
     DataAugmentor,
@@ -179,9 +180,11 @@ class EvaluationEngine:
             target_length: Optional[int] = None,
             prediction_length: Optional[int] = None,
             down_sampling_factor: int = 1,
+            sequence_spacing: Optional[int] = 1,
             actions: Optional[List[str]] = H36M_DATASET_ACTIONS,
             split_actions: Optional[bool] = False,
             representation: Optional[Literal["axis", "mat", "quat", "6d", "pos", None]] = None,
+            absolute_positions: Optional[bool] = False,
             skeleton_representation: Optional[Literal['s26','s21','s16']] = 's26',
             batch_size: Optional[int] = 32,
             normalize: Optional[bool] = False,
@@ -218,6 +221,7 @@ class EvaluationEngine:
                         actions=[a],
                         seed_length=self.seed_length,
                         target_length=self.target_length,
+                        sequence_spacing=sequence_spacing,
                         down_sampling_factor=self.down_sampling_factor,
                         stacked_hourglass=True if skeleton_representation == 's16' else False,
                         rot_representation=representation,
@@ -230,6 +234,7 @@ class EvaluationEngine:
                         actions=actions,
                         seed_length=self.seed_length,
                         target_length=self.target_length,
+                        sequence_spacing=sequence_spacing,
                         down_sampling_factor=self.down_sampling_factor,
                         stacked_hourglass=True if skeleton_representation == 's16' else False,
                         rot_representation=representation,
@@ -238,6 +243,14 @@ class EvaluationEngine:
             
         elif dataset == 'ais':
             self.h36m_evaluation = False
+            self.datasets = {}
+            self.datasets['overall'] =  AISDataset(
+                seed_length=self.seed_length,
+                target_length=self.target_length,
+                sequence_spacing=sequence_spacing,
+                absolute_position=absolute_positions
+            )
+
 
         self.data_loaded = True        
 
@@ -645,7 +658,9 @@ class EvaluationEngine:
                 fname = fname,
                 color_after_change='r',
                 overlay=self.overlay_visualization,
-                fps=2
+                fps=2,
+                show_axis=True,
+                constant_limits=True
             )
 
     #####===== Utility Functions =====#####

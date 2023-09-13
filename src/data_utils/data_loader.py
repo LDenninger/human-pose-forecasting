@@ -5,7 +5,7 @@ from typing import Optional, Literal, List
 from abc import abstractmethod
 
 from ..utils import get_conv_from_axis_angle
-from .data_loading import load_data_h36m
+from .data_loading import load_data_h36m, load_data_visionlab3DPoses
 from .skeleton_utils import parse_h36m_to_s26, h36m_forward_kinematics, convert_s26_to_s21, convert_s21_to_s16
 from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT, H36M_DATASET_ACTIONS
 
@@ -35,6 +35,7 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
     else:
         raise NotImplementedError(f'Dataset {config["name"]} is not implemented.')
     
+#####===== H36M Dataset =====#####
 class H36MDatasetBase(Dataset):
 
     def __init__(self, 
@@ -190,5 +191,36 @@ class H36MDataset(H36MDatasetBase):
             return sequence, self.labels[x]
         return sequence
 
+#####===== AIS Dataset =====#####
 
+class AISDataset(Dataset):
 
+    def __init__(self, 
+                 seed_length: int,
+                 target_length: int,
+                 sequence_spacing: int,
+                 absolute_position: Optional[bool] = False):
+        self.seed_length = seed_length
+        self.target_length = target_length
+        self.sequence_spacing = sequence_spacing
+        self.absolute_position = absolute_position
+        self.data = self._load_data()
+        self.len = len(self.data)
+
+    def __getitem__(self, x):
+        return self.data[x]
+
+    def _load_data(self):
+        full_data = []
+        raw_data = load_data_visionlab3DPoses(self.absolute_position)
+        for fname, data in raw_data.items():
+            max_ind = len(data)
+            start_inds = np.arange(len(data))
+            start_inds = start_inds[::self.sequence_spacing]
+            for sid in start_inds:
+                if sid+self.target_length+self.seed_length <= max_ind:
+                    full_data.append(data[sid:sid+self.target_length+self.seed_length])
+        return full_data
+
+    def __len__(self):
+        return self.len
