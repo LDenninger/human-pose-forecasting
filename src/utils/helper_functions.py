@@ -9,7 +9,7 @@ import torch.nn as nn
 import os
 from typing import Optional
 
-from .schedulers import SchedulerBase, SPLScheduler
+from .schedulers import SchedulerBase, SPLScheduler, ExponentialScheduler
 from .losses import *
 from .logging import print_
 
@@ -31,6 +31,13 @@ def getScheduler(config: dict, optimizer: nn.Module, **kwargs) -> SchedulerBase:
             optimizer=optimizer,
             emb_size = kwargs.pop("emb_size"),
             warmup = config["warmup"]
+        )
+    elif config["type"] == 'exponential':
+
+        return ExponentialScheduler(
+            optimizer=optimizer,
+            base_lr= config["base_lr"],
+            gamma=config["gamma"]
         )
     else:
         raise NotImplementedError(f'Scheduler {config["type"]} is not implemented.')
