@@ -367,7 +367,8 @@ class Session:
             self.metric_tracker.step_iteration()
             # Update the logger
             self.logger.log({
-                self.config['loss']['type']: loss.item()
+                self.config['loss']['type']: loss.item(),
+                'learning_rate': self.scheduler.learning_rate
             }, step=self.iteration)
             # Update the progress bar description
             if batch_idx == 0:
@@ -409,6 +410,7 @@ class Session:
             prediction_length = prediction_length,
             down_sampling_factor=self.config['dataset']['downsampling_factor'],
             split_actions=split_actions,
+            sequence_spacing=self.config['dataset']['spacing'],
             skeleton_representation = self.config['skeleton']['type'],
             normalize=self.config['data_augmentation']['normalize'],
             representation= self.config['joint_representation']['type']

@@ -57,7 +57,6 @@ class PosePredictor(nn.Module):
         super(PosePredictor, self).__init__()
         # Build the model 
         # Initial linear layer for embedding each joint into the embedding space
-
         self.joint_encoder = PointWiseLinear(joint_dim, emb_dim, num_joints)
         if incl_abs_position: 
             self.position_encoder = nn.Linear(3, emb_dim)
