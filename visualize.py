@@ -47,6 +47,7 @@ def run_visualization(experiment_name: str,
                       dataset: str,
                       visualization_type: List[str],
                       log: bool, 
+                      num_visualizations: Optional[int] = 1,
                       interactive: Optional[bool] = False,
                       overlay: Optional[bool] = False,
                       pred_length: Optional[int] = None,
@@ -89,7 +90,7 @@ def run_visualization(experiment_name: str,
         session.num_eval_iterations = 10
         session.num_epochs = 5
     # Evaluate the model
-    session.visualize()
+    session.visualize(num_visualizations)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -99,6 +100,7 @@ def main():
     parser.add_argument('-s', '--seed', type=int, default=None, help='Random seed')
     parser.add_argument('-d', '--dataset', type=str, default='h36m', help='Dataset to visualize')
     parser.add_argument('--vis2d', action='store_true', default=False, help='2D visualization')
+    parser.add_argument('--num', type=int, default=None, help='Number of sequences to visualize')
     parser.add_argument("--vis3d", action='store_true', default=False, help='3D visualization')
     parser.add_argument('--length', type=int, default=None, help='Length of the sequence to be visualized')
     parser.add_argument('--interactive', action='store_true', default=False, help='Interactive visualization')
@@ -132,6 +134,7 @@ def main():
                     visualization_type=visualization_type,
                     log=args.log,
                     pred_length=args.length,
+                    num_visualizations=args.num,
                     interactive=args.interactive,
                     overlay=args.overlay,
                     debug=args.debug,
@@ -170,6 +173,7 @@ def main():
             checkpoint_name=args.checkpoint,
             dataset=args.dataset,
             visualization_type=visualization_type,
+            num_visualizations=args.num,
             interactive=args.interactive,
             pred_length=args.length,
             overlay=args.overlay,
