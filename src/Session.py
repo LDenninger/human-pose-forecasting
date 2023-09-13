@@ -83,12 +83,8 @@ class Session:
         if not self.evaluate_model:
             print_('Evaluation was not properly initialized!', 'error')
             return
-        if self.exhaustive_evaluation:
-                self.evaluation_engine.evaluate(self.model)
-                self.evaluation_engine.log_results(self.iteration)
-        else:
-            self.metric_tracker.reset()
-            self.evaluation_epoch()
+        self.evaluation_engine.evaluate(self.model)
+        self.evaluation_engine.log_results(self.iteration)
         self._print_epoch_results()
     
     def visualize(self, num_visualization: Optional[int] = 1) -> None:
@@ -245,25 +241,18 @@ class Session:
         if self.train_loader is None:
             print_("Cannot train without a training loader.", 'error')
             return False
-        if self.test_loader is None and not self.exhaustive_evaluation:
-            print_("Cannot train without a test loader.", 'error')
-            return False
+
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
+        # Initial evaluation for untrained model
         if self.evaluate_model:
-            print_(f"Initial Evaluation:")
-            if self.exhaustive_evaluation:
-                self.evaluation_engine.evaluate(self.model)
-                self.evaluation_engine.log_results(self.iteration)
-            else:
-                self.metric_tracker.reset()
-                self.evaluation_epoch()
+            self.evaluation_engine.evaluate(self.model)
+            self.evaluation_engine.log_results(self.iteration)
             self._print_epoch_results()
         for self.epoch in range(1, self.config['num_epochs'] + 1):
             print_(f"Epoch {self.epoch}/{self.config['num_epochs']}", 'info')
             # Reset the tracked metrics for the new epoch
             self.metric_tracker.reset()
-            if self.exhaustive_evaluation:
-                self.evaluation_engine.reset()
+            self.evaluation_engine.reset()
             # Run a single epoch of training
             if self.config['training_scheme'] == 'single_step':
                 self.train_epoch_single_step()
@@ -271,11 +260,9 @@ class Session:
                 self.train_epoch_auto_regressive()
             # Evaluation in pre-defined intervals
             if self.evaluate_model and self.epoch % self.config['evaluation']['frequency'] == 0:
-                if self.exhaustive_evaluation:
-                    self.evaluation_engine.evaluate(self.model)
-                    self.evaluation_engine.log_results(self.iteration)
-                else:
-                    self.evaluation_epoch()
+                self.evaluation_engine.evaluate(self.model)
+                self.evaluation_engine.log_results(self.iteration)
+         
             # Print out the epoch results
             self._print_epoch_results()
             # Save checkpoint 
@@ -404,9 +391,8 @@ class Session:
         pstr = f'Iterations completed: {self.iteration-1} Results:\n '
         pstr += '\n '.join([f'{metric_names[i]}: mean: {mean:.4f}, var: {var:.4f}' for i, (mean, var) in enumerate(zip(list(metric_means.values()), list(metric_vars.values())))])
         print_(pstr, 'info')
-        if self.exhaustive_evaluation:
-            print_(f'Exhaustive Evaluation Results:\n',)
-            self.evaluation_engine.print()
+        print_(f'Evaluation Results:\n',)
+        self.evaluation_engine.print()
     
     def _load_evaluation_data(self, 
                               dataset: Literal['h36m','ais'], 

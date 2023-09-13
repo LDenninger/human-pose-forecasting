@@ -105,7 +105,7 @@ class EvaluationEngine:
         """
             Initialize the evaluation for long predictions using distribution metrics
         """
-        self.num_iteration['long_predictions'] = iterations
+        self.num_iterations['long_predictions'] = iterations
         self.prediction_timesteps['long_predictions'] = prediction_timesteps
         target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
         prediction_steps_real = (target_frames * self.step_size).tolist()
@@ -127,14 +127,13 @@ class EvaluationEngine:
         """
             Initialize the evaluation for long predictions using distribution metrics
         """
-        self.num_iteration['distance_metric'] = iterations
-        self.prediction_timesteps['distance_metric'] = prediction_timesteps
+        self.num_iterations['distance_metric'] = iterations
         target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
         prediction_steps_real = (target_frames * self.step_size).tolist()
         if prediction_steps_real != prediction_timesteps:
             print_(f"Goal prediction timesteps: {prediction_timesteps} not reachable using timesteps: {prediction_steps_real}","warn")
         self.target_frames['distance_metric'] = target_frames.tolist()
-        self.prediction_timesteps['visualization_2d'] = prediction_steps_real
+        self.prediction_timesteps['distance_metric'] = prediction_steps_real
         self.distance_metrics = metric_names
         self.distance_metric_active = True
         for t in prediction_timesteps:
@@ -224,13 +223,6 @@ class EvaluationEngine:
                         rot_representation=representation,
                         is_train=False
                     )
-                self.evaluation_results = {}
-                for a in actions + ["overall"]:
-                    self.evaluation_results[a] = {}
-                    for timestep in self.target_timesteps:
-                        self.evaluation_results[a][timestep] = {}
-                        for metric_names in self.metric_names:
-                            self.evaluation_results[a][timestep][metric_names] = []
             else:
                 self.split_actions = split_actions
                 self.datasets = {}
@@ -268,20 +260,18 @@ class EvaluationEngine:
                 if len(metric_names)==0:
                     continue
             if self.split_actions:
-                self.evaluation_results = {}
                 for a in self.actions + ["overall"]:
-                    self.evaluation_results[a] = {}
-                    for timestep in self.target_timesteps:
-                        self.evaluation_results[a][timestep] = {}
+                    self.evaluation_results[eval_type][a] = {}
+                    for timestep in self.prediction_timesteps[eval_type]:
+                        self.evaluation_results[eval_type][a][timestep] = {}
                         for m_name in metric_names:
-                            self.evaluation_results[a][timestep][m_name] = []
+                            self.evaluation_results[eval_type][a][timestep][m_name] = []
             else:
-                self.evaluation_results = {}
-                self.evaluation_results['overall'] = {}
-                for timestep in self.target_timesteps:
-                    self.evaluation_results['overall'][timestep] = {}
+                self.evaluation_results[eval_type]['overall'] = {}
+                for timestep in self.prediction_timesteps[eval_type]:
+                    self.evaluation_results[eval_type]['overall'][timestep] = {}
                     for m_name in metric_names:
-                        self.evaluation_results['overall'][timestep][m_name] = []
+                        self.evaluation_results[eval_type]['overall'][timestep][m_name] = []
         self.evaluation_finished = False
 
     def print(self) -> None:
@@ -302,10 +292,13 @@ class EvaluationEngine:
             print_(f"No logger defined, cannot log evaluation results")
         data_dir = {}
         actions = self.actions + ["overall"] if self.split_actions else ['overall']
-        for a in actions:
-            for p in self.target_timesteps:
-                for m in self.metric_names:
-                    data_dir[f"{a}/{p}/{m}"] = self.evaluation_results[a][p][m]
+        for eval_type in self.evaluation_results.keys():
+            if len(self.evaluation_results[eval_type]) == 0:
+                continue
+            for a in actions:
+                for p in self.prediction_timesteps[eval_type]:
+                    for m in self.evaluation_results[eval_type][a][p].keys():
+                        data_dir[f"{a}/{p}/{m}"] = self.evaluation_results[eval_type][a][p][m]
         logger.log(data_dir, step)
 
     #####===== Getter Functions =====#####
@@ -367,7 +360,6 @@ class EvaluationEngine:
         """
         A single evaluation loop for an action.
         """
-
         model.eval()
         # Initialize progress bar
         dataset = self.datasets[action]
@@ -377,12 +369,12 @@ class EvaluationEngine:
 
         predictions = {}
         targets = {}
-        for i in self.target_frames:
+        for i in self.target_frames['distance_metric']:
             predictions[i] = []
             targets[i] = []
 
         for batch_idx, data in progress_bar:
-            if batch_idx == self.iterations:
+            if batch_idx == self.num_iterations['distance_metric']:
                 break
             # Load data
             data = data.to(self.device)
@@ -407,7 +399,7 @@ class EvaluationEngine:
                 cur_input = output
         # Compute the distance metrics for each timestep
         for i, frame in enumerate(self.target_frames['distance_metric']):
-            timestep = self.prediction_timesteps['distance_metric']
+            timestep = self.prediction_timesteps['distance_metric'][i]
             timestep_prediction = torch.stack(predictions[frame])
             timestep_target = torch.stack(targets[frame])
             timestep_prediction = torch.flatten(
@@ -416,11 +408,12 @@ class EvaluationEngine:
             timestep_target = torch.flatten(
                 timestep_target, start_dim=0, end_dim=1
             )
-            self.evaluation_results[action][timestep].update(evaluate_distance_metrics(
+
+            self.evaluation_results['distance_metric'][action][timestep].update(evaluate_distance_metrics(
                 timestep_prediction,
                 timestep_target,
                 reduction="mean",
-                metrics=self.metric_names,
+                metrics=self.distance_metrics,
                 representation=self.representation,
             ))
 
@@ -448,7 +441,7 @@ class EvaluationEngine:
             targets[i] = []
 
         for batch_idx, data in progress_bar:
-            if batch_idx == self.iterations:
+            if batch_idx == self.num_iterations['long_predictions']:
                 break
             # Load data
             data = data.to(self.device)
@@ -685,21 +678,23 @@ class EvaluationEngine:
         """
         Print the results into the console using the PrettyTable library.
         """
-
         for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0:
                 continue
-            for a in self.evaluation_results.keys():
+            for a in self.evaluation_results[eval_type].keys():
                 if a == "overall":
                     print(f"Average over all actions:")
                 else:
                     print_(f"Evaluation results for action {a}:")
                 table = PrettyTable()
-                table.field_names = ["Pred. length"] + list(self.metric_names)
-                for pred_length in self.evaluation_results[a].keys():
+                if eval_type == 'long_predictions':
+                    table.field_names = ["Pred. length"] + list(self.distribution_metrics)
+                elif eval_type == 'distance_metric':
+                    table.field_names = ["Pred. length"] + list(self.distance_metrics)
+                for pred_length in self.evaluation_results[eval_type][a].keys():
                     table.add_row(
                         [pred_length]
-                        + list(self.evaluation_results[a][pred_length].values())
+                        + list(self.evaluation_results[eval_type][a][pred_length].values())
                     )
                 print_(table)
     
