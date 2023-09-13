@@ -133,6 +133,8 @@ class Session:
     def initialize_visualization(self,
                                  visualization_type: List[str] = ['2d'],
                                  prediction_timesteps: List[int] = None,
+                                 interactive: Optional[bool] = False,
+                                 overlay_visualization: Optional[bool] = False,
                                  dataset: Literal['h36m','ais'] = 'h36m',
                                  split_actions: Optional[bool]=False,
                                  ):
@@ -149,7 +151,9 @@ class Session:
             self.visualize_model = True
         if '3d' in visualization_type:
             self.evaluation_engine.initialize_visualization_3d(
-                max_length=prediction_timesteps[-1]
+                max_length=prediction_timesteps[-1],
+                interactive=interactive,
+                overlay=overlay_visualization
             )
             self.visualize_model = True
     @log_function
@@ -216,6 +220,7 @@ class Session:
             epoch=checkpoint,
             optimizer=self.optimizer,
             scheduler=self.scheduler,
+            device=self.device
         )
     
     ###=== Training Functions ===###

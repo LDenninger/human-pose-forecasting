@@ -267,6 +267,25 @@ H36M_NON_REDUNDANT_INDICES = {
     20: 'rWristEnd'
 }
 
+
+SH_NAMES = ['']*16
+SH_NAMES[0]  = 'hip'
+SH_NAMES[1]  = 'rHip'
+SH_NAMES[2]  = 'rKnee'
+SH_NAMES[3]  = 'rFoot'
+SH_NAMES[4]  = 'lHip'
+SH_NAMES[5]  = 'lKnee'
+SH_NAMES[6]  = 'lFoot'
+SH_NAMES[7]  = 'spine1'
+SH_NAMES[8]  = 'thorax'
+SH_NAMES[9]  = 'head'
+SH_NAMES[10] = 'lShoulder'
+SH_NAMES[11] = 'lElbow'
+SH_NAMES[12] = 'lWrist'
+SH_NAMES[13] = 'rShoulder'
+SH_NAMES[14] = 'rElbow'
+SH_NAMES[15] = 'rWrist'
+
 H36M_REVERSED_NON_REDUNDANT_ANGLE_INDICES = {v:k for k, v in H36M_NON_REDUNDANT_INDICES.items()}
 
 H36M_NON_REDUNDANT_SKELETON_STRUCTURE = {
@@ -392,40 +411,40 @@ VLP_PARENTS=[-1, 0, 1, 2, 3, 1, 5, 6, 1, 8, 9, 10, 8, 12, 13, 0, 0, 15, 16]
 # Stacked Hourglass produces 16 joints. These are the names.
 
 SH_NAMES = ['']*16
-SH_NAMES[0]  = 'rFoot'
-SH_NAMES[1]  = 'rKnee'
-SH_NAMES[2]  = 'rHip'
-SH_NAMES[3]  = 'lHip'
-SH_NAMES[4]  = 'lKnee'
-SH_NAMES[5]  = 'lFoot'
-SH_NAMES[6]  = 'hip'
+SH_NAMES[0]  = 'hip'
+SH_NAMES[1]  = 'rHip'
+SH_NAMES[2]  = 'rKnee'
+SH_NAMES[3]  = 'rFoot'
+SH_NAMES[4]  = 'lHip'
+SH_NAMES[5]  = 'lKnee'
+SH_NAMES[6]  = 'lFoot'
 SH_NAMES[7]  = 'spine1'
 SH_NAMES[8]  = 'thorax'
 SH_NAMES[9]  = 'head'
-SH_NAMES[10] = 'rWrist'
-SH_NAMES[11] = 'rElbow'
-SH_NAMES[12] = 'rShoulder'
-SH_NAMES[13] = 'lShoulder'
-SH_NAMES[14] = 'lElbow'
-SH_NAMES[15] = 'lWrist'
+SH_NAMES[10] = 'lShoulder'
+SH_NAMES[11] = 'lElbow'
+SH_NAMES[12] = 'lWrist'
+SH_NAMES[13] = 'rShoulder'
+SH_NAMES[14] = 'rElbow'
+SH_NAMES[15] = 'rWrist'
 
 SH_SKELETON_STRUCTURE = {
-    6: ('hip', 'root'),
-    2: ('rHip', 'hip'),
-    1: ('rKnee', 'rHip'),
-    0: ('rFoot', 'rKnee'),
-    3: ('lHip', 'hip'),
-    4: ('lKnee', 'lHip'),
-    5: ('lFoot', 'lKnee'),
+    0: ('hip', 'root'),
+    1: ('rHip', 'hip'),
+    2: ('rKnee', 'rHip'),
+    3: ('rFoot', 'rKnee'),
+    4: ('lHip', 'hip'),
+    5: ('lKnee', 'lHip'),
+    6: ('lFoot', 'lKnee'),
     7: ('spine1', 'hip'),
     8: ('thorax', 'spine'),
     9: ('head', 'thorax'),
-    13: ('lShoulder', 'thorax'),
-    14: ('lElbow', 'lShoulder'),
-    15: ('lWrist', 'lElbow'),
-    12: ('rShoulder', 'thorax'),
-    11: ('rElbow', 'rShoulder'),
-    10: ('rWrist', 'rElbow'),
+    10: ('lShoulder', 'thorax'),
+    11: ('lElbow', 'lShoulder'),
+    12: ('lWrist', 'lElbow'),
+    13: ('rShoulder', 'thorax'),
+    14: ('rElbow', 'rShoulder'),
+    15: ('rWrist', 'rElbow'),
 }
 
-SH_SKELETON_PARENTS = [1, 2, 6, 6, 3, 4, 6, 7, 8, 8, 13, 14, 8, 12, 11]
+SH_SKELETON_PARENTS = [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 8, 10, 11, 8, 13, 14]

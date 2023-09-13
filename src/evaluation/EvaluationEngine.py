@@ -168,7 +168,7 @@ class EvaluationEngine:
             print_(f"Goal prediction timesteps: {max_length} not reachable using timesteps: {prediction_steps_real}","warn")
         self.prediction_timesteps['visualization_3d'] = prediction_steps_real
         self.target_frames['visualization_3d'] = target_frame
-        self.visualization_2d_active = True
+        self.visualization_3d_active = True
         self.interactive_visualization = interactive
         self.overlay_visualization = overlay 
 
@@ -520,7 +520,6 @@ class EvaluationEngine:
         predictions = []
         targets = []
 
-        num_batches = np.ceil(self.batch_size / num)
         data = next(iter(data_loader))
         # Load data
         data = data.to(self.device)
@@ -568,14 +567,13 @@ class EvaluationEngine:
     
     def visualization_3d_loop(
         self,
+        model: torch.nn.Module,
         action: str,
         num: int,
-        model: torch.nn.Module,
         data_loader: torch.utils.data.DataLoader,
     ):
         if num == 0:
             return
-        import ipdb; ipdb.set_trace()
         model.eval()
         # Initialize progress bar
         dataset = self.datasets[action]
@@ -586,7 +584,7 @@ class EvaluationEngine:
         predictions = []
         targets = []
 
-        max_length = max(self.target_frames['visualization_3d'])
+        max_length = self.target_frames['visualization_3d']
         # Get a single batch from the data loader
         data = next(iter(data_loader))
 
@@ -595,7 +593,8 @@ class EvaluationEngine:
         # Load data
         data = data.to(self.device)
         # Set input for the model
-        cur_input = self.data_augmentor(data[:, : self.seed_length])
+        seed_data = data[:, : self.seed_length]
+        cur_input = self.data_augmentor(seed_data, is_train=False)
         # Predict future frames in an auto-regressive manner
         for i in range(max_length):
             # Compute the output
@@ -608,8 +607,8 @@ class EvaluationEngine:
                 )
             else:
                 pred = output[:, -1].detach().cpu()
-                predictions.append(pred)
-                targets.append(data[:, self.seed_length + i - 2].detach().cpu())
+            predictions.append(pred)
+            targets.append(data[:, self.seed_length + i - 2].detach().cpu())
             # Update model input for auto-regressive prediction
             cur_input = output
 
@@ -618,29 +617,35 @@ class EvaluationEngine:
         predictions = torch.transpose(predictions, 0, 1) 
         targets = torch.stack(targets)
         targets = torch.transpose(targets, 0, 1)
-        skeleton_structure = self._get_skeleton_model()
+        parent_ids = self._get_skeleton_parents()
         logger = LOGGER
+        adjust_dim = [2,0,1]
+        seed_data = seed_data[...,adjust_dim]
 
-        for i in num:
-            cur_pred = predictions[i,...,[2,0,1]].numpy()
-            cur_target = targets[i,...,[2,0,1]].numpy()
+        for i in range(num):
+            cur_pred = predictions[i,...,adjust_dim].numpy()
+            cur_pred = np.concatenate([seed_data[i].numpy(), cur_pred], axis=0)
+            cur_target = targets[i,...,adjust_dim].numpy()
+            cur_target = np.concatenate([seed_data[i].numpy(), cur_target], axis=0)
             if not self.interactive_visualization:
                 save_dir = logger.get_path('visualization')
                 fname = f"h36m_{action}_{i}" if self.h36m_evaluation else f"ais_{i}"
             else:
                 save_dir = None
                 fname = None
-            parent_ids = self._get_skeleton_parents()
             animate_pose_matplotlib(
                 positions = (cur_pred, cur_target),
+                titles = ('Predicted', 'Ground Truth'),
+                fig_title = 'Model Evaluation',
                 colors = ('g', 'g'),
                 parents = parent_ids,
                 change_color_after_frame=(self.seed_length, None),
                 out_dir=save_dir,
+                step_size=self.step_size,
                 fname = fname,
                 color_after_change='r',
                 overlay=self.overlay_visualization,
-                fps=25
+                fps=2
             )
 
     #####===== Utility Functions =====#####

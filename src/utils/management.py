@@ -107,17 +107,19 @@ def load_model_from_checkpoint(exp_name,
                                  model,
                                   epoch, 
                                    optimizer=None,
-                                    scheduler=None):
+                                    scheduler=None,
+                                     device='cpu'):
     cp_dir = os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'checkpoints', f'checkpoint_epoch_{epoch}.pth')
     try:
-        cp_data = torch.load(cp_dir)
+        cp_data = torch.load(cp_dir, map_location=device)
         model.load_state_dict(cp_data['model_state_dict'])
         if optimizer is not None:
             optimizer.load_state_dict(cp_data['optimizer_state_dict'])
         if scheduler is not None:
             scheduler.load_state_dict(cp_data['scheduler_state_dict'])
-    except:
-        print_(f'Checkpoint could not been load from: {cp_dir}')
+    except Exception as e:
+        print_(f'Checkpoint could not been load from: {cp_dir}', 'error')
+        print_(f'Exception: {e}', 'error')
         return
     print_(f'Model checkpoint was load from: {cp_dir}')
     

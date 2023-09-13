@@ -266,7 +266,7 @@ def create_skeleton_subplot_plotly(
 
 
 def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, change_color_after_frame=None,
-                       color_after_change=None, overlay=False, fps=60, out_dir=None, to_video=True, fname=None,
+                       color_after_change=None, overlay=False, fps=60, step_size=40, out_dir=None, to_video=True, fname=None,
                        keep_frames=True):
     """
     Visualize motion given 3D positions. Can visualize several motions side by side. If the sequence lengths don't
@@ -368,7 +368,7 @@ def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, chang
                     points_j[k].set_color(colors[l])
                 k += 1
 
-        time_passed = '{:>.2f} seconds passed'.format(1 / 60.0 * num)
+        time_passed = '{:>.2f} seconds passed'.format(step_size/1000 * num)
         fig_text.set_text(time_passed)
 
     # create the animation object, for animation to work reference to this object must be kept

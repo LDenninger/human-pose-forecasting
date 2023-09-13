@@ -47,6 +47,9 @@ def run_visualization(experiment_name: str,
                       dataset: str,
                       visualization_type: List[str],
                       log: bool, 
+                      interactive: Optional[bool] = False,
+                      overlay: Optional[bool] = False,
+                      pred_length: Optional[int] = None,
                       debug: bool = False,
                       split_actions: Optional[bool] = False,
                       random_seed: Optional[int] = None):
@@ -55,7 +58,6 @@ def run_visualization(experiment_name: str,
 
         TODO: Implement checkpoint loading
     """
-    import ipdb; ipdb.set_trace()
 
     num_threads = 0 if debug else 4
     # Initialize the trainer
@@ -69,10 +71,16 @@ def run_visualization(experiment_name: str,
     session.initialize_model()
     session.load_checkpoint(checkpoint_name)
     # Initialize the evaluation
+    if pred_length is None:
+        pred_length = PREDICTION_TIMESTEPS
+    else:
+        pred_length = [pred_length]
     session.initialize_visualization(
         visualization_type=visualization_type,
-        prediction_timesteps=PREDICTION_TIMESTEPS,
+        prediction_timesteps=pred_length,
         dataset=dataset,
+        interactive=interactive,
+        overlay_visualization=overlay,
         split_actions=split_actions
 
     )
@@ -91,7 +99,10 @@ def main():
     parser.add_argument('-s', '--seed', type=int, default=None, help='Random seed')
     parser.add_argument('-d', '--dataset', type=str, default='h36m', help='Dataset to visualize')
     parser.add_argument('--vis2d', action='store_true', default=False, help='2D visualization')
+    parser.add_argument("--vis3d", action='store_true', default=False, help='3D visualization')
+    parser.add_argument('--length', type=int, default=None, help='Length of the sequence to be visualized')
     parser.add_argument('--interactive', action='store_true', default=False, help='Interactive visualization')
+    parser.add_argument('--overlay', action='store_true', default=False, help='Overlay visualization of different skeletons')
     parser.add_argument('--split_actions', action='store_true', default=False, help='Split actions in the dataset')
     parser.add_argument('--log', action='store_true', default=False, help='Log the training process to WandB')
     parser.add_argument('--debug', action='store_true', default=False, help='Debug mode')
@@ -109,7 +120,7 @@ def main():
                 exp_name = EXPERIMENT_NAMES[i]
                 run_name = RUN_NAMES[i]
                 visualization_type = []
-                if args.interactive:
+                if args.vis3d:
                     visualization_type.append('3d')
                 if args.vis2d:
                     visualization_type.append('2d')
@@ -120,6 +131,9 @@ def main():
                     dataset=args.dataset,
                     visualization_type=visualization_type,
                     log=args.log,
+                    pred_length=args.length,
+                    interactive=args.interactive,
+                    overlay=args.overlay,
                     debug=args.debug,
                     split_actions=args.split_actions,
                     random_seed=args.seed
@@ -146,7 +160,7 @@ def main():
             run_name = args.run
         
         visualization_type = []
-        if args.interactive:
+        if args.vis3d:
             visualization_type.append('3d')
         if args.vis2d:
             visualization_type.append('2d')
@@ -156,6 +170,9 @@ def main():
             checkpoint_name=args.checkpoint,
             dataset=args.dataset,
             visualization_type=visualization_type,
+            interactive=args.interactive,
+            pred_length=args.length,
+            overlay=args.overlay,
             log=args.log,
             debug=args.debug,
             split_actions=args.split_actions,
