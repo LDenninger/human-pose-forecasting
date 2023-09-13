@@ -76,14 +76,27 @@ class ExponentialScheduler(SchedulerBase):
             each update. Default: ``False``.
     """
 
-    def __init__(self, optimizer, gamma: int, base_lr: int, update_frequency: int = 1):
+    def __init__(self,
+                    optimizer,
+                    gamma: int,
+                    base_lr: int,
+                    update_frequency: Optional[int] = 1,
+                    warmup_steps: Optional[int] = 0):
         super().__init__(optimizer)
         self.gamma = gamma
         self.learning_rate *= base_lr
+        self.base_lr = base_lr
         self.update_frequency = update_frequency
+        self.warmup_steps = warmup_steps
+        if self.warmup_steps == 0:
+            self.warmup_lr = base_lr * 1e-2
 
     def compute_learning_rate(self, step: int) -> None:
-        if self.update_frequency%step == 0:
+        if step == 0:
+            return
+        if step <= self.warmup_steps:
+            self.learning_rate = self.warmup_lr + (self.base_lr - self.warmup_lr) * (step / self.warmup_steps)
+        if step%self.update_frequency == 0:
             self.learning_rate *= self.gamma
 
 

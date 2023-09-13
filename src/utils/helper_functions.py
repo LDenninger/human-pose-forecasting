@@ -37,7 +37,8 @@ def getScheduler(config: dict, optimizer: nn.Module, **kwargs) -> SchedulerBase:
         return ExponentialScheduler(
             optimizer=optimizer,
             base_lr= config["base_lr"],
-            gamma=config["gamma"]
+            gamma=config["gamma"],
+            update_frequency=config['update_frequency']
         )
     else:
         raise NotImplementedError(f'Scheduler {config["type"]} is not implemented.')
