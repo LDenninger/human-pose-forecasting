@@ -295,7 +295,7 @@ def h36m_forward_kinematics(data: torch.Tensor,
         data = conversion_func(data)
         shape = data.shape[:-2]
         if len(data.shape) > 4:
-            data = torch.flatten(data, start_dim=0, end_dim=-3)
+            data = torch.flatten(data, start_dim=0, end_dim=-4)
     if not hip_as_root and hip_pos is None:
         print_("Please provide a hip position if it is not the root frame.", 'error')
         return

@@ -42,6 +42,7 @@
     "lr_scheduler": {
         "type": "exponential",
         "gamma": 0.9,
+        "warmup": 1000,
         "update_frequency": 1000,
         "base_lr": 5e-05
     },

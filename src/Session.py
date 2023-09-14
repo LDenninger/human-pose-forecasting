@@ -346,7 +346,7 @@ class Session:
             for i in range(self.config['dataset']['target_length']):
                 output = self.model(cur_input)
                 predictions.append(output[...,-1,:,:])
-                cur_input = output
+                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
             
             predictions = torch.stack(predictions)
             predictions = torch.transpose(predictions, 0,1)

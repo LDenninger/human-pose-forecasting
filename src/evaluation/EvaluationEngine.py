@@ -415,7 +415,7 @@ class EvaluationEngine:
                     predictions[i].append(pred)
                     targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
                 # Update model input for auto-regressive prediction
-                cur_input = output
+                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
         # Compute the distance metrics for each timestep
         for i, frame in enumerate(self.target_frames['distance_metric']):
             timestep = self.prediction_timesteps['distance_metric'][i]
@@ -468,7 +468,6 @@ class EvaluationEngine:
             cur_input = self.data_augmentor(data[:, : self.seed_length])
             # Predict future frames in an auto-regressive manner
             for i in range(1,max(self.target_frames['long_predictions']) + 1):
-
                 # Compute the output
                 output = model(cur_input)
                 # Check if we want to compute metrics for this timestep
@@ -483,7 +482,8 @@ class EvaluationEngine:
                     predictions[i].append(pred)
                     targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
                 # Update model input for auto-regressive prediction
-                cur_input = output
+                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+
         # Compute the distance metrics for each timestep
         for i, frame in enumerate(self.target_frames['long_predictions']):
             timestep = self.prediction_timesteps['long_predictions']
@@ -560,7 +560,7 @@ class EvaluationEngine:
                 predictions.append(pred)
                 targets.append(data[:, self.seed_length + i - 2].detach().cpu())
             # Update model input for auto-regressive prediction
-            cur_input = output
+            cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
         # Create visualizations
         logger = LOGGER
         predictions = torch.stack(predictions)  # [seq_len, batch_size, num_joints, joint_dim]
@@ -627,15 +627,24 @@ class EvaluationEngine:
             else:
                 pred = output[:, -1].detach().cpu()
             predictions.append(pred)
-            targets.append(data[:, self.seed_length + i - 2].detach().cpu())
+            targets.append(data[:, self.seed_length + i].detach().cpu())
             # Update model input for auto-regressive prediction
-            cur_input = output
+            cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
 
-        
+
         predictions = torch.stack(predictions)
         predictions = torch.transpose(predictions, 0, 1) 
+            
         targets = torch.stack(targets)
         targets = torch.transpose(targets, 0, 1)
+        if self.representation!= 'pos':
+            targets, _ = h36m_forward_kinematics(targets, self.representation)
+            targets /= 1000
+            predictions, _ = h36m_forward_kinematics(predictions, self.representation)
+            predictions /= 1000
+            seed_data, _ = h36m_forward_kinematics(seed_data, self.representation)
+            seed_data /= 1000
+
         parent_ids = self._get_skeleton_parents()
         logger = LOGGER
         adjust_dim = [2,0,1]
@@ -664,7 +673,7 @@ class EvaluationEngine:
                 fname = fname,
                 color_after_change='r',
                 overlay=self.overlay_visualization,
-                fps=2,
+                fps=5,
                 show_axis=True,
                 constant_limits=True
             )
