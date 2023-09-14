@@ -89,7 +89,7 @@ class ExponentialScheduler(SchedulerBase):
         self.update_frequency = update_frequency
         self.warmup_steps = warmup_steps
         if self.warmup_steps != 0:
-            self.warmup_lr = base_lr * 1e-2
+            self.warmup_lr = torch.finfo(torch.float32).eps
 
     def compute_learning_rate(self, step: int) -> None:
         if step == 0:
