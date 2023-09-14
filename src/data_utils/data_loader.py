@@ -22,7 +22,6 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
     """
     if config["name"] == 'h36m':
         return H36MDataset(
-            actions = ["walking"],
             seed_length=config["seed_length"],
             rot_representation=joint_representation,
             stacked_hourglass= True if skeleton_model=='s16' else False,

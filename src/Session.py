@@ -305,6 +305,7 @@ class Session:
             loss = self.loss(output, target_data)
             # Backward pass through the network
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             # Update model weights
             self.optimizer.step()
             # Update all the meta information
@@ -357,6 +358,7 @@ class Session:
             loss = self.loss(predictions, target_data)
             # Backward pass through the network
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
             # Update model weights
             self.optimizer.step()
             # Update all the meta information
