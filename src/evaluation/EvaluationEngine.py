@@ -412,7 +412,7 @@ class EvaluationEngine:
                     else:
                         pred = output[:, -1].detach().cpu()
                     predictions[i].append(pred)
-                    targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
+                    targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
                 # Update model input for auto-regressive prediction
                 cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
         # Compute the distance metrics for each timestep
@@ -479,7 +479,7 @@ class EvaluationEngine:
                     else:
                         pred = output[:, -1].detach().cpu()
                     predictions[i].append(pred)
-                    targets[i].append(data[:, self.seed_length + i - 2].detach().cpu())
+                    targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
                 # Update model input for auto-regressive prediction
                 cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
 
@@ -557,7 +557,7 @@ class EvaluationEngine:
                 else:
                     pred = output[:, -1].detach().cpu()
                 predictions.append(pred)
-                targets.append(data[:, self.seed_length + i - 2].detach().cpu())
+                targets.append(data[:, self.seed_length + i].detach().cpu())
             # Update model input for auto-regressive prediction
             cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
         # Create visualizations
