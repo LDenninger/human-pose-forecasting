@@ -38,7 +38,8 @@ def getScheduler(config: dict, optimizer: nn.Module, **kwargs) -> SchedulerBase:
             optimizer=optimizer,
             base_lr= config["base_lr"],
             gamma=config["gamma"],
-            update_frequency=config['update_frequency']
+            update_frequency=config['update_frequency'],
+            warmup_steps=config['warmup']
         )
     else:
         raise NotImplementedError(f'Scheduler {config["type"]} is not implemented.')

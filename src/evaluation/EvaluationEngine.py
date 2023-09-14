@@ -231,13 +231,14 @@ class EvaluationEngine:
                 self.split_actions = split_actions
                 self.datasets = {}
                 self.datasets['overall'] =  H36MDataset(
+                        actions=["walking"],
                         seed_length=self.seed_length,
                         target_length=self.target_length,
                         sequence_spacing=sequence_spacing,
                         down_sampling_factor=self.down_sampling_factor,
                         stacked_hourglass=True if skeleton_representation == 's16' else False,
                         rot_representation=representation,
-                        is_train=False
+                        is_train=True
                     )
             
         elif dataset == 'ais':
