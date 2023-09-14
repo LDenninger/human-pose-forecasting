@@ -278,7 +278,7 @@ def h36m_forward_kinematics(data: torch.Tensor,
                                hip_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
     """
         Compute the forward kinematics of the h36m skeleton model from a given representation.
-        The functions returns the joint positions
+        The functions returns the joint positions and rotations
     """
     # conversion function to convert to rotation matrices
     conversion_func = get_conv_to_rotation_matrix(representation)
@@ -327,100 +327,6 @@ def h36m_forward_kinematics(data: torch.Tensor,
     joint_positions = torch.reshape(joint_positions, (*shape, 3))
     joint_rotations = torch.reshape(joint_rotations, (*shape, 3, 3))
     return joint_positions, joint_rotations
-
-def s21_forward_kinematics(data: torch.Tensor,
-                            representation: Literal['axis','mat', 'quat', '6d'],
-                             hip_as_root: Optional[bool] = False,
-                              hip_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
-    """
-        A forward kinematics function for the reduced skeleton with 21 joints.
-
-        Arguments:
-            data (torch.Tensor): (batched) data structure holding the relative joint angles.
-    """
-    if not hip_as_root and hip_pos is None:
-        print_("Please provide a hip position if it is not the root frame.", 'error')
-        return
-    # conversion function to convert to rotation matrices
-    conversion_func = get_conv_to_rotation_matrix(representation)
-    data = conversion_func(data)
-    shape = data.shape[:-2]
-    # Set variables need for the forward kinematics
-    name_to_ind = H36M_REVERSED_NON_REDUNDANT_ANGLE_INDICES
-    offset = _compute_s21_bone_length()
-    # output tensors
-    joint_positions = torch.zeros(data.shape[0], 21, 3)
-    joint_rotations = torch.zeros(data.shape[0], 21, 3, 3)
-    # Iterate through the kinematic chain
-    for joint_id, (i, (cur_frame, par_frame)) in enumerate(H36M_NON_REDUNDANT_SKELETON_STRUCTURE.items()):
-        if joint_id == 0:
-            # Set the position and rotation of the base frame, the hip
-            if not hip_as_root:
-                joint_positions[:,joint_id] = offset[i].unsqueeze(0)
-                joint_positions[:,joint_id] += hip_pos
-                joint_rotations[:,joint_id] = data[:, joint_id]
-            else:
-                joint_rotations[:,joint_id] = torch.eye(3).unsqueeze(0)
-            continue
-        if cur_frame == 'spine1':
-            import ipdb; ipdb.set_trace()
-        # Retrieve data from the previously processed parent frame
-        parent_rotation = joint_rotations[:,name_to_ind[par_frame]]
-        parent_position = joint_positions[:,name_to_ind[par_frame]]
-        # Compute the position and rotation of the joint
-        joint_positions[:,joint_id] = (offset[i].unsqueeze(0).unsqueeze(0) @ parent_rotation).squeeze() + parent_position
-        joint_rotations[:,joint_id] = data[:, joint_id] @ parent_rotation
-    # Reshpae the output to the original shape
-    joint_positions = torch.reshape(joint_positions, (*shape, 3))
-    joint_rotations = torch.reshape(joint_rotations, (*shape, 3, 3))
-    return joint_positions, joint_rotations
-
-def s16_forward_kinematics(data: torch.Tensor,
-                            representation: Literal['axis','mat', 'quat', '6d'],
-                             hip_as_root: Optional[bool] = False,
-                              hip_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
-    """
-        A forward kinematics function for the reduced skeleton with 21 joints.
-
-        Arguments:
-            data (torch.Tensor): (batched) data structure holding the relative joint angles.
-    """
-    if not hip_as_root and hip_pos is None:
-        print_("Please provide a hip position if it is not the root frame.", 'error')
-        return
-    # conversion function to convert to rotation matrices
-    conversion_func = get_conv_to_rotation_matrix(representation)
-    data = conversion_func(data)
-    shape = data.shape[:-2]
-    # Set variables need for the forward kinematics
-    name_to_ind = H36M_REVERSED_NON_REDUNDANT_ANGLE_INDICES
-    offset = _compute_s16_bone_length()
-    # output tensors
-    joint_positions = torch.zeros(data.shape[0], 26, 3)
-    joint_rotations = torch.zeros(data.shape[0], 26, 3, 3)
-    # Iterate through the kinematic chain
-    for joint_id, (i, (cur_frame, par_frame)) in enumerate(SH_SKELETON_STRUCTURE.items()):
-        if joint_id == 0:
-            # Set the position and rotation of the base frame, the hip
-            if not hip_as_root:
-                joint_positions[:,joint_id] = offset[i].unsqueeze(0)
-                joint_positions[:,joint_id] += hip_pos
-                joint_rotations[:,joint_id] = data[:, joint_id]
-            else:
-                joint_rotations[:,joint_id] = torch.eye(3).unsqueeze(0)
-            continue
-        # Retrieve data from the previously processed parent frame
-        parent_rotation = joint_rotations[:,name_to_ind[par_frame]]
-        parent_position = joint_positions[:,name_to_ind[par_frame]]
-        # Compute the position and rotation of the joint
-        joint_positions[:,joint_id] = (offset[i].unsqueeze(0).unsqueeze(0) @ parent_rotation).squeeze() + parent_position
-        joint_rotations[:,joint_id] = data[:, joint_id] @ parent_rotation
-    # Reshpae the output to the original shape
-    import ipdb; ipdb.set_trace()
-    joint_positions = torch.reshape(joint_positions, (*shape, 3))
-    joint_rotations = torch.reshape(joint_rotations, (*shape, 3, 3))
-    return joint_positions, joint_rotations
-
 
 #####===== Utility Functions =====#####
 def _remove_joints(seq: torch.Tensor, inds: List[int]):

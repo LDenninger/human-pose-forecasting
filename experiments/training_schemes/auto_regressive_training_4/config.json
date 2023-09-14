@@ -41,10 +41,10 @@
     },
     "lr_scheduler": {
         "type": "exponential",
-        "gamma": 0.9,
+        "gamma": 0.98,
         "warmup": 1000,
         "update_frequency": 1000,
-        "base_lr": 5e-05
+        "base_lr": 1e-05
     },
     "skeleton": {
         "type": "s16",

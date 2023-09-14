@@ -21,6 +21,12 @@ import json
 def read_file_h36m(person_id: int, action_str: str, sub_action_id: int = None, return_tensor=False):
     """
         Read a single file from the dataset
+
+        Arguments:
+            person_id (int): the person to load the data for.
+            action_str (str): the action to load the data for.
+            sub_action_id (int): the sub-action to load the data for.
+            return_tensor (bool): whether to return the data as a torch.FloatTensor or numpy array.
     """
 
     if sub_action_id is None:
@@ -167,6 +173,13 @@ def read_file_visionlab3DPoses(path: str, return_tensor: Optional[bool] = False)
     return joint_positions
     
 def load_data_visionlab3DPoses(absolute: Optional[bool] = False):
+    """
+        Load the data from the files of the AIS dataset.
+        The data is automatically parsed to the stacked hourglass skeleton format.
+
+        Arguments:
+            absolute (bool): Whether to return the data in absolute coordinates or relative coordinates.
+    """
     file_paths = (P(os.getcwd()) / VLP_DATASET_PATH).rglob('**/*.json')
     data = {}
     for path in file_paths:

@@ -169,7 +169,6 @@ class SpatialAttention(AttentionBase):
             Input:
                 x [batch_size, seq_len, num_joints, emb_dim]
         """
-
         Q = self.multi_head_query_embedding(x, self.W_query) # [batch_size, seq_len, num_heads, num_joints, head_dim]
         K = self.multi_head_linear_embedding(x, self.W_key) # [batch_size, seq_len, num_heads, num_joints, head_dim]
         V = self.multi_head_linear_embedding(x, self.W_value) # [batch_size, seq_len, num_heads, num_joints, head_dim]
@@ -190,6 +189,7 @@ class SpatialAttention(AttentionBase):
                 x [..., num_tokens, token_dim], W [num_emb, num_tokens, token_dim]
             output: [..., num_emb, num_tokens, token_dim]
         """
+
         out = self.query_embedding(x, W)    
         out = out.view(*out.shape[:-1], self.num_heads, self.head_dim)
         out = torch.transpose(out, -3, -2)
@@ -226,7 +226,6 @@ class VanillaAttention(AttentionBase):
             Input:
                 x [batch_size, seq_len, num_joints * emb_dim]
         """
-        import ipdb; ipdb.set_trace()
         Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size,num_tokens, token_dim]
         K = self.multi_head_linear_embedding(x, self.W_key)
         V = self.multi_head_linear_embedding(x, self.W_value)
