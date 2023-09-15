@@ -80,18 +80,18 @@ def evaluate_distribution_metrics(
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
         elif metric == "ps_entropy":
-            results[metric] = METRICS_IMPLEMENTED[metric](power_spec_pred).squeeze()
+            results[metric] = METRICS_IMPLEMENTED[metric](power_spec_pred)
         elif metric == "ps_kld":
             results[metric] = METRICS_IMPLEMENTED[metric](
                 power_spec_targ, power_spec_pred
-            ).squeeze()
+            )
         elif metric == "npss":
-            results[metric] = npss(npss_preds, npss_targs)
+            npss_res = torch.from_numpy(np.array([npss(npss_preds, npss_targs)]))
+            # Change to torch float32
+            npss_res = npss_res.to(torch.float32)
+            results[metric] = npss_res
         if reduction is not None:
-            # Don't apply reduction to npss as it is a single value
-            if metric != "npss":
-                results[metric] = _reduce(results[metric], reduction)
-    
+            results[metric] = _reduce(results[metric], reduction)
     return results
 
 
@@ -165,24 +165,15 @@ def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     Returns:
         (n_joints, seq_len, feature_size)
     """
-    feature_size = seq.shape[-1]
-    n_joints = seq.shape[1]
+    seq = torch.permute(seq, [0, 2, 1, 3]) # (batch_size, seq_len, n_joints, feature_size)
+    seq = torch.reshape(seq, [*seq.shape[:2], 1, -1]) # (batch_size, seq_len, 1, n_joints * feature_size)
+    seq = torch.permute(seq, [0, 2, 1, 3]) # (batch_size, 1, seq_len, n_joints * feature_size)
+    seq_fft = torch.fft.fft(seq, dim=2) # fast fourier over seq_len dimension
+    seq_ps = torch.abs(seq_fft) ** 2 # power spectrum definition
 
-    seq_t = seq.permute(0, 2, 1, 3)
-    dims_to_use = torch.where(
-        (torch.reshape(seq_t, [-1, n_joints, feature_size]).std(0) >= 1e-4).all(dim=-1)
-    )[0]
-    seq_t = seq_t[:, :, dims_to_use]
-
-    seq_t = torch.reshape(seq_t, [seq_t.shape[0], seq_t.shape[1], 1, -1])
-    seq = seq_t.permute(0, 2, 1, 3)
-
-    seq_fft = torch.fft.fft(seq, dim=2)
-    seq_ps = torch.abs(seq_fft) ** 2
-
-    seq_ps_global = seq_ps.sum(dim=0) + 1e-8
-    seq_ps_global /= seq_ps_global.sum(dim=1, keepdims=True)
-    return seq_ps_global
+    seq_ps_global = seq_ps.sum(dim=0) + torch.finfo(torch.float32).eps # sum over batch dimension
+    seq_ps_global /= seq_ps_global.sum(dim=1, keepdims=True) # normalize over seq_len dimension (which is then dimension 1)
+    return seq_ps_global.squeeze() # (seq_len, n_joints * feature_size)
 
 
 def ps_entropy(seq_ps):
@@ -193,7 +184,8 @@ def ps_entropy(seq_ps):
 
     Returns:
     """
-    return -torch.sum(seq_ps * torch.log(seq_ps), dim=1)
+    res = -torch.sum(seq_ps * torch.log(seq_ps), axis = 0)
+    return res
 
 
 def ps_kld(seq_ps_from, seq_ps_to):
@@ -204,7 +196,8 @@ def ps_kld(seq_ps_from, seq_ps_to):
 
     Returns:
     """
-    return torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), dim=1)
+    res = torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), axis = 0)
+    return res
 
 
 def npss(euler_gt_sequences, euler_pred_sequences):
@@ -286,7 +279,6 @@ def npss(euler_gt_sequences, euler_pred_sequences):
     power_weighted_emd = np.average(emd, weights=seq_feature_power)
     
     return power_weighted_emd
-
 
 
 #####===== Pair-Wise Distance Metrics =====#####

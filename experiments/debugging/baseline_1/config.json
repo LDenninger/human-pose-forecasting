@@ -50,11 +50,12 @@
         "num_joints": 26
     },
     "joint_representation": {
-        "type": "mat",
-        "joint_dim": 9
+        "type": "axis",
+        "joint_dim": 3
     },
     "evaluation": {
         "metrics": ["geodesic_distance", "positional_mse", "euler_error", "auc"],
+        "distribution_metrics": ["ps_entropy", "ps_kld", "npss"],
         "frequency": 1,
         "exhaustive_evaluation": true,
         "timesteps": [100,200,300,400]
@@ -62,7 +63,7 @@
     "dataset": {
         "name": "h36m",
         "seed_length": 75,
-        "target_length": 1,
+        "target_length": 10,
         "downsampling_factor": 2,
         "spacing": 0,
         "training_size": 1000,
