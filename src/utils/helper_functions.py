@@ -9,7 +9,7 @@ import torch.nn as nn
 import os
 from typing import Optional
 
-from .schedulers import SchedulerBase, SPLScheduler, ExponentialScheduler
+from .schedulers import SchedulerBase, SPLScheduler, ExponentialScheduler, CosineAnnealingScheduler
 from .losses import *
 from .logging import print_
 
@@ -40,6 +40,14 @@ def getScheduler(config: dict, optimizer: nn.Module, **kwargs) -> SchedulerBase:
             gamma=config["gamma"],
             update_frequency=config['update_frequency'],
             warmup_steps=config['warmup']
+        )
+    elif config["type"] == 'cosine':
+        return CosineAnnealingScheduler(
+            optimizer=optimizer,
+            max_iterations=config['max_iterations'],
+            min_learning_rate=config['min_learning_rate'],
+            warmup_steps=config['warmup'],
+            initial_learning_rate=config['base_lr']
         )
     else:
         raise NotImplementedError(f'Scheduler {config["type"]} is not implemented.')

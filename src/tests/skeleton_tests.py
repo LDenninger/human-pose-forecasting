@@ -10,8 +10,6 @@ from ..data_utils import (
     axis_angle_to_matrix,
     h36m_forward_kinematics,
     get_annotated_dictionary,
-    s21_forward_kinematics,
-    s16_forward_kinematics,
     convert_s26_to_s21, convert_s26_to_s16, convert_s21_to_s26, convert_s21_to_s16,
     parse_h36m_to_s26
 )

@@ -2,7 +2,7 @@
     "training_scheme": "auto_regressive",
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 50,
+    "num_epochs": 100,
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 10,
@@ -11,7 +11,7 @@
         "type": "st_transformer",
         "num_blocks": 8,
         "input_dropout": 0.1,
-        "embedding_dim": 64,
+        "embedding_dim": 256,
         "positional_encoding": {
             "type": "sin"
         },
@@ -40,11 +40,12 @@
         "reduction": "mean"
     },
     "lr_scheduler": {
-        "type": "exponential",
-        "gamma": 0.95,
-        "warmup": 1000,
+        "type": "cosine",
+        "max_iterations": 100000,
+        "warmup": 2000,
+        "min_learning_rate": 0.0,
         "update_frequency": 1000,
-        "base_lr": 3e-04
+        "base_lr": 1e-03
     },
     "skeleton": {
         "type": "s16",

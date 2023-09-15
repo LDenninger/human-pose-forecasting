@@ -99,4 +99,29 @@ class ExponentialScheduler(SchedulerBase):
         if step%self.update_frequency == 0:
             self.learning_rate *= self.gamma
 
+class CosineAnnealingScheduler(SchedulerBase):
+    """
+        Implementes a learning rate scheduler using cosine annealing.
+    """
 
+    def __init__(self,
+                 optimizer,
+                 max_iterations: int,
+                 initial_learning_rate: float,
+                 min_learning_rate: float,
+                 warmup_steps: int = 0):
+        super().__init__(optimizer)
+        self.max_iterations = max_iterations
+        self.initial_learning_rate = initial_learning_rate
+        self.min_learning_rate = min_learning_rate
+        self.warmup_steps = warmup_steps
+        if self.warmup_steps!= 0:
+            self.warmup_lr = torch.finfo(torch.float32).eps
+
+    def compute_learning_rate(self, step: int) -> None:
+        if step == 0:
+            return
+        if step <= self.warmup_steps:
+            self.learning_rate = torch.FloatTensor([self.warmup_lr + (self.initial_learning_rate - self.warmup_lr) * (step / self.warmup_steps)])
+        else:
+            self.learning_rate = torch.FloatTensor([self.min_learning_rate + (self.initial_learning_rate - self.min_learning_rate) * 0.5 * (1 + math.cos(math.pi * step / self.max_iterations))])

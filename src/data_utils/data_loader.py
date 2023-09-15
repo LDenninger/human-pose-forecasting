@@ -197,9 +197,9 @@ class H36MDataset(H36MDatasetBase):
                 self.data = parse_h36m_to_s26(self.data, get_conv_from_axis_angle(rot_representation))
             else:
                 self.data, _ = h36m_forward_kinematics(self.data, 'axis', hip_as_root=not absolute_position)
-                self.data = convert_s26_to_s21(self.data, interpolate=False)
+                self.data = convert_s26_to_s21(self.data)
                 if stacked_hourglass:
-                    self.data = convert_s21_to_s16(self.data, interpolate=False)
+                    self.data = convert_s21_to_s16(self.data)
                 self.data /= 1000
             
         self.full_length = len(self.data)
