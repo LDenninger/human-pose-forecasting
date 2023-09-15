@@ -4,7 +4,7 @@
     "batch_size": 32,
     "num_epochs": 40,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 100,
+    "num_eval_iterations": 200,
     "seq_length": 10,
     "checkpoint_frequency": 5,
     "model": {
@@ -41,9 +41,10 @@
     },
     "lr_scheduler": {
         "type": "exponential",
-        "gamma": 0.9,
+        "gamma": 0.98,
+        "warmup": 1000,
         "update_frequency": 1000,
-        "base_lr": 5e-05
+        "base_lr": 1e-05
     },
     "skeleton": {
         "type": "s16",

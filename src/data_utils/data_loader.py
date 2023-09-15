@@ -22,7 +22,6 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
     """
     if config["name"] == 'h36m':
         return H36MDataset(
-            actions = ["walking"],
             seed_length=config["seed_length"],
             rot_representation=joint_representation,
             stacked_hourglass= True if skeleton_model=='s16' else False,
@@ -38,6 +37,10 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
     
 #####===== H36M Dataset =====#####
 class H36MDatasetBase(Dataset):
+    """
+        H36M dataset base class.
+        This module implements the base data loading and can be used by other datasets for more advanced data loading techniques.
+    """
 
     def __init__(self, 
                     seed_length: int,
@@ -46,6 +49,16 @@ class H36MDatasetBase(Dataset):
                     raw_data: Optional[bool] = False,
                     is_train: Optional[bool]=True,
                     debug: Optional[bool]=False)-> None:
+        """
+            Initialize the data loader.
+            Arguments:
+                seed_length (int): The length of the seed sequence.
+                target_length (int): The length of the target sequence.
+                actions (List[str]): The list of actions to use. Default: Use all actions.
+                raw_data (bool): Whether to load the raw data or load the processed data in a skeleton format. Default: False.
+                is_train (bool): Whether to load the training data or the test data. Default: True.
+                debug (bool): Whether to load the debug split only consisting of a single person. Default: False.
+        """
         ##== Meta Information ==##
         self.seed_length = seed_length
         self.target_length = target_length
@@ -59,26 +72,17 @@ class H36MDatasetBase(Dataset):
         
     def get_mean_variance(self):
         """
-            Computes the mean and variance over the data for normalization
+            Computes the mean and variance over the data for normalization.
         """
         mean = torch.mean(self.data, dim=0) + torch.finfo(torch.float32).eps
         var = torch.var(self.data, dim=0) + torch.finfo(torch.float32).eps
         return mean, var
     
-    def set_attribute(self, name: torch.Tensor, value: torch.Tensor) -> None:
-        """
-            Set an attribute of the dataset.
-
-        """
-        if name in ['target_length', 'seed_length']:
-            setattr(self, name, value)
-
-            
-    
     def _compute_valid_indices(self):
         """
             Compute the valid start indices for sequences.
-            This is later used for easy indexing of the data.
+            The valid indices are computed w.r.t. the sequence spacing, seed and target length, such that a sampled sequence is not overlapping different actions/persons etc.
+            This is later used for easy indexing of the data in a flattened tensor.
 
 
         """
@@ -110,7 +114,10 @@ class H36MDatasetBase(Dataset):
     
     def _flatten_data(self, data: torch.Tensor) -> torch.Tensor:
         """
-            Flatten the data into a single dimension for all frames to correspond to the computed indices
+            Flatten the data into a single dimension for all frames to correspond to the computed indices.
+
+            Arguments:
+                data (torch.Tensor): The data to flatten.
 
         """
         for i, sequence in enumerate(data):
@@ -124,6 +131,11 @@ class H36MDatasetBase(Dataset):
         return len(self.valid_indices)
     
 class H36MDataset(H36MDatasetBase):
+    """
+        Main dataset used within the project. This loads the data from the H36M dataset to torch tensors and applies the given
+        transformations for the joint and skeleton representation.
+    """
+
     def __init__(self, 
                     seed_length: int,
                     target_length: int,
@@ -144,13 +156,17 @@ class H36MDataset(H36MDatasetBase):
             Arguments:
                 seed_length (int): The length of the seed sequence.
                 target_length (int): The length of the target sequence.
-                down_sampling_factor (int, optional): The downsampling factor for the sequences to minimize redundant frames. Defaults to 1.
-                sequence_spacing (int, optional): The number of frames two independent sequences. Defaults to 0.
-                skeleton_model (['s26'], optional): The skeleton model to use. Defaults to None.
-                rot_representation (['axis','mat', 'quat', '6d'], optional): The rotation representation to use. Defaults to axis angles as provided by the datase.
-                return_label (bool, optional): Whether to return the label or not. Defaults to False.
-                is_train (bool, optional): Whether to load the training or test data. Defaults to True.
-
+                actions (List[str], optional): The list of actions to use. Default: Use all actions.
+                down_sampling_factor (int, optional): The downsampling factor for the sequences to minimize redundant frames. Default: 1 -> 25 FPS.
+                sequence_spacing (int, optional): The number of frames between two independent sequences. Default: 0.
+                reverse_prob (float, optional): The probability of reversing a sequence. Default: 0.0.
+                rot_representation (['axis','mat', 'quat', '6d', 'pos'], optional): The representation to use.
+                    Rotation representations are automatically parsed to the 26 joint skeleton.
+                    Position representations are automatically parsed to the 21 joint skeleton to remove positionally redundant joints.
+                stacked_hourglass (bool, optional): Whether to use the stacked hourglass representation. This is only possible for position representations. Default: False.
+                absolute_position (bool, optional): Whether to use the absolute positions. This is only possible for position representations. Default: False.
+                return_label (bool, optional): Whether to return the action or not. Default: False.
+                is_train (bool, optional): Whether to load the training or test data. Default: True.
         """
         super().__init__(seed_length, target_length, actions, raw_data=True, is_train=is_train, debug=debug)
         ##== Meta Information ==##
@@ -183,6 +199,9 @@ class H36MDataset(H36MDatasetBase):
         self.full_length = len(self.data)
 
     def __getitem__(self, x):
+        """
+            Return a single sampled sequence from the dataset.
+        """
         seq_start = self.valid_indices[x]
         sequence = self.data[seq_start:(seq_start + self.seed_length + self.target_length)]
         # Reverse the sequence with given probability
@@ -195,12 +214,25 @@ class H36MDataset(H36MDatasetBase):
 #####===== AIS Dataset =====#####
 
 class AISDataset(Dataset):
+    """
+        Dataset class for the AIS dataset recorded within the lab.
+        This dataset is only used for evaluation.
+    """
 
     def __init__(self, 
                  seed_length: int,
                  target_length: int,
                  sequence_spacing: int,
                  absolute_position: Optional[bool] = False):
+        """
+            Initialize the dataset.
+
+            Arguments:
+                seed_length (int): The length of the seed sequence.
+                target_length (int): The length of the target sequence.
+                sequence_spacing (int): The number of frames between two independent sequences.
+                absolute_position (bool, optional): Whether to use the absolute positions. This is only possible for position representations. Default: False.
+        """
         self.seed_length = seed_length
         self.target_length = target_length
         self.sequence_spacing = sequence_spacing
@@ -209,16 +241,24 @@ class AISDataset(Dataset):
         self.len = len(self.data)
 
     def __getitem__(self, x):
+        """ Retrieve a single sampled sequence from the dataset. """
         return self.data[x]
 
     def _load_data(self):
+        """
+            Load the raw data and sample it into sequences according to the sequence spacing, seed and target length.
+        """
         full_data = []
+        # Load the raw data
         raw_data = load_data_visionlab3DPoses(self.absolute_position)
+        # Iterate through each sequence
         for fname, data in raw_data.items():
             max_ind = len(data)
+            # Compute possible starting indices
             start_inds = np.arange(len(data))
             start_inds = start_inds[::self.sequence_spacing]
             for sid in start_inds:
+                # Append data for the sampled sequence if it does not exceed the last frame of the complete sequence
                 if sid+self.target_length+self.seed_length <= max_ind:
                     full_data.append(data[sid:sid+self.target_length+self.seed_length])
         return full_data

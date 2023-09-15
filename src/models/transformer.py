@@ -89,7 +89,6 @@ class VanillaTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        import ipdb; ipdb.set_trace()
         shape = x.shape
         x = torch.flatten(x, start_dim=-2, end_dim=-1)
         # Compute spatial and temporal attention separately and update input
