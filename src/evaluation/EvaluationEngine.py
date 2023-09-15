@@ -112,6 +112,7 @@ class EvaluationEngine:
         prediction_steps_real = (target_frames * self.step_size).tolist()
         if prediction_steps_real != prediction_timesteps:
             print_(f"Goal prediction timesteps: {prediction_timesteps} not reachable using timesteps: {prediction_steps_real}","warn")
+        self.target_frames['long_predictions'] = target_frames.tolist()
         self.prediction_timesteps['visualization_2d'] = prediction_steps_real
         self.distribution_metrics = metric_names
         self.long_predictions_active = True
@@ -485,16 +486,21 @@ class EvaluationEngine:
 
         # Compute the distance metrics for each timestep
         for i, frame in enumerate(self.target_frames['long_predictions']):
-            timestep = self.prediction_timesteps['long_predictions']
+            timestep = self.prediction_timesteps['long_predictions'][i]
             timestep_prediction = torch.stack(predictions[frame])
             timestep_target = torch.stack(targets[frame])
             # Needs stacked tensor instead of flattened one
-            self.evaluation_results[action][timestep].update(evaluate_distribution_metrics(
+            eval_res = evaluate_distribution_metrics(
                 timestep_prediction,
                 timestep_target,
                 reduction="mean",
-                metrics=self.distribution_metric_names,
-            ))
+                metrics=self.distribution_metrics,
+            )
+            # If eval_res is of shape [1], extract the value
+            for key, val in eval_res.items():
+                if val.numel() == 1:
+                    eval_res[key] = val.item()
+            self.evaluation_results['long_predictions'][action][timestep].update(eval_res)
             
     ###=== Visualization Functions ===###
     def visualize(self, model: torch.nn.Module, num_visualizations: int = 1) -> None:
@@ -717,7 +723,7 @@ class EvaluationEngine:
                 continue
             for a in self.evaluation_results[eval_type].keys():
                 if a == "overall":
-                    print(f"Average over all actions:")
+                    print_(f"Average over all actions:")
                 else:
                     print_(f"Evaluation results for action {a}:")
                 table = PrettyTable()
