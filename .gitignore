@@ -15,6 +15,9 @@ wandb/*
 *.pth
 *.pt
 
+!mean.pt
+!var.pt
+
 compare_sequences_plotly_*
 
 ~
