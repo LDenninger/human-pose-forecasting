@@ -1,5 +1,7 @@
 """
     This files containes a module that is used to augment the data according to the configuration.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
 """
 import torch
 import torch.nn as nn
@@ -10,6 +12,9 @@ from typing import Optional
 from ..utils import print_
 
 class DataAugmentor(nn.Module):
+    """
+        Data augmentation module that is used to augment and/or normalize the data.
+    """
 
     def __init__(self, 
                   normalize: Optional[bool] = False,
@@ -17,6 +22,14 @@ class DataAugmentor(nn.Module):
                     snp_noise_prob: Optional[int] = 0.0,
                      joint_cutout_prob: Optional[int] = 0.0,
                       timestep_cutout_prob: Optional[int] = 0.0):
+        """
+            Initialize the data augmentation module.
+            Arguments:
+                normalize (bool, optional): Whether to normalize the data. Defaul: False.
+                    For this option the data augmentor needs to be passed the mean and variance for the training dataset.
+                reverse_prob (bool, optional): Whether to reverse the provided batch. Default: False.
+
+        """
         super().__init__()
         self.normalize = normalize
         self.norm_mean = None
@@ -50,6 +63,9 @@ class DataAugmentor(nn.Module):
         return unnorm_x
     
     def set_mean_var(self, mean: float, var: float) -> None:
+        """
+            Set the mean and variance for the data normalization.
+        """
         self.norm_mean = mean
         self.norm_var = var
     
@@ -60,29 +76,40 @@ class DataAugmentor(nn.Module):
         return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
     
     def _normalize(self, x: torch.Tensor) -> torch.Tensor:
+        """ Normalize the data """
         if self.norm_mean is None or self.norm_var is None:
             print_("Mean and variance are not set. Normalization is not performed.", "warn")
             return x
         return (x-self.norm_mean) / torch.sqrt(self.norm_var)
     
     def _snp_noise(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Salt'n'Pepper noise. Single joints across all time steps are cut out and set to zero.
+        """
         noise_mask = torch.rand(x.shape[:-1], device=x.device) < self.snp_noise_prob
         noise_mask = noise_mask.unsqueeze(-1)
         return x * noise_mask
     
     def _joint_noise(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Single joints across all time steps are cut out and set to zero.
+        """
         noise_mask = torch.rand(x.shape[:-2], device=x.device) < self.joint_cutout_prob
         noise_mask = noise_mask.unsqueeze(-1).unsqueeze(-1)
         return x * noise_mask
     
     def _timestep_noise(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Single time steps are completely cut out and set to zero.
+        """
         noise_mask = torch.rand(x.shape[[0,2,3]], device=x.device) < self.timestep_cutout_prob
         noise_mask = noise_mask.unsqueeze(1).unsqueeze(-1)
         return x * noise_mask
     
     def _reverse(self, x: torch.Tensor) -> torch.Tensor:
         """
-            This operation is preferred to be applied in the data loader.
+            Reverse the provided batch.
+            This operation is preferred to be applied in the data loader since we want it working on single sequences.
         """
         if torch.rand(1) < self.reverse_prob:
             return torch.flip(x, dims=[-1])
@@ -91,7 +118,8 @@ class DataAugmentor(nn.Module):
         return x
     def __init_pipeline(self):
         """
-            Returns a sequence of functions to apply the data augmentation
+            Initialize the data augmentation pipeline according to the parameters provided at initialization.
+
         """
         train_pipeline = []
         eval_pipeline = []

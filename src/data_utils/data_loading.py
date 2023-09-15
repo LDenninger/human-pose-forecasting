@@ -155,7 +155,11 @@ def load_data_h36m(  person_id: list = H36M_DATASET_PERSONS,
 
 def read_file_visionlab3DPoses(path: str, return_tensor: Optional[bool] = False):
     """
-        Load the data from the files of the VisionLab3DPoses dataset.
+        Load the data from a single file of the AIS dataset.
+
+        Arguments:
+            path (str): Path to the file
+            return_tensor (bool): Whether to return the data as a torch.FloatTensor or a list.
     """
     with open(path, 'r') as file:
         pose_data = json.load(file)

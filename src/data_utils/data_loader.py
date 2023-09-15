@@ -1,3 +1,9 @@
+"""
+    Dataset used for training and evaluating our method.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 from torch.utils.data import Dataset
 import numpy as np

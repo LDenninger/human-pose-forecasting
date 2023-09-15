@@ -1,3 +1,9 @@
+"""
+    This file contains the evaluation engine that is used to compute the evaluation metrics and produce visualizations.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 from torch.utils.data import DataLoader
 import math
@@ -50,15 +56,22 @@ VISUALIZATION_IMPLEMENTED = {"3dpose": geodesic_distance}  # placeholder
 
 class EvaluationEngine:
     """
-    Active evaluation engine that directly computes the model outputs.
-    Doing so we are able to compute more high-level metrics on the H3.6M dataset.
-
-    Here we compute all defined metrics, instead of a small subset.
+        The evaluation engine computes different quantitative metrics and visualizations.
+        All our evaluation results are produced using this module.
+        First, one needs to load the data using the load_data() function for the evaluation.
+        Next, we can choose from different evaluation methods:
+            - distance metrics: Compute the distances to the ground truth data
+            - distribution metrics: Compute the distribution metrics over long prediction horizons
+            - visualization 2d: Produces a visualization showing a complete sequence
+            - visualization 3d: Produces a 3D visualization showing the sequence. 
+                This can be done interactively in a window or be saved as video files.
     """
 
     def __init__(self, device: str = "cpu"):
         """
-        Initialize the active evaluation engine.
+            Initialize the evaluation engine.
+
+            Simply initializes empty data structures required for the evaluation.
         """
         ##== Evaluation Parameters ==##
         self.visualization_2d_active = False
@@ -105,6 +118,11 @@ class EvaluationEngine:
                                            prediction_timesteps: List[int]):
         """
             Initialize the evaluation for long predictions using distribution metrics
+
+            Arguments:
+                iterations (int): Number of iterations for the evaluation
+                metric_names (List[str]): List of the metrics to compute
+                prediction_timesteps (List[int]): List of the prediction timesteps to compute the metrics for
         """
         self.num_iterations['long_predictions'] = iterations
         self.prediction_timesteps['long_predictions'] = prediction_timesteps
@@ -127,6 +145,11 @@ class EvaluationEngine:
                                        prediction_timesteps: List[int]):
         """
             Initialize the evaluation for long predictions using distribution metrics
+
+            Arguments:
+                iterations (int): Number of iterations for the evaluation
+                metric_names (List[str]): List of the metrics to compute
+                prediction_timesteps (List[int]): List of the prediction timesteps to compute the metrics for
         """
         self.num_iterations['distance_metric'] = iterations
         target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
@@ -146,6 +169,9 @@ class EvaluationEngine:
                                     prediction_timesteps: List[int]):
         """
             Initialize the 2d visualization
+
+            Arguments:
+                prediction_timesteps (List[int]): List of the prediction timesteps to include in the visualization.
         """
         target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
         prediction_steps_real = (target_frames * self.step_size).tolist()
@@ -162,6 +188,11 @@ class EvaluationEngine:
                                     ):
         """
             Initialize the 2d visualization
+
+            Arguments:
+                interactive (bool): Whether to visualize the sequence in an interactive matplotlib window
+                max_length (int): The maximum length of the sequence to visualize. Determines the prediction horizon.
+                overlay (Optional[bool]): Whether to overlay the sequence predicted and ground truth sequence.
         """
         target_frame = np.ceil(max_length / self.step_size).astype(int)
         prediction_steps_real = (target_frame * self.step_size).tolist()
@@ -189,6 +220,22 @@ class EvaluationEngine:
             batch_size: Optional[int] = 32,
             normalize: Optional[bool] = False,
     ):
+        """
+            Load the evaluation data.
+
+            Arguments:
+                dataset (Literal['h36m', 'ais']): Which dataset to load
+                seed_length (int): The length of the seed sequence
+                target_length (Optional[int]): The length of the target sequence
+                prediction_length (Optional[int]): The length of the prediction sequence
+                down_sampling_factor (int): The down sampling factor
+                sequence_spacing (Optional[int]): The spacing between the frames
+                actions (Optional[List[str]]): List of the actions to include in the dataset
+                split_actions (Optional[bool]): Whether to split the actions into different datasets
+                representation (Optional[Literal["axis", "mat", "quat", "6d", "pos", None]]): Which joint representation to use
+
+
+        """
         
         # Set the target frames and reachable timesteps given the time intervals between frames
         ##== Dataset Parameters ==##

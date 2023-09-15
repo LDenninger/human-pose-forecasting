@@ -5,7 +5,7 @@
 """
 import torch
 from typing import Optional, Literal, List
-
+import numpy as np
 from ..utils import get_conv_to_rotation_matrix, get_conv_from_rotation_matrix, print_
 from .meta_info import (
     H36M_REDUCED_IND_TO_CHILD,
@@ -19,6 +19,9 @@ from .meta_info import (
     H36M_REDUCED_ANGLE_INDICES,
     SH_NAMES,
     VLP_NAMES,
+    H36M_NAMES,
+    BASELINE_FKL_IND,
+    H36M_BASELINE_PARENTS,
     H36M_NON_REDUNDANT_PARENT_IDS
 
 )
@@ -126,64 +129,35 @@ def parse_ais3dposes_to_s16(seq: torch.Tensor, absolute: Optional[bool] = False)
 
 
 #####===== Conversion Functions =====#####
+# Please note that a proper conversion is only possible for positions or absolute rotations
+# Simply cutting out relative joint rotations produces an artifact of a skeleton that is not interpretable on its own.
 
-def convert_s26_to_s21(seq: torch.Tensor, 
-                        conversion_func: Optional[callable] = None,
-                          interpolate: Optional[bool] = False,
-                           rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos', None]] = None) -> torch.Tensor:
+def convert_s26_to_s21(seq: torch.Tensor,
+                       conversion_func: Optional[callable] = None,) -> torch.Tensor:
     """
         This functions takes the full skeleton of the h36m and removes the following redundant joints:
             - lShoulderAnchor / rShoulderAnchor (thorax)
             - lThumb / rThumb (lWrist / rWrist)
             - spine (hip)
         This function is specifically designed for the H36M dataset.
+
+        Arguments:
+            seq (torch.Tensor): A sequence of joint positions
+            conversion_func (callable, optional): A function that transforms the representation of the sequence. Default: Do not perform transformation.
     """
     ind_to_cut = [9,14,18,20,24]
-    if not interpolate: 
-        # If we have absolute angles wrt a fixed anchor frame, we can simply remove joints as we like
-        seq = _remove_joints(seq, ind_to_cut)
-    else:
-        # If we use relative angles wrt to the parent joint, we have to interpolate across removed joints.
-        if rot_representation is None:
-            print_("Please provide a valid rotation/position representation for interpolation", "warn")
-            return seq
-        # If we work with angles get conversion functions to rotation matrix
-        if rot_representation != 'pos':
-            to_rotmat = get_conv_to_rotation_matrix(rot_representation)
-            to_org_rep = get_conv_from_rotation_matrix(rot_representation)
-            pos_rep = False
-        else:
-            pos_rep = True
-        for i, ind in enumerate(ind_to_cut):
-            # Adjust relative rotations
-            if not pos_rep:
-                rot_mat_cut = to_rotmat(seq[...,(ind-i),:])
-                
-                # Iterate through all children joints of the joint to be removed
-                for child_ind in H36M_REDUCED_IND_TO_CHILD[ind]:
-                    # Query the rotation to get the rotation of the children joint wrt to its new parent
-                    rot_mat_child = to_rotmat(seq[..., (child_ind-i),:])
-                    # We have to compute the shoulder anchors differently since we want the parent frame to be thorax instead of spine1
-                    if ind in [14,20]:
-                        rot_mat_thorax = to_rotmat(seq[...,(11-i),:])
-                        seq[...,(child_ind-i),:] = to_org_rep(torch.bmm(rot_mat_child,rot_mat_thorax))
-                        continue
-                    seq[...,(child_ind-i),:] = to_org_rep(torch.bmm(rot_mat_child,rot_mat_cut))
-            # Adjust relative positions
-            else:
-                pos_cut = seq[...,(ind-i),:]
-                # Iterate through all children joints of the joint to be removed
-                for child_ind in H36M_REDUCED_IND_TO_CHILD[ind]:
-                    # Query the position to get the position of the children joint wrt to its new parent
-                    pos_child = seq[..., (child_ind-i),:]
-                    seq[...,(child_ind-i),:] = pos_cut + pos_child
-            seq = torch.cat([seq[...,0:(ind-i),:], seq[...,(ind-i)+1:,:]], dim=1)
+    seq = _remove_joints(seq, ind_to_cut)
     return _transform_representation(seq, conversion_func)
+
 
 
 def convert_s21_to_s26(seq: torch.Tensor, conversion_func: Optional[callable] = None) -> torch.Tensor:
     """
         This function converts the reduced s21 skeleton back to the full skeleton of the h36m dataset.
+
+        Arguments:
+            seq (torch.Tensor): A sequence of joint configurations
+            conversion_func (callable, optional): A function that transforms the representation of the sequence. Default: Do not perform transformation.
     """
     seq_repr = torch.FloatTensor(seq.shape[0],26,3)
     seq_repr[...,0] = seq[...,0]
@@ -215,47 +189,21 @@ def convert_s21_to_s26(seq: torch.Tensor, conversion_func: Optional[callable] = 
     return _transform_representation(seq_repr, conversion_func)
 
 def convert_s21_to_s16(seq: torch.Tensor, 
-                        conversion_func: Optional[callable] = None,
-                          interpolate: Optional[bool] = False,
-                           rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos', None]] = None):
+                        conversion_func: Optional[callable] = None) -> torch.Tensor:
     """
         Converts the reduced s21 skeleton to the stacked hourglass skeleton representation.
         This simply removes the last joints of each limb and the neck joint.
+
+        Arguments:
+            seq (torch.Tensor): A sequence of joint configurations
+            conversion_func (callable, optional): A function that transforms the representation of the sequence. Default: Do not perform transformation.
     """
     ind_to_cut = [4,8,11,16,20]
-    if not interpolate:
-        seq = _remove_joints(seq, ind_to_cut)
-    else:
-        # If we use relative angles wrt to the parent joint, we have to interpolate across removed joints.
-        if rot_representation is None:
-            print_("Please provide a valid rotation/position representation for interpolation", "warn")
-            return seq
-        # If we work with angles get conversion functions to rotation matrix
-        if rot_representation != 'pos':
-            to_rotmat = get_conv_to_rotation_matrix(rot_representation)
-            to_org_rep = get_conv_from_rotation_matrix(rot_representation)
-            pos_rep = False
-        else:
-            pos_rep = True
-        for i, ind in enumerate(ind_to_cut):
-            # Only the neck is not at the end of a kinematic chain and needs to be considered separate
-            if ind == 11:
-                if not pos_rep:
-                    rot_mat_cut = to_rotmat(seq[...,(ind-i),:])
-                    rot_mat_child = to_rotmat(seq[...,(12-i),:])
-                    seq[...,(12-i),:] = to_org_rep(torch.matmul(rot_mat_child,rot_mat_cut))
-                else:
-                    pos_cut = seq[...,(ind-i),:]
-                    pos_child = seq[...,(12-i),:]
-                    seq[...,(12-i),:] = pos_cut + pos_child
-
-            seq = torch.cat([seq[...,0:(ind-i),:], seq[...,(ind-i)+1:,:]], dim=1)
+    seq = _remove_joints(seq, ind_to_cut)
     return _transform_representation(seq, conversion_func)
 
 def convert_s26_to_s16(seq: torch.Tensor, 
-                        conversion_func: Optional[callable] = None,
-                          relative: Optional[bool] = False,
-                           rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos', None]] = None) -> torch.Tensor:
+                        conversion_func: Optional[callable] = None) -> torch.Tensor:
     """
         Converts the full H36M dataset to the stacked hourglass skeleton representation.
         This removes viable information from the skeleton and cannot be reversed.
@@ -263,9 +211,13 @@ def convert_s26_to_s16(seq: torch.Tensor,
         since joints are removed in the kinematic chain and relative angles do not make sense anymore.
         This effectively removes the following joints (equally for left and right):
             neck, ShoulderAnchor, Thumb, WristEnd, spine, Toe
+
+        Arguments:
+            seq (torch.Tensor): A sequence of joint configurations
+            conversion_func (callable, optional): A function that transforms the representation of the sequence. Default: Do not perform transformation.
     """
-    s21_repr = convert_s26_to_s21(seq, None, relative, rot_representation)
-    s16_repr = convert_s21_to_s16(s21_repr, conversion_func, relative, rot_representation)
+    s21_repr = convert_s26_to_s21(seq)
+    s16_repr = convert_s21_to_s16(s21_repr, conversion_func)
     return s16_repr
 
 
@@ -278,7 +230,13 @@ def h36m_forward_kinematics(data: torch.Tensor,
                                hip_pos: Optional[torch.Tensor] = None) -> torch.Tensor:
     """
         Compute the forward kinematics of the h36m skeleton model from a given representation.
-        The functions returns the joint positions and rotations
+        The functions returns the joint positions and rotations.
+
+        Arguments:
+            data (torch.Tensor): A sequence of joint configurations
+            representation (Literal['axis','mat', 'quat', '6d']): The representation of the joints.
+            hip_as_root (bool, optional): If True, the hip joint is at the origin. Default: True.
+            hip_pos (torch.Tensor, optional): The position of the hip joint required if the hip joint is not the root frame.
     """
     # conversion function to convert to rotation matrices
     conversion_func = get_conv_to_rotation_matrix(representation)
@@ -328,10 +286,96 @@ def h36m_forward_kinematics(data: torch.Tensor,
     joint_rotations = torch.reshape(joint_rotations, (*shape, 3, 3))
     return joint_positions, joint_rotations
 
+###--- Kinematic Module from Motion Mixer ---###
+# These modules were taken from: https://github.com/MotionMLP/MotionMixer/tree/main
+# They are mainly used to test our own kinematic module
+
+def convert_baseline_representation(xyz_struct):
+    positions = {}
+    for i, joint in enumerate(xyz_struct):
+        joint_name = H36M_NAMES[i]
+        positions[joint_name] = torch.from_numpy(joint)
+    return positions
+
+
+def expmap2rotmat(r):
+    """
+    Converts an exponential map angle to a rotation matrix
+    Matlab port to python for evaluation purposes
+    I believe this is also called Rodrigues' formula
+    https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/CRFProblems/H3.6m/mhmublv/Motion/expmap2rotmat.m
+
+    Args
+      r: 1x3 exponential map
+    Returns
+      R: 3x3 rotation matrix
+    """
+    theta = np.linalg.norm(r)
+    r0 = np.divide(r, theta + np.finfo(np.float32).eps)
+    r0x = np.array([0, -r0[2], r0[1], 0, 0, -r0[0], 0, 0, 0]).reshape(3, 3)
+    r0x = r0x - r0x.T
+    R = np.eye(3, 3) + np.sin(theta) * r0x + (1 - np.cos(theta)) * (r0x).dot(r0x);
+    return R
+
+def baseline_forward_kinematics(angles, parent = H36M_BASELINE_PARENTS, angle_indices = BASELINE_FKL_IND, offset = H36M_BONE_LENGTH):
+    """
+        Convert joint angles and bone lenghts into the 3d points of a person.
+
+        adapted from
+        https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/forward_kinematics.py#L14
+
+        which originaly based on expmap2xyz.m, available at
+        https://github.com/asheshjain399/RNNexp/blob/7fc5a53292dc0f232867beb66c3a9ef845d705cb/structural_rnn/CRFProblems/H3.6m/mhmublv/Motion/exp2xyz.m
+        Args
+        angles: 99-long vector with 3d position and 3d joint angles in expmap format
+        parent: 32-long vector with parent-child relationships in the kinematic tree
+        offset: 96-long vector with bone lenghts
+        rotInd: 32-long list with indices into angles
+        expmapInd: 32-long list with indices into expmap angles
+        Returns
+        xyz: 32x3 3d points that represent a person in 3d space
+    """
+
+    assert len(angles) == 99
+    # Structure that indicates parents for each joint
+    njoints = 32
+    xyzStruct = [dict() for x in range(njoints)]
+    offset = np.reshape(offset, (-1, 3))
+
+    for i in np.arange(njoints):
+
+        if i == 0:
+            xangle = angles[0]
+            yangle = angles[1]
+            zangle = angles[2]
+            thisPosition = np.array([xangle, yangle, zangle])
+        else:
+            thisPosition = np.array([0, 0, 0])
+
+        r = angles[angle_indices[i]]
+
+        thisRotation = expmap2rotmat(r)
+
+        if parent[i] == -1:  # Root node
+            xyzStruct[i]['rotation'] = thisRotation
+            xyzStruct[i]['xyz'] = np.reshape(offset[i, :], (1, 3)) + thisPosition
+        else:
+            xyzStruct[i]['xyz'] = (offset[i, :] + thisPosition).dot(xyzStruct[parent[i]]['rotation']) + \
+                                  xyzStruct[parent[i]]['xyz']
+            xyzStruct[i]['rotation'] = thisRotation.dot(xyzStruct[parent[i]]['rotation'])
+    xyz = [xyzStruct[i]['xyz'] for i in range(njoints)]
+    xyz = np.array(xyz).squeeze()
+
+    return xyz, xyzStruct   
+
 #####===== Utility Functions =====#####
 def _remove_joints(seq: torch.Tensor, inds: List[int]):
     """
         Removes the by the indices given joints from the sequence.
+
+        Arguments:
+            seq (torch.Tensor): the sequence to remove the joints from
+            inds (List[int]): the indices of the joints to remove
     """
     for i, ind in enumerate(inds):
         seq = torch.cat([seq[...,0:(ind-i),:], seq[...,(ind-i)+1:,:]], dim=-2)
@@ -340,46 +384,13 @@ def _remove_joints(seq: torch.Tensor, inds: List[int]):
 def _transform_representation(seq: torch.Tensor, conversion_func: Optional[callable] = None) -> torch.Tensor:
     """
         converts the joint representation
+
+        Arguments:
+            seq (torch.Tensor): the sequence to transform
+            conversion_func (callable): a function that takes in a sequence and returns a transformed sequence
     """
     if conversion_func is not None:
         seq = torch.flatten(seq, 0, 1)
         seq = conversion_func(seq)
         seq = torch.reshape(seq,(seq.shape[0], 21, -1))
     return seq
-
-def _compute_s21_bone_length() -> torch.Tensor:
-    """
-        Computes the bone length of the reduced skeleton based on the original bone lengths from the H36M dataset.
-    """
-    bone_length = torch.reshape(torch.FloatTensor(H36M_BONE_LENGTH), (-1,3))
-    bone_length = _cutout_sites(bone_length)
-    ind_to_cut = [9,14,18,20,24]
-    for i, ind in enumerate(ind_to_cut):
-        for child_ind in H36M_REDUCED_IND_TO_CHILD[ind]:
-            child_bone_length = bone_length[child_ind]
-            bone_length[(child_ind-i)] = child_bone_length + bone_length[(ind-i)]
-        bone_length = torch.cat([bone_length[:(ind-i)], bone_length[(ind-i)+1:]])
-    return bone_length
-
-def _compute_s16_bone_length() -> torch.Tensor:
-    """
-        Computes the bone length of the reduced skeleton based on the original bone lengths from the H36M dataset.
-    """
-    bone_length = torch.reshape(torch.FloatTensor(H36M_BONE_LENGTH), (-1,3))
-    bone_length = _cutout_sites(bone_length)
-    ind_to_cut = [4,8,9,12,14,18,19,20,24,25]
-    for i, ind in enumerate(ind_to_cut):
-        for child_ind in H36M_REDUCED_IND_TO_CHILD[ind]:
-            child_bone_length = bone_length[child_ind]
-            bone_length[(child_ind-i)] = child_bone_length + bone_length[(ind-i)]
-        bone_length = torch.cat([bone_length[:(ind-i)], bone_length[(ind-i)+1:]])
-    return bone_length
-
-def _cutout_sites(input: torch.Tensor) -> torch.Tensor:
-    """
-        Cuts out the site joints from the h36m dataset in some given data.
-    """
-    ind_to_cut = [5,10,21,23,29,31]
-    for i, ind in enumerate(ind_to_cut):
-        input = torch.cat([input[...,0:(ind-i),:], input[...,(ind-i)+1:,:]], dim=-2)
-    return input

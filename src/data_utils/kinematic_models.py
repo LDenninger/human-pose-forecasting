@@ -1,3 +1,11 @@
+"""
+    This file contains a fully-differentiable abstract skeleton model.
+    This can be used to implement different skeleton representations.
+    Unfortunately it does not work batch-wsie. Thus, we chose to use our forward kinematics function instead.
+
+    Author: Luis Denninger <l_denninger@uni-bonn.de>
+"""
+
 import torch
 import torch.nn as nn
 from typing import Literal, Optional
@@ -7,14 +15,6 @@ import numpy as np
 
 from .meta_info import *
 from ..utils.transformations import *
-
-"""
-
-
-"""
-#####===== Processing Functions =====#####
-
-
 
 #####===== Skeleton Models =====#####
 
@@ -299,95 +299,3 @@ class SkeletonModel32(SkeletonBase):
         joint_angles[[93, 94, 95]] = conv_func(self.rWristEnd_angle)
 
         return joint_angles
-
-    
-###--- Kinematic Module from Motion Mixer ---###
-# These modules were taken from: https://github.com/MotionMLP/MotionMixer/tree/main
-# They are mainly used to test our own kinematic module
-
-def convert_baseline_representation(xyz_struct):
-    positions = {}
-    for i, joint in enumerate(xyz_struct):
-        joint_name = H36M_NAMES[i]
-        positions[joint_name] = torch.from_numpy(joint)
-    return positions
-
-
-def expmap2rotmat(r):
-    """
-    Converts an exponential map angle to a rotation matrix
-    Matlab port to python for evaluation purposes
-    I believe this is also called Rodrigues' formula
-    https://github.com/asheshjain399/RNNexp/blob/srnn/structural_rnn/CRFProblems/H3.6m/mhmublv/Motion/expmap2rotmat.m
-
-    Args
-      r: 1x3 exponential map
-    Returns
-      R: 3x3 rotation matrix
-    """
-    theta = np.linalg.norm(r)
-    r0 = np.divide(r, theta + np.finfo(np.float32).eps)
-    r0x = np.array([0, -r0[2], r0[1], 0, 0, -r0[0], 0, 0, 0]).reshape(3, 3)
-    r0x = r0x - r0x.T
-    R = np.eye(3, 3) + np.sin(theta) * r0x + (1 - np.cos(theta)) * (r0x).dot(r0x);
-    return R
-
-# TODO: parent data structure has do be put into meta_info again
-def baseline_forward_kinematics(angles, parent = H36M_BASELINE_PARENTS, angle_indices = BASELINE_FKL_IND, offset = H36M_BONE_LENGTH):
-    """
-        Convert joint angles and bone lenghts into the 3d points of a person.
-
-        adapted from
-        https://github.com/una-dinosauria/human-motion-prediction/blob/master/src/forward_kinematics.py#L14
-
-        which originaly based on expmap2xyz.m, available at
-        https://github.com/asheshjain399/RNNexp/blob/7fc5a53292dc0f232867beb66c3a9ef845d705cb/structural_rnn/CRFProblems/H3.6m/mhmublv/Motion/exp2xyz.m
-        Args
-        angles: 99-long vector with 3d position and 3d joint angles in expmap format
-        parent: 32-long vector with parent-child relationships in the kinematic tree
-        offset: 96-long vector with bone lenghts
-        rotInd: 32-long list with indices into angles
-        expmapInd: 32-long list with indices into expmap angles
-        Returns
-        xyz: 32x3 3d points that represent a person in 3d space
-    """
-
-    assert len(angles) == 99
-    # Structure that indicates parents for each joint
-    njoints = 32
-    xyzStruct = [dict() for x in range(njoints)]
-    offset = np.reshape(offset, (-1, 3))
-
-    for i in np.arange(njoints):
-
-        # if not rotInd[i]:  # If the list is empty
-        #     xangle, yangle, zangle = 0, 0, 0
-        # else:
-        #     xangle = angles[rotInd[i][0] - 1]
-        #     yangle = angles[rotInd[i][1] - 1]
-        #     zangle = angles[rotInd[i][2] - 1]
-        if i == 0:
-            xangle = angles[0]
-            yangle = angles[1]
-            zangle = angles[2]
-            thisPosition = np.array([xangle, yangle, zangle])
-        else:
-            thisPosition = np.array([0, 0, 0])
-
-        r = angles[angle_indices[i]]
-
-        thisRotation = expmap2rotmat(r)
-
-        if parent[i] == -1:  # Root node
-            xyzStruct[i]['rotation'] = thisRotation
-            xyzStruct[i]['xyz'] = np.reshape(offset[i, :], (1, 3)) + thisPosition
-        else:
-            xyzStruct[i]['xyz'] = (offset[i, :] + thisPosition).dot(xyzStruct[parent[i]]['rotation']) + \
-                                  xyzStruct[parent[i]]['xyz']
-            xyzStruct[i]['rotation'] = thisRotation.dot(xyzStruct[parent[i]]['rotation'])
-    xyz = [xyzStruct[i]['xyz'] for i in range(njoints)]
-    xyz = np.array(xyz).squeeze()
-    # xyz = xyz[:, [0, 2, 1]]
-    # xyz = xyz[:,[2,0,1]]
-
-    return xyz, xyzStruct   
