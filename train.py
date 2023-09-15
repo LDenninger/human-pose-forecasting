@@ -45,9 +45,9 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
-QUEUED = False # Activate the usage of the training queue
-EXPERIMENT_NAMES = ['training_schemes']*2 + ['transformer_study']*2
-RUN_NAMES = ['auto_regressive_training', 'baseline_training', 'seq_spatial_temporal', 'seq_temporal_spatial']
+QUEUED = True # Activate the usage of the training queue
+EXPERIMENT_NAMES = ['training_schemes']*2
+RUN_NAMES = ['auto_regressive_training_6', 'baseline_training']
 
 #####===== Meta Information =====#####
 TRAINING_FUNCTIONS = {

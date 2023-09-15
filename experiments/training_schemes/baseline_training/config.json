@@ -2,9 +2,9 @@
     "training_scheme": "single_step",
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 20,
+    "num_epochs": 50,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 100,
+    "num_eval_iterations": 200,
     "seq_length": 10,
     "checkpoint_frequency": 5,
     "model": {
@@ -37,11 +37,14 @@
     },
     "loss": {
         "type": "position_mse",
-        "reduction": "sum"
+        "reduction": "mean"
     },
     "lr_scheduler": {
-        "type": "baseline",
-        "warmup": 100000
+        "type": "exponential",
+        "gamma": 0.95,
+        "warmup": 1000,
+        "update_frequency": 1000,
+        "base_lr": 3e-04
     },
     "skeleton": {
         "type": "s16",

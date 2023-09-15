@@ -40,6 +40,9 @@ class Session:
             run_name=self.run_name,
             log_internal=log_process_internal,
         )
+        # Load mean and var of data
+        self.norm_mean = torch.load(f'configurations/mean.pt')
+        self.norm_var = torch.load(f'configurations/var.pt')
 
         self.metric_tracker = MetricTracker()
         # Load the config for the run
@@ -98,7 +101,7 @@ class Session:
 
     @log_function
     def initialize_evaluation(self, 
-                              evaluation_type: List[str] = ['distance'],
+                              evaluation_type: List[str] = ['distance', 'distribution'],
                               num_iterations: Optional[int] = None,
                               distance_metrics: List[str] = None,
                               distribution_metrics: List[str] = None,
@@ -124,7 +127,7 @@ class Session:
             self.evaluation_engine.initialize_long_prediction_evaluation(
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
                 prediction_timesteps = self.config['evaluation']['timesteps'],
-                metric_names=self.config['evaluation']['metrics'] if distribution_metrics is None else distribution_metrics,
+                metric_names=self.config['evaluation']['distribution_metrics'] if distribution_metrics is None else distribution_metrics,
             )
             self.num_eval_iterations = self.config['num_eval_iterations']
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
