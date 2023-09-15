@@ -1,5 +1,5 @@
 {
-    "training_scheme": "single_step",
+    "training_scheme": "auto_regressive",
     "random_seed": 42,
     "batch_size": 32,
     "num_epochs": 50,
@@ -64,7 +64,7 @@
     "dataset": {
         "name": "h36m",
         "seed_length": 10,
-        "target_length": 1,
+        "target_length": 10,
         "downsampling_factor": 2,
         "spacing": 5,
         "training_size": 1000,
