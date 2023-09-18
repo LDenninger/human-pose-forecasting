@@ -37,6 +37,7 @@
     },
     "loss": {
         "type": "std_weighted_position_mse",
+        "scale": 10.0,
         "reduction": "mean"
     },
     "lr_scheduler": {

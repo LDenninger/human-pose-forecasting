@@ -75,7 +75,7 @@ def getLoss(config: str, rot_representation: Optional[Literal['axis', 'mat', 'qu
     elif config['type'] == 'position_mse':
         return PositionMSE(config['reduction'])
     elif config['type'] == 'std_weighted_position_mse':
-        return STDWeightedPositionMSE(config['reduction'])
+        return STDWeightedPositionMSE(config['reduction'], scale=config['scale'])
     elif config['type'] == 'hand_weighted_position_mse':
         return HandWeightedPositionMSE(config['reduction'], config['weights'])
     elif config['type'] == 'learned_weights_position_mse':

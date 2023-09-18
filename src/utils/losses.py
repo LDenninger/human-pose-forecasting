@@ -88,19 +88,24 @@ class STDWeightedPositionMSE(LossBase):
         The weights are determined by the standard deviation within a single sequence,
         such that joints with a large movement get a higher weight.
     """
-    def __init__(self, reduction: Optional[Literal['mean','sum']] = 'mean'):
+    def __init__(self, reduction: Optional[Literal['mean','sum']] = 'mean', scale: Optional[float] = 1.0):
         super(STDWeightedPositionMSE, self).__init__()
+        self.scale = scale
         self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
     
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         import ipdb; ipdb.set_trace()
-        loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+        # Compute the MSE loss per-joint
+        loss = F.mse_loss(output, target, reduction='none')
+        loss = torch.sum(loss, dim=-1) 
+        loss = torch.sqrt(loss) 
+        # Compute the weights using the std within the target sequence
         std = torch.std(target, dim=1, unbiased=False)
         std = torch.mean(std, dim=-1)
-        std_corr = std + torch.max(std)
-        weights = std_corr/torch.sum(std_corr, dim=1)
-        loss = torch.sum(loss * weights, dim=-1) 
-        loss = torch.sqrt(loss) 
+        std_corr = self.scale*std + torch.max(std)
+        weights = std_corr/torch.sum(std_corr, dim=1).unsqueeze(-1)
+        # Compute a weighted mean across the joints
+        loss = torch.sum(loss*weights.unsqueeze(1), dim=-1)
         return self.reduction_func(loss)
 
 class HandWeightedPositionMSE(LossBase):
@@ -113,15 +118,23 @@ class HandWeightedPositionMSE(LossBase):
     def __init__(self, reduction: Optional[Literal['mean','sum']] = 'mean', weights: Optional[list] = None):
         super(HandWeightedPositionMSE, self).__init__()
         if weights is None:
-            self.weights = [0.1, 0.3, 0.7, 1.0, 0.3, 0.7, 1.0, 0.3, 0.3, 0.7, 0.3, 0.7, 1.0, 0.3, 0.7, 1.0]
+            self.weights = torch.FloatTensor([0.1, 0.3, 0.7, 1.0, 0.3, 0.7, 1.0, 0.3, 0.3, 0.7, 0.3, 0.7, 1.0, 0.3, 0.7, 1.0]).unsqueeze(0).unsqueeze(0)
         else:
             self.weights = weights
+        self.device = None
         self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """
+            Compute the MSE loss on the joints. Each joint is weighted by hardcoded weights.
+        """
+        if self.device is None:
+            self.device = output.device
+            self.weights = self.weights.to(self.device)
         loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
-        loss = torch.sum(loss*self.weights, dim=-1)
+        loss = torch.sum(loss, dim=-1)
         loss = torch.sqrt(loss)
+        loss = torch.sum(loss*self.weights, dim=-1)
         return self.reduction_func(loss)
 
 class LearningPositionMSE(LossBase):
@@ -140,17 +153,26 @@ class LearningPositionMSE(LossBase):
         self.register_parameter('weights', nn.Parameter(torch.zeros(num_joints), requires_grad=True if warmup_steps == 0 else False))
         self.steps = 0
         self.learning_active = False if warmup_steps == 0 else True
+        self.device = None
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        # Do not learn during warm-up steps
+        import ipdb; ipdb.set_trace()
+        if self.device is None:
+            self.device = output.device
+            self.weights = nn.Parameter(self.weights.to(self.device))
         if not self.learning_active:
             if self.steps == self.warmup_steps:
                 self.weights.requires_grad = True
                 self.learning_active = True
             else:
                 self.steps += 1
+        # Compute weights using the softmax
+        weights_sm = F.softmax(self.weights, dim=-1).unsqueeze(0).unsqueeze(0)
         loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
-        loss = torch.sum(loss*self.weights, dim=-1)
+        loss = torch.sum(loss, dim=-1)
         loss = torch.sqrt(loss)
+        loss = torch.sum(loss*weights_sm, dim=-1)
         return self.reduction_func(loss)
 
     
