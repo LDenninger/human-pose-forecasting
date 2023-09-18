@@ -33,6 +33,7 @@ def compare_sequences_plotly(
     sequences: List[torch.Tensor],
     time_steps_ms: List[List[int]],
     skeleton_structure: dict,
+    parent_ids: List[int],
     prediction_positions: List[int] = None,
     title_text: str = "",
     save_path: str = None,
@@ -47,6 +48,8 @@ def compare_sequences_plotly(
     @param sequence_names: List of sequence names - ['gt', 'pred']
     @param sequences: List of sequences - [gt_seq, pred_seq]
     @param prediction_positions: List of positions of where prediction starts in the sequence
+    @param skeleton_structure: Dictionary containing the skeleton structure
+    @param parent_ids: List of parent ids for each joint
     @param time_steps_ms: List of time steps in milliseconds for each sequence
     @param title_text: Title of the plot
     @param figsize: Size of the figure (width, height) in pixels
@@ -59,7 +62,6 @@ def compare_sequences_plotly(
     @return: Numpy array of the image
 
     """
-    import ipdb; ipdb.set_trace()
     # Make sure the number of sequence names, sequences and prediction positions are the same
     assert len(sequence_names) == len(sequences)
     if prediction_positions is not None:
@@ -82,6 +84,8 @@ def compare_sequences_plotly(
     # Flatten time_steps_ms if it is not None
     if time_steps_ms is not None:
         time_steps_ms = time_steps_ms
+    # Turn time_steps_ms into a list of strings
+    time_steps_ms = list(map(lambda x: str(x), time_steps_ms))
 
     # Create a figure with no gaps between subplots
     fig = make_subplots(
@@ -98,9 +102,8 @@ def compare_sequences_plotly(
 
     # Loop through the sequences and frames
     for i, (name, sequence) in enumerate(zip(sequence_names, sequences)):
-        prediction_position = (
-            prediction_positions[i] if prediction_positions else math.inf
-        )
+        prediction_position = math.inf if prediction_positions is None or len(prediction_positions) == 0 or prediction_positions[i] is None else prediction_positions[i]
+        
         for j in range(ncols):
             # Get joint positions from skeleton
             joint_positions = sequence[j]
@@ -117,6 +120,7 @@ def compare_sequences_plotly(
                 ),
                 joint_positions,
                 skeleton_structure,
+                parent_ids,
                 show_joints=show_joints,
             )
 

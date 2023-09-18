@@ -9,6 +9,7 @@ from ..data_utils import (
     SkeletonModel32,
     H36MDataset,
     H36M_SKELETON_STRUCTURE,
+    H36M_SKELETON_PARENTS,
     H36M_NON_REDUNDANT_PARENT_IDS,
     baseline_forward_kinematics,
     convert_baseline_representation,
@@ -35,6 +36,7 @@ def test_visualizer():
         is_train=True,
     )
 
+
     # Adjust amount of sequences to be displayed
     seq_amount = 4
 
@@ -53,6 +55,8 @@ def test_visualizer():
     img = compare_sequences_plotly(
         sequence_names=sequence_names,
         sequences=sequences,
+        skeleton_structure=H36M_SKELETON_STRUCTURE,
+        parent_ids=H36M_SKELETON_PARENTS,
         title_text="Test Sequence",
         time_steps_ms=[f"{i * 100}" for i in range(sequences[0].shape[0])],
         prediction_positions=[
