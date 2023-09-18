@@ -38,7 +38,7 @@
     "loss": {
         "type": "learned_weights_position_mse",
         "reduction": "mean",
-        "warmup": 0,
+        "warmup": 0
     },
     "lr_scheduler": {
         "type": "cosine",
