@@ -38,6 +38,7 @@ def compare_sequences_plotly(
     title_text: str = "",
     save_path: str = None,
     line_width: int = 4,
+    font_size: int = 24,
     colors: Tuple[str, str] = ("green", "blue"),
     show_joints: bool = False,
     size: int = 500,
@@ -54,7 +55,8 @@ def compare_sequences_plotly(
     @param title_text: Title of the plot
     @param figsize: Size of the figure (width, height) in pixels
     @param save_path: Path to save the figure to
-    @param line_width: Width of the lines in the plot
+    @param line_width: Width of the lines in the plot (scaled with size of plot)
+    @param font_size: Font size of the text in the plot (scaled with size of plot)
     @param colors: Tuple of two colors of the lines in the plot. First one is the color the ground truth should have, second one is the color the prediction should have.
     @param show_joints: Whether to show the joints in the plot
     @param size: Size of the plot (roughly in pixels, gets multiplied by aspect (so 500 with two rows equates a 4000x1000 plot))
@@ -71,9 +73,8 @@ def compare_sequences_plotly(
 
     max_sequence_length = max([sequence.shape[0] for sequence in sequences])
 
-
     # Calculate aspect ratio of the plot (0.215 came from trial and error)
-    aspect = (0.215 * max_sequence_length, len(sequences))
+    aspect = (0.2 * max_sequence_length, len(sequences))
 
     # Round size up to the nearest multiple of 100
     figsize = (
