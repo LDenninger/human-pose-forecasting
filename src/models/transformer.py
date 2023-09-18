@@ -38,7 +38,7 @@ def getTransformerBlock(transformer_config: Dict[str, Any],
         )
     elif transformer_config['type'] =='vanilla':
         return VanillaTransformer(
-                        emb_dim = emb_dim,
+                        emb_dim = emb_dim*num_joints,
                         ff_dim = transformer_config['ff_dimension'],
                         num_tokens = seq_len,
                         heads = transformer_config['heads'],

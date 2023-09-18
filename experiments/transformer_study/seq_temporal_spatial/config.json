@@ -40,8 +40,12 @@
         "reduction": "sum"
     },
     "lr_scheduler": {
-        "type": "baseline",
-        "warmup": 100000
+        "type": "cosine",
+        "max_iterations": 100000,
+        "warmup": 2000,
+        "min_learning_rate": 0.0,
+        "update_frequency": 1000,
+        "base_lr": 3e-04
     },
     "skeleton": {
         "type": "s16",
@@ -49,7 +53,7 @@
     },
     "joint_representation": {
         "type": "pos",
-        "absolute": true,
+        "absolute": false,
         "joint_dim": 3
     },
     "evaluation": {
