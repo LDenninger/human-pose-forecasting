@@ -101,7 +101,7 @@ class Session:
 
     @log_function
     def initialize_evaluation(self, 
-                              evaluation_type: List[str] = ['distance', 'distribution'],
+                              evaluation_type: List[str] = ['distance'],
                               num_iterations: Optional[int] = None,
                               distance_metrics: List[str] = None,
                               distribution_metrics: List[str] = None,
