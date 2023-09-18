@@ -74,13 +74,17 @@ def compare_sequences_plotly(
     max_sequence_length = max([sequence.shape[0] for sequence in sequences])
 
     # Calculate aspect ratio of the plot (0.215 came from trial and error)
-    aspect = (0.2 * max_sequence_length, len(sequences))
+    aspect = (0.215 * max_sequence_length,  len(sequences))
 
     # Round size up to the nearest multiple of 100
     figsize = (
         math.ceil(aspect[0] * size / 100) * 100,
         math.ceil(aspect[1] * size / 100) * 100,
     )
+
+    # Make fontsize and linewidth scale with size
+    font_size = int(24 / 500 * size)
+    line_width = int(4 / 500 * size)
 
     # Flatten time_steps_ms if it is not None
     if time_steps_ms is not None:
@@ -93,7 +97,7 @@ def compare_sequences_plotly(
         rows=nrows,
         cols=ncols,
         specs=[[{"type": "scatter3d"} for i in range(ncols)] for j in range(nrows)],
-        vertical_spacing=0.1,
+        vertical_spacing=0,
         horizontal_spacing=0,
         subplot_titles=time_steps_ms,
     )
@@ -139,7 +143,7 @@ def compare_sequences_plotly(
             y=y_coord,
             text=name,
             showarrow=False,
-            font=dict(size=24),
+            font=dict(size=font_size),
             textangle=-90,  # Rotate text 90 degrees counter-clockwise
         )
 
@@ -149,7 +153,7 @@ def compare_sequences_plotly(
         showlegend=False,
         width=figsize[0],
         height=figsize[1],
-        margin=dict(l=100, r=0, b=0, t=100, pad=0),
+        margin=dict(l=100, r=150, b=0, t=100, pad=0),
     )
     # Remove axes and background and ticks
     fig.update_scenes(
@@ -161,6 +165,9 @@ def compare_sequences_plotly(
             aspectratio=dict(x=0.375, y=0.25, z=1.875),
         )
     )
+
+    # Update font size
+    fig.update_annotations(font_size=font_size)
 
     if save_path is not None:
         fig.write_image(save_path)
