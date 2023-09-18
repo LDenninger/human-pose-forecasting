@@ -1,5 +1,4 @@
 import torch
-#torch.autograd.set_detect_anomaly(True)
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Optional
@@ -70,7 +69,8 @@ class Session:
         # Backend configuration
         self.num_threads = num_threads
         print_(f"Initialized trainer for run: {experiment_name}/{run_name}")
-        print_(f"Using device: {self.device}")
+        print_(f"Using device: {self.device}")        
+
 
     ###=== Calls ===###
     @log_function
@@ -163,6 +163,7 @@ class Session:
     def initialize_model(self):
         """
             Initialize the PosePredictor model using the loaded config.
+
         """
         self.model = getModel(self.config, self.device)
         self.logger.watch_model(self.model)

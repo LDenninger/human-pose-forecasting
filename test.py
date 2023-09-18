@@ -38,6 +38,9 @@ def parse_arguments():
         "--h36mfk", action="store_true", default=False, help="Test the h36m forward kinematics function"
     )
     parser.add_argument(
+        "--var_loss", action="store_true", default=False, help="Test the variance weighted MSE loss"
+    )
+    parser.add_argument(
         "--vis_bl", action="store_true", default=False, help="Test the baseline visualization function"
     )
     parser.add_argument(
@@ -83,6 +86,8 @@ def main():
         test_transformer()
     if args.comp:
         test_processing_functions()
+    if args.var_loss:
+        test_varianceMSE()
     if args.penc:
         test_pose_encoding_decoding()
     if args.metrics:

@@ -82,6 +82,78 @@ class PositionMSE(LossBase):
         loss = torch.sqrt(loss) # mse over all rotation dimensions
         return self.reduction_func(loss)
     
+class STDWeightedPositionMSE(LossBase):
+    """
+        Module to compute a weighted mean squared error between joint positions.
+        The weights are determined by the standard deviation within a single sequence,
+        such that joints with a large movement get a higher weight.
+    """
+    def __init__(self, reduction: Optional[Literal['mean','sum']] = 'mean'):
+        super(STDWeightedPositionMSE, self).__init__()
+        self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
+    
+    def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        import ipdb; ipdb.set_trace()
+        loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+        std = torch.std(target, dim=1, unbiased=False)
+        std = torch.mean(std, dim=-1)
+        std_corr = std + torch.max(std)
+        weights = std_corr/torch.sum(std_corr, dim=1)
+        loss = torch.sum(loss * weights, dim=-1) 
+        loss = torch.sqrt(loss) 
+        return self.reduction_func(loss)
+
+class HandWeightedPositionMSE(LossBase):
+    """
+        Module to compute a weighted mean squared error between joint positions.
+        The weights are hardcoded by hand depending on the difficulty of a joint.
+        Possible weights are 0.1, 0.3, 0.7, 1.0. 
+        With increasing distance to the torso the weights are also increased.
+    """
+    def __init__(self, reduction: Optional[Literal['mean','sum']] = 'mean', weights: Optional[list] = None):
+        super(HandWeightedPositionMSE, self).__init__()
+        if weights is None:
+            self.weights = [0.1, 0.3, 0.7, 1.0, 0.3, 0.7, 1.0, 0.3, 0.3, 0.7, 0.3, 0.7, 1.0, 0.3, 0.7, 1.0]
+        else:
+            self.weights = weights
+        self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
+
+    def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+        loss = torch.sum(loss*self.weights, dim=-1)
+        loss = torch.sqrt(loss)
+        return self.reduction_func(loss)
+
+class LearningPositionMSE(LossBase):
+    """
+        Module to compute a weighted mean squared error between joint positions.
+        The weights are first fixed for a number of warmup steps to produce the same results as the position mse.
+        After the model is trained for a number of steps, the weights can also be learned to improve the loss.
+    """
+    def __init__(self, 
+                 reduction: Optional[Literal['mean','sum']] ='mean', 
+                 num_joints: Optional[int] = 16, 
+                 warmup_steps: Optional[int] = 1000):
+        super(LearningPositionMSE, self).__init__()
+        self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
+        self.warmup_steps = warmup_steps
+        self.register_parameter('weights', nn.Parameter(torch.zeros(num_joints), requires_grad=True if warmup_steps == 0 else False))
+        self.steps = 0
+        self.learning_active = False if warmup_steps == 0 else True
+
+    def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        if not self.learning_active:
+            if self.steps == self.warmup_steps:
+                self.weights.requires_grad = True
+                self.learning_active = True
+            else:
+                self.steps += 1
+        loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+        loss = torch.sum(loss*self.weights, dim=-1)
+        loss = torch.sqrt(loss)
+        return self.reduction_func(loss)
+
+    
 class GeodesicLoss(LossBase):
     """
         Module to compute the geodesic loss on an arbitrary rotation representation.
