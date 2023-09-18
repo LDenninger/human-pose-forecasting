@@ -2,9 +2,9 @@
     "training_scheme": "auto_regressive",
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 20,
+    "num_epochs": 100,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 100,
+    "num_eval_iterations": 200,
     "seq_length": 10,
     "checkpoint_frequency": 5,
     "model": {
@@ -16,7 +16,7 @@
             "type": "sin"
         },
         "transformer": {
-            "type": "seq_ts",
+            "type": "parallel",
             "spatial_heads": 4,
             "temporal_heads": 4,
             "spatial_dropout": 0.1,
@@ -36,7 +36,7 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "position_mse",
+        "type": "std_weighted_position_mse",
         "reduction": "mean"
     },
     "lr_scheduler": {
@@ -58,6 +58,7 @@
     },
     "evaluation": {
         "metrics": ["positional_mse", "auc"],
+        "distribution_metrics": [],
         "frequency": 1,
         "exhaustive_evaluation": true,
         "timesteps": [80,120,160,200,240,280,320]

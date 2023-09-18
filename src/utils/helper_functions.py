@@ -74,6 +74,12 @@ def getLoss(config: str, rot_representation: Optional[Literal['axis', 'mat', 'qu
         return Rotation6DLoss(config['reduction'])
     elif config['type'] == 'position_mse':
         return PositionMSE(config['reduction'])
+    elif config['type'] == 'std_weighted_position_mse':
+        return STDWeightedPositionMSE(config['reduction'])
+    elif config['type'] == 'hand_weighted_position_mse':
+        return HandWeightedPositionMSE(config['reduction'], config['weights'])
+    elif config['type'] == 'learned_weights_position_mse':
+        return LearningPositionMSE(config['reduction'], warmup_steps= config['warmup'])
     else:
         raise ValueError(f"Loss {config['type']} is not supported.")
     

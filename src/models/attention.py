@@ -231,6 +231,8 @@ class VanillaAttention(AttentionBase):
         V = self.multi_head_linear_embedding(x, self.W_value)
 
         out = self.scaled_dot_product_attention(Q, K, V)
+        out = torch.transpose(out, -3, -2)
+        out = torch.flatten(out, start_dim=-2, end_dim=-1)
         out = self.linear_embedding(out, self.W_output)
         return out
     

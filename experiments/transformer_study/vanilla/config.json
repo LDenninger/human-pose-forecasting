@@ -51,7 +51,7 @@
     },
     "joint_representation": {
         "type": "pos",
-        "absolute": true,
+        "absolute": false,
         "joint_dim": 3
     },
     "evaluation": {
