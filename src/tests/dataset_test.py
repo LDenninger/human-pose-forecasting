@@ -1,6 +1,7 @@
 from ..data_utils import *
 import ipdb
 import numpy as np
+from ..visualization import animate_pose_matplotlib
 
 def test_h36m_data_loading():
 
@@ -37,9 +38,26 @@ def test_h36m_data_loading():
     ipdb.set_trace()
     print('Test Finished!')
 
-def test_vslab_data_loading():
+def test_ais_data_loading():
 
-    rotation_data = load_data_visionlab3DPoses()
-    position_data = load_data_visionlab3DPoses(representation='pos')
-
+    dataset = AISDataset(
+        seed_length=10,
+        target_length=10,
+        sequence_spacing=5,
+        absolute_position=False
+    )
+    import ipdb; ipdb.set_trace()
+    for i, data in enumerate(dataset):
+        animate_pose_matplotlib(
+                positions = (data.numpy(), data.numpy()),
+                colors = ('g', 'g'),
+                titles = ("test_1", "test_2"),
+                fig_title = "Visualization Test",
+                parents = SH_SKELETON_PARENTS,
+                change_color_after_frame=(None, None),
+                color_after_change='r',
+                overlay=True,
+                fps=25,
+                
+            )
     

@@ -348,6 +348,7 @@ H36M_BONE_LENGTH = [0.000000,0.000000,0.000000,-132.948591,0.000000,0.000000,0.0
 # Num keypoints: 27
 # Active joints: 19
 VLP_DATASET_PATH = 'data/VisionLab3DPoses'
+VLP_STEP_SIZE = 33
 
 ###=== Joint Names ===###
 VLP_NAMES = [''] * 27
@@ -378,24 +379,6 @@ VLP_NAMES[23] = 'lHeel'  #unused
 VLP_NAMES[24] = 'rbToe'  #unused
 VLP_NAMES[25] = 'rsToe'  #unused
 VLP_NAMES[26] = 'rHeel'  #unused
-
-SH_NAMES = ['']*16
-SH_NAMES[0]  = 'hip'
-SH_NAMES[1]  = 'rHip'
-SH_NAMES[2]  = 'rKnee'
-SH_NAMES[3]  = 'rFoot'
-SH_NAMES[4]  = 'lHip'
-SH_NAMES[5]  = 'lKnee'
-SH_NAMES[6]  = 'lFoot'
-SH_NAMES[7]  = 'spine1'
-SH_NAMES[8]  = 'thorax'
-SH_NAMES[9]  = 'head'
-SH_NAMES[10] = 'lShoulder'
-SH_NAMES[11] = 'lElbow'
-SH_NAMES[12] = 'lWrist'
-SH_NAMES[13] = 'rShoulder'
-SH_NAMES[14] = 'rElbow'
-SH_NAMES[15] = 'rWrist'
 
 
 VLP_SKELETON_STRUCTURE = {

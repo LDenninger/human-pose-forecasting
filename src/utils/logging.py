@@ -89,13 +89,16 @@ def emergency_save(f):
 
     return try_call_except
 
-def print_(message, message_type="info"):
+def print_(message, message_type="info", file_name: str=None, path_type: Literal['log', 'plot', 'checkpoint', 'visualization'] = None):
     """
     Overloads the print method so that the message is written both in logs file and console
     """
     print(message)
     if(LOGGER is not None):
-        LOGGER.log_info(message, message_type)
+        if file_name is None:
+            LOGGER.log_info(message, message_type)
+        elif file_name is not None and path_type is not None:
+            LOGGER.log_to_file(message, file_name, path_type)
     return
 
 
@@ -242,8 +245,8 @@ class Logger(object):
         self.run_name = run_name
         self.run_path = P('experiments') / self.exp_name / self.run_name
         ##-- Logging Parameters --##
-        self.log_to_file = log_to_file
-        self.log_internal = log_internal
+        self.log_to_file_activated = log_to_file
+        self.log_internal_activated = log_internal
         self.log_external = False
         self._internal_log_dir = {}
         ##-- Logging Paths --##
@@ -469,7 +472,7 @@ class Logger(object):
     def log_internal(self, data: Dict[str, Any]):
         if not self.run_initialized:
             return
-        if self.log_internal:
+        if self.log_internal_activated:
             for key, value in data.items():
                 if key not in self._internal_log_dir.keys():
                     self._internal_log_dir[key] = []
@@ -483,6 +486,13 @@ class Logger(object):
         with open(self.log_file_path, 'a') as f:
             f.write(msg_str)            
 
+    def log_to_file(self, message: str, file_name: str, type: Literal['log', 'plot', 'checkpoint', 'visualization']) -> None:
+        """
+            Log a message to a specific file within the run directory.
+        """
+        path = self.get_path(type)
+        with open(path / f"{file_name}.txt", 'a') as f:
+            f.write(f'{message}\n')
 
     def log_config(self, config: Dict[str, Any]) -> None:
         """

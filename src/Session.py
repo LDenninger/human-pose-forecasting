@@ -57,6 +57,8 @@ class Session:
         # Modules
         self.model = None
         self.evaluation_engine = EvaluationEngine(device=self.device)
+        self.data_augmentor = get_data_augmentor(self.config['data_augmentation'])
+        self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
         self.scheduler = None
         self.optimizer = None
         self.loss = None
@@ -86,7 +88,7 @@ class Session:
         if not self.evaluate_model:
             print_('Evaluation was not properly initialized!', 'error')
             return
-        self.evaluation_engine.evaluate(self.model)
+        self.evaluation_engine.evaluate(self.model, self.data_augmentor)
         self.evaluation_engine.log_results(self.iteration)
         self._print_epoch_results()
     
@@ -95,7 +97,7 @@ class Session:
         if not self.visualize_model:
             print_('Visualization was not properly initialized!', 'error')
             return
-        self.evaluation_engine.visualize(self.model, num_visualization)
+        self.evaluation_engine.visualize(self.model, num_visualization, self.data_augmentor)
 
     ###=== Initialization Functions ===###
 
@@ -115,23 +117,27 @@ class Session:
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
         if not self.evaluation_engine.data_loaded:
             self._load_evaluation_data(dataset, split_actions, max(self.config['evaluation']['timesteps'] if prediction_timesteps is None else prediction_timesteps))
+        if prediction_timesteps is None:
+            prediction_timesteps = self.config['evaluation']['timesteps']
+        
         if 'distance' in evaluation_type:
             self.evaluation_engine.initialize_distance_evaluation(
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
-                prediction_timesteps = self.config['evaluation']['timesteps'],
+                prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['metrics'] if distance_metrics is None else distance_metrics,
             )
-            self.num_eval_iterations = self.config['num_eval_iterations']
+            self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for joint distances with {self.evaluation_engine.num_iterations['distance_metric']}")
         if 'distribution' in evaluation_type:
             self.evaluation_engine.initialize_long_prediction_evaluation(
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
-                prediction_timesteps = self.config['evaluation']['timesteps'],
+                prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['distribution_metrics'] if distribution_metrics is None else distribution_metrics,
             )
-            self.num_eval_iterations = self.config['num_eval_iterations']
+            self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
         self.evaluation_engine.set_normalization(self.norm_mean, self.norm_var)
+     
     @log_function
     def initialize_visualization(self,
                                  visualization_type: List[str] = ['2d'],
@@ -159,6 +165,8 @@ class Session:
                 overlay=overlay_visualization
             )
             self.visualize_model = True
+
+
     @log_function
     def initialize_model(self):
         """
@@ -202,12 +210,9 @@ class Session:
             drop_last=True,
             num_workers=self.num_threads,
         )
-        self.norm_mean, self.norm_var = dataset.get_mean_variance()
         self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
         p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
         print_(p_str)
-        self.data_augmentor = get_data_augmentor(self.config['data_augmentation'])
-        self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
@@ -220,6 +225,8 @@ class Session:
             scheduler=self.scheduler,
             device=self.device
         )
+    
+    
     
     ###=== Training Functions ===###
     @log_function
