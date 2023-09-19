@@ -176,31 +176,33 @@ def power_spectrum(seq: torch.Tensor) -> torch.Tensor:
     return seq_ps_global.squeeze() # (seq_len, n_joints * feature_size)
 
 
-def ps_entropy(seq_ps):
+def ps_entropy(seq_ps: torch.Tensor):
     """
 
     Args:
         seq_ps: (n_joints, seq_len, feature_size)
 
     Returns:
+        entropy: (feature_size, )
     """
     res = -torch.sum(seq_ps * torch.log(seq_ps), axis = 0)
     return res
 
 
-def ps_kld(seq_ps_from, seq_ps_to):
+def ps_kld(seq_ps_from: torch.Tensor, seq_ps_to: torch.Tensor):
     """Calculates KL(seq_ps_from, seq_ps_to).
     Args:
         seq_ps_from:
         seq_ps_to:
 
     Returns:
+        kld: (feature_size, )
     """
     res = torch.sum(seq_ps_from * torch.log(seq_ps_from / seq_ps_to), axis = 0)
     return res
 
 
-def npss(euler_gt_sequences, euler_pred_sequences):
+def npss(euler_gt_sequences: np.ndarray, euler_pred_sequences: np.ndarray):
     """
     Computing normalized Normalized Power Spectrum Similarity (NPSS)
     Taken from @github.com neural_temporal_models/blob/master/metrics.py#L51
