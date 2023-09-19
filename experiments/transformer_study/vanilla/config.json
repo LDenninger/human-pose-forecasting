@@ -35,7 +35,7 @@
     },
     "loss": {
         "type": "position_mse",
-        "reduction": "sum"
+        "reduction": "mean"
     },
     "lr_scheduler": {
         "type": "cosine",

@@ -14,6 +14,8 @@ wandb/*
 *.pdf
 *.pth
 *.pt
+*.png
+
 
 !mean.pt
 !var.pt
