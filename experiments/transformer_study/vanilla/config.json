@@ -2,9 +2,9 @@
     "training_scheme": "auto_regressive",
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 20,
+    "num_epochs": 100,
     "num_train_iterations": 1000,
-    "num_eval_iterations": 100,
+    "num_eval_iterations": 200,
     "seq_length": 10,
     "checkpoint_frequency": 5,
     "model": {

@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from functools import reduce
-from typing import Optional
+from typing import Optional, Tuple
 
 from ..utils import print_
 
@@ -19,9 +19,12 @@ class DataAugmentor(nn.Module):
     def __init__(self, 
                   normalize: Optional[bool] = False,
                    reverse_prob: Optional[bool] = False,
-                    snp_noise_prob: Optional[int] = 0.0,
-                     joint_cutout_prob: Optional[int] = 0.0,
-                      timestep_cutout_prob: Optional[int] = 0.0):
+                    snp_noise_prob: Optional[float] = 0.0,
+                    snp_portion: Optional[Tuple[float, float]] = (0.0,0.0),
+                     joint_cutout_prob: Optional[float] = 0.0,
+                     num_joint_cutout: Optional[Tuple[int, int]] = (0,0),
+                      timestep_cutout_prob: Optional[int] = 0.0,
+                      num_timestep_cutout: Optional[Tuple[int, int]] = (0,0),):
         """
             Initialize the data augmentation module.
             Arguments:
