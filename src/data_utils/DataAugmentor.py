@@ -7,9 +7,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from functools import reduce
-from typing import Optional
+from typing import Optional, Tuple
 
 from ..utils import print_
+
+def get_data_augmentor(config: dict) -> nn.Module:
+
+    return DataAugmentor(
+            normalize=config['normalize'],
+            reverse_prob=config['reverse_prob'],
+            snp_noise_prob=config['snp_noise_prob'],
+            snp_portion=config['snp_noise_portion'],
+            joint_cutout_prob=config['joint_cutout_prob'],
+            num_joint_cutout=config['joint_cutout_portion'],
+            timestep_cutout_prob=config['timestep_cutout_prob'],
+            num_timestep_cutout=config['timestep_cutout_portion']
+        )
+    
+
 
 class DataAugmentor(nn.Module):
     """
@@ -19,9 +34,12 @@ class DataAugmentor(nn.Module):
     def __init__(self, 
                   normalize: Optional[bool] = False,
                    reverse_prob: Optional[bool] = False,
-                    snp_noise_prob: Optional[int] = 0.0,
-                     joint_cutout_prob: Optional[int] = 0.0,
-                      timestep_cutout_prob: Optional[int] = 0.0):
+                    snp_noise_prob: Optional[float] = 0.0,
+                    snp_portion: Optional[Tuple[float, float]] = (0.0,0.0),
+                     joint_cutout_prob: Optional[float] = 0.0,
+                     num_joint_cutout: Optional[Tuple[int, int]] = (0,0),
+                      timestep_cutout_prob: Optional[int] = 0.0,
+                      num_timestep_cutout: Optional[Tuple[int, int]] = (0,0),):
         """
             Initialize the data augmentation module.
             Arguments:
@@ -36,8 +54,11 @@ class DataAugmentor(nn.Module):
         self.norm_var = None
         self.reverse_prob = reverse_prob
         self.snp_noise_prob = snp_noise_prob
+        self.snp_portion = snp_portion
         self.joint_cutout_prob = joint_cutout_prob
+        self.num_joint_cutout = num_joint_cutout
         self.timestep_cutout_prob = timestep_cutout_prob
+        self.num_timestep_cutout = num_timestep_cutout
         self.train_pipeline, self.eval_pipeline = self.__init_pipeline()
 
     def forward(self, x: torch.Tensor, is_train: Optional[bool] = True) -> torch.Tensor:
@@ -86,25 +107,52 @@ class DataAugmentor(nn.Module):
         """
             Salt'n'Pepper noise. Single joints across all time steps are cut out and set to zero.
         """
-        noise_mask = torch.rand(x.shape[:-1], device=x.device) < self.snp_noise_prob
-        noise_mask = noise_mask.unsqueeze(-1)
+        # Get the shape of the input
+        full_length = x.shape[1]*x.shape[2]
+        bs = x.shape[0]
+        # Indices of the batches that are added with snp noise
+        batch_mask = torch.rand(bs, device=x.device) < self.snp_noise_prob
+        # For each batch compute the portion of the input to be cutted
+        portion_to_cut = self.snp_portion[0] + (self.snp_portion[1] - self.snp_portion[0])*torch.rand(bs, device=x.device)
+        portion_to_cut = torch.where(batch_mask, portion_to_cut, torch.tensor(0, device=x.device))
+        # Compute the noise mask for each batch
+        noise_mask = torch.ones((bs,full_length), device=x.device)
+        # Since we have different length of the index tensors it is hard to do it batch-wise
+        for i, portion in enumerate(portion_to_cut):
+            random_ind = torch.randperm(full_length, device=x.device)
+            ind = random_ind[:(torch.floor(portion*full_length).int())] 
+            noise_mask[i, ind] = 0.0
+        noise_mask = noise_mask.view(-1, x.shape[1], x.shape[2], 1)
         return x * noise_mask
     
     def _joint_noise(self, x: torch.Tensor) -> torch.Tensor:
         """
             Single joints across all time steps are cut out and set to zero.
         """
-        noise_mask = torch.rand(x.shape[:-2], device=x.device) < self.joint_cutout_prob
-        noise_mask = noise_mask.unsqueeze(-1).unsqueeze(-1)
-        return x * noise_mask
+        bs = x.shape[0]
+        batch_mask = torch.rand(bs, device=x.device) < self.joint_cutout_prob
+        joints_to_cut = torch.randint(self.num_joint_cutout[0], self.num_joint_cutout[1], size=(bs,), device=x.device)
+        for i, num in enumerate(joints_to_cut):
+            if not batch_mask[i]:
+                continue
+            joint_ids = torch.randint(x.shape[2], size=(num,), device=x.device)
+            x[i, :, joint_ids, :] = torch.zeros((1,1,num,1), device=x.device)
+        return x 
     
     def _timestep_noise(self, x: torch.Tensor) -> torch.Tensor:
         """
             Single time steps are completely cut out and set to zero.
         """
-        noise_mask = torch.rand(x.shape[[0,2,3]], device=x.device) < self.timestep_cutout_prob
-        noise_mask = noise_mask.unsqueeze(1).unsqueeze(-1)
-        return x * noise_mask
+        bs = x.shape[0]
+        batch_mask = torch.rand(bs, device=x.device) < self.timestep_cutout_prob
+        timesteps_to_cut = torch.randint(self.num_timestep_cutout[0], self.num_timestep_cutout[1], size=(bs,), device=x.device)
+        for i, num in enumerate(timesteps_to_cut):
+            if not batch_mask[i]:
+                continue
+            timestep_ids = torch.randint(x.shape[1], size=(num,), device=x.device)
+            x[i, timestep_ids, :, :] = torch.zeros((1,num,1,1), device=x.device)
+
+        return x
     
     def _reverse(self, x: torch.Tensor) -> torch.Tensor:
         """

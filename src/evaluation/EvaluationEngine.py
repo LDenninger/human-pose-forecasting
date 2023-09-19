@@ -29,6 +29,7 @@ from ..data_utils import (
     SkeletonModel32,
     h36m_forward_kinematics,
     DataAugmentor,
+    get_data_augmentor
 )
 from .metrics import (
     evaluate_distance_metrics,
@@ -220,6 +221,7 @@ class EvaluationEngine:
             skeleton_representation: Optional[Literal['s26','s21','s16']] = 's26',
             batch_size: Optional[int] = 32,
             normalize: Optional[bool] = False,
+            augmentation_config: Optional[dict] = None,
     ):
         """
             Load the evaluation data.
@@ -389,7 +391,7 @@ class EvaluationEngine:
 
     #####===== Evaluation Functions =====#####
     @log_function
-    def evaluate(self, model: torch.nn.Module):
+    def evaluate(self, model: torch.nn.Module, data_augmentor: Optional[DataAugmentor] = None) -> None:
         """
         Evaluate the provided model on the H3.6M dataset.
         For this the evaluation needs to be initialized.
@@ -402,7 +404,7 @@ class EvaluationEngine:
                 data_loader = torch.utils.data.DataLoader(
                     dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
                 )
-                self.data_augmentor = DataAugmentor(normalize=self.normalize)
+                self.data_augmentor = data_augmentor
                 if self.normalize:
                     self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
                 if self.distance_metric_active:
@@ -445,7 +447,7 @@ class EvaluationEngine:
             # Load data
             data = data.to(self.device)
             # Set input for the model
-            cur_input = self.data_augmentor(data[:, : self.seed_length])
+            cur_input = self.data_augmentor(data[:, : self.seed_length], is_train=False)
             # Predict future frames in an auto-regressive manner
             for i in range(1,max(self.target_frames['distance_metric']) + 1):
                 # Compute the output
