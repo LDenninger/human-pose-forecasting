@@ -7,6 +7,8 @@ Following https://github.com/eth-ait/motion-transformer/blob/master/metrics/moti
 import numpy as np
 import torch
 from typing import Optional, Literal, Union, List
+import warnings
+warnings.filterwarnings('ignore')
 
 from ..utils import (
     print_,
