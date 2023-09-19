@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from typing import Optional
 from tqdm import tqdm
 
-from .data_utils import getDataset, H36M_DATASET_ACTIONS, DataAugmentor
+from .data_utils import getDataset, H36M_DATASET_ACTIONS, get_data_augmentor
 from .utils import *
 from .models import PosePredictor, getModel
 from .evaluation import EvaluationEngine
@@ -206,13 +206,7 @@ class Session:
         self.num_iterations = self.config['num_train_iterations'] if self.config['num_train_iterations']!=-1 else len(self.train_loader)
         p_str = f'Loaded training data: Length: {len(dataset)}, Batched length: {len(self.train_loader)}, Iterations per epoch: {self.num_iterations}'
         print_(p_str)
-        self.data_augmentor = DataAugmentor(
-            normalize=self.config['data_augmentation']['normalize'],
-            reverse_prob=self.config['data_augmentation']['reverse_prob'],
-            snp_noise_prob=self.config['data_augmentation']['snp_noise_prob'],
-            joint_cutout_prob=self.config['data_augmentation']['joint_cutout_prob'],
-            timestep_cutout_prob=self.config['data_augmentation']['timestep_cutout_prob']
-        )
+        self.data_augmentor = get_data_augmentor(self.config['data_augmentation'])
         self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
 
     @log_function
@@ -254,7 +248,7 @@ class Session:
         print_(f'Start training for run {self.exp_name}/{self.run_name}', 'info')
         # Initial evaluation for untrained model
         if self.evaluate_model:
-            self.evaluation_engine.evaluate(self.model)
+            self.evaluation_engine.evaluate(self.model, self.data_augmentor)
             self.evaluation_engine.log_results(self.iteration)
             self._print_epoch_results()
         for self.epoch in range(1, self.config['num_epochs'] + 1):
@@ -269,7 +263,7 @@ class Session:
                 self.train_epoch_auto_regressive()
             # Evaluation in pre-defined intervals
             if self.evaluate_model and self.epoch % self.config['evaluation']['frequency'] == 0:
-                self.evaluation_engine.evaluate(self.model)
+                self.evaluation_engine.evaluate(self.model, self.data_augmentor)
                 self.evaluation_engine.log_results(self.iteration)
          
             # Print out the epoch results
