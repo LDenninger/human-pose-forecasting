@@ -255,7 +255,7 @@ class Logger(object):
         self.log_file_path = self.log_path / log_file_name
         if os.path.exists(self.log_file_path):
             os.remove(self.log_file_path)
-        self.vis_path = self.run_path / "visualization" if visualization_path is None else visualization_path
+        self.vis_path = self.run_path / "visualizations" if visualization_path is None else visualization_path
         self.checkpoint_path = self.run_path / "checkpoints" if checkpoint_path is None else checkpoint_path
         self.run_initialized = True
 
