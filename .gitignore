@@ -19,6 +19,8 @@ wandb/*
 
 !mean.pt
 !var.pt
+!entropy.pt
+!kld.pt
 
 compare_sequences_plotly_*
 
