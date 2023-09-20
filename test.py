@@ -47,6 +47,9 @@ def parse_arguments():
         "--vis_ais", action="store_true", default=False, help="Visualize the AIS dataset"
     )
     parser.add_argument(
+        "--vis_augm", action="store_true", default=False, help="Visualize the data augmentation"
+    )
+    parser.add_argument(
         "--model", action="store_true", default=False, help="Test the Skeleton32 model"
     )
     parser.add_argument(
@@ -99,6 +102,8 @@ def main():
         test_visualizer()
     if args.vis_ais:
         test_ais_data_loading()
+    if args.vis_augm:
+        test_data_augmentation()
 
 if __name__ == "__main__":
     main()
