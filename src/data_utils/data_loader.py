@@ -17,7 +17,9 @@ from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT
 
 #####===== Helper Functions =====#####
 
-def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_train: Optional[bool] =True, debug: Optional[bool] = False, **kwargs) -> torch.utils.data.Dataset:
+def getDataset(config: dict, joint_representation: str,
+                skeleton_model: str, is_train: Optional[bool] =True, 
+                    debug: Optional[bool] = False, absolute_position: Optional[bool] =False, **kwargs) -> torch.utils.data.Dataset:
     """
         Load a dataset using a run config.
 
@@ -33,6 +35,7 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
             stacked_hourglass= True if skeleton_model=='s16' else False,
             reverse_prob=config['reverse_prob'],
             target_length=config["target_length"],
+            absolute_position=absolute_position,
             normalize_orientation=config["normalize_orientation"],
             down_sampling_factor=config["downsampling_factor"],
             sequence_spacing=config["spacing"],
