@@ -6,7 +6,7 @@
 import torch
 from typing import Optional, Literal, List
 import numpy as np
-from ..utils import get_conv_to_rotation_matrix, get_conv_from_rotation_matrix, print_
+from ..utils import get_conv_to_rotation_matrix, get_conv_from_rotation_matrix, print_, vectors_to_rotation_matrix
 from .meta_info import (
     H36M_REDUCED_IND_TO_CHILD,
     H36M_REVERSED_REDUCED_ANGLE_INDICES,
@@ -404,3 +404,35 @@ def smooth_sequence(seq: torch.Tensor, sigma: float = 1.0, num: int = 5) -> torc
         seq[i] = seq[i]*k + (1-k)*seq[i-1]
 
     return seq
+
+def normalize_sequence_orientation(seq: torch.Tensor) -> torch.Tensor:
+    """
+        Normalize the orientation of a given sequence in stacked hourglass position format.
+    """
+    orig_shape = seq.shape
+    if len(seq.shape) > 3:
+        seq = torch.flatten(seq, start_dim=0, end_dim=-3)
+    # Compute the hip vector -> new y axis
+    hip_vector = seq[:,4] - seq[:,1] # right hip to left hip
+    hip_vector = hip_vector / torch.norm(hip_vector, dim=-1).unsqueeze(-1) # normalize hip vector
+    # Compute the spine vector -> new z axis
+    spine_vector = seq[:,8] - seq[:,0] # hip to thorax
+    spine_vector = spine_vector / torch.norm(spine_vector, dim=-1).unsqueeze(-1) # normalize spine vector
+    # Orthogonalize the spine vector with respect to the hip vector
+    dot_spine_hip = torch.einsum('bi,bi->b', spine_vector, hip_vector) 
+    spine_vector_proj = spine_vector -  dot_spine_hip.unsqueeze(-1) * hip_vector# normalize spine
+    spine_vector_proj = spine_vector_proj / torch.norm(spine_vector_proj, dim=-1).unsqueeze(-1)
+    # Compute the orthogonal vector facing forward -> new x axis
+    ortho_vector = torch.cross(hip_vector, spine_vector, dim=-1)
+    ortho_vector = ortho_vector / torch.norm(ortho_vector, dim=-1).unsqueeze(-1)
+    
+    rotation_matrix = torch.zeros(seq.shape[0], 3, 3)
+    rotation_matrix[:,:,0] = ortho_vector
+    rotation_matrix[:,:,1] = hip_vector
+    rotation_matrix[:,:,2] = spine_vector_proj
+
+    seq = torch.einsum('bij,bnj->bni', torch.transpose(rotation_matrix, -2, -1), seq)
+    seq = torch.reshape(seq, orig_shape)
+
+    return seq
+
