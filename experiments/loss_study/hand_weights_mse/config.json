@@ -79,8 +79,22 @@
         "normalize": true,
         "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
+        "snp_noise_portion": [
+            0.05,
+            0.4
+        ],
         "joint_cutout_prob": 0.0,
-        "timestep_cutout_prob": 0.0   
+        "joint_cutout_portion": [
+            1,
+            4
+        ],
+        "timestep_cutout_prob": 0.0,
+        "timestep_cutout_portion": [
+            1,
+            4
+        ],
+        "gaussian_noise_prob": 0.0,
+        "gaussian_noise_std": 0.005
     }
 
 }
