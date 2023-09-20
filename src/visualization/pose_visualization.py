@@ -329,6 +329,11 @@ def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, chang
         ax.set_aspect('equal')
         if not show_axis:
             ax.axis('off')
+        else:
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            ax.set_zlabel('Z')
+
 
         for xb, yb, zb in zip(Xb, Yb, Zb):
             ax.plot([xb], [yb], [zb], 'w')

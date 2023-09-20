@@ -21,7 +21,9 @@ def get_data_augmentor(config: dict) -> nn.Module:
             joint_cutout_prob=config['joint_cutout_prob'],
             num_joint_cutout=config['joint_cutout_portion'],
             timestep_cutout_prob=config['timestep_cutout_prob'],
-            num_timestep_cutout=config['timestep_cutout_portion']
+            num_timestep_cutout=config['timestep_cutout_portion'],
+            gaussian_noise_prob=config['gaussian_noise_prob'],
+            gaussian_noise_std=config['gaussian_noise_std']
         )
     
 
@@ -39,7 +41,9 @@ class DataAugmentor(nn.Module):
                      joint_cutout_prob: Optional[float] = 0.0,
                      num_joint_cutout: Optional[Tuple[int, int]] = (0,0),
                       timestep_cutout_prob: Optional[int] = 0.0,
-                      num_timestep_cutout: Optional[Tuple[int, int]] = (0,0),):
+                      num_timestep_cutout: Optional[Tuple[int, int]] = (0,0),
+                       gaussian_noise_prob: Optional[float] = 0.0,
+                       gaussian_noise_std: Optional[float] = 0.0,):
         """
             Initialize the data augmentation module.
             Arguments:
@@ -59,6 +63,8 @@ class DataAugmentor(nn.Module):
         self.num_joint_cutout = num_joint_cutout
         self.timestep_cutout_prob = timestep_cutout_prob
         self.num_timestep_cutout = num_timestep_cutout
+        self.gaussian_noise_prob = gaussian_noise_prob
+        self.gaussian_noise_std = gaussian_noise_std
         self.train_pipeline, self.eval_pipeline = self.__init_pipeline()
 
     def forward(self, x: torch.Tensor, is_train: Optional[bool] = True) -> torch.Tensor:
@@ -154,6 +160,18 @@ class DataAugmentor(nn.Module):
 
         return x
     
+    def _gaussian_noise(self, x: torch.Tensor) -> torch.Tensor:
+        """
+            Gaussian noise on each joint.
+        """
+        bs = x.shape[0]
+        # Compute which batch to add noise to
+        batch_mask = torch.rand(bs, device=x.device) < self.gaussian_noise_prob
+        # Compute the additive gaussian noise
+        noise = self.gaussian_noise_std * torch.randn(size=x.shape, device=x.device)
+        noise = torch.where(batch_mask, noise, torch.zeros(x.shape[1:], device=x.device))
+        return x + noise
+    
     def _reverse(self, x: torch.Tensor) -> torch.Tensor:
         """
             Reverse the provided batch.
@@ -173,6 +191,8 @@ class DataAugmentor(nn.Module):
         eval_pipeline = []
         if self.reverse_prob > 0:
             train_pipeline.append(self._reverse)
+        if self.gaussian_noise_prob > 0:
+            train_pipeline.append(self._gaussian_noise)
         if self.normalize:
             train_pipeline.append(self._normalize)
             eval_pipeline.append(self._normalize)
@@ -182,6 +202,7 @@ class DataAugmentor(nn.Module):
             train_pipeline.append(self._joint_noise)
         if self.timestep_cutout_prob > 0:
             train_pipeline.append(self._timestep_noise)
+        
         if len(train_pipeline) == 0:
             train_pipeline.append(self._blank_processing)
         if len(eval_pipeline) == 0:

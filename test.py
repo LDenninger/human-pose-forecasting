@@ -44,6 +44,12 @@ def parse_arguments():
         "--vis_bl", action="store_true", default=False, help="Test the baseline visualization function"
     )
     parser.add_argument(
+        "--vis_ais", action="store_true", default=False, help="Visualize the AIS dataset"
+    )
+    parser.add_argument(
+        "--vis_augm", action="store_true", default=False, help="Visualize the data augmentation"
+    )
+    parser.add_argument(
         "--model", action="store_true", default=False, help="Test the Skeleton32 model"
     )
     parser.add_argument(
@@ -94,7 +100,10 @@ def main():
         test_distribution_metrics()
     if args.visualizer:
         test_visualizer()
-
+    if args.vis_ais:
+        test_ais_data_loading()
+    if args.vis_augm:
+        test_data_augmentation()
 
 if __name__ == "__main__":
     main()

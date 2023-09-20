@@ -103,7 +103,6 @@ def parse_h36m_to_s26(seq: torch.Tensor, conversion_func: Optional[callable] = N
     return seq_repr
 
 def parse_ais3dposes_to_s16(seq: torch.Tensor, absolute: Optional[bool] = False) -> torch.Tensor:
-
     seq_repr = torch.FloatTensor(seq.shape[0],16,3)
     seq_repr[...,0,:] = seq[...,8,:]
     seq_repr[...,1,:] = seq[...,9,:]
@@ -112,19 +111,18 @@ def parse_ais3dposes_to_s16(seq: torch.Tensor, absolute: Optional[bool] = False)
     seq_repr[...,4,:] = seq[...,12,:]
     seq_repr[...,5,:] = seq[...,13,:]
     seq_repr[...,6,:] = seq[...,14,:]
-    seq_repr[...,7,:] = seq[...,8,:] + (seq[...,8,:] - seq[...,1,:])/2
+    seq_repr[...,7,:] = seq[...,8,:] + (seq[...,1,:]-seq[...,8,:])/2
     seq_repr[...,8,:] = seq[...,1,:]
-    seq_repr[...,9,:] = seq[...,18,:] + (seq[...,18,:] - seq[...,17,:])/2 + (seq[...,0,:] - seq[...,1,:])/2
+    seq_repr[...,9,:] = seq[...,18,:] + (seq[...,18,:] - seq[...,17,:])/2 
     seq_repr[...,10,:] = seq[...,5,:]
     seq_repr[...,11,:] = seq[...,6,:]
     seq_repr[...,12,:] = seq[...,7,:]
     seq_repr[...,13,:] = seq[...,2,:]
     seq_repr[...,14,:] = seq[...,3,:]
     seq_repr[...,15,:] = seq[...,4,:]
-
     if not absolute:
-        seq_repr -= seq_repr[...,0,:]
-    
+        seq_repr -= torch.repeat_interleave(seq_repr[...,0,:].unsqueeze(1), 16, dim=1)
+    seq_repr = seq_repr[...,[1,2,0]]
     return seq_repr
 
 

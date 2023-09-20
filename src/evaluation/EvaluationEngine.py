@@ -301,6 +301,12 @@ class EvaluationEngine:
             
         elif dataset == 'ais':
             self.h36m_evaluation = False
+            self.step_size = 33
+            if self.target_length is None:
+                if prediction_length is None:
+                    print_("Please provide either a prediction length or a target length for the Dataset", "error")
+                    return
+                self.target_length = np.ceil(prediction_length / self.step_size).astype(int)
             self.datasets = {}
             self.datasets['overall'] =  AISDataset(
                 seed_length=self.seed_length,
@@ -345,11 +351,11 @@ class EvaluationEngine:
                         self.evaluation_results[eval_type]['overall'][timestep][m_name] = []
         self.evaluation_finished = False
 
-    def print(self) -> None:
+    def print(self, file_name: str = None) -> None:
         """
         Print the evaluation results in a table to the console.
         """
-        return self._print_results()
+        return self._print_results(file_name)
 
     def log_results(self, step: int) -> None:
         """
@@ -409,21 +415,21 @@ class EvaluationEngine:
         model.eval()
         if self.h36m_evaluation:
             print_(f"Start evaluation on H3.6M dataset using actions: {self.actions}")
-            for action, dataset in self.datasets.items():
-                data_loader = torch.utils.data.DataLoader(
-                    dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
-                )
-                self.data_augmentor = data_augmentor
-                if self.normalize:
-                    self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
-                if self.distance_metric_active:
-                    self.evaluation_loop_distance(action, model, data_loader)
-                if self.long_predictions_active:
-                    self.evaluation_loop_distribution(action, model, data_loader)
+        else:
+            print_(f"Start evaluation on AIS dataset")
+        for action, dataset in self.datasets.items():
+            data_loader = torch.utils.data.DataLoader(
+                dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
+            )
+            self.data_augmentor = data_augmentor
+            if self.normalize:
+                self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
+            if self.distance_metric_active:
+                self.evaluation_loop_distance(action, model, data_loader)
+            if self.long_predictions_active:
+                self.evaluation_loop_distribution(action, model, data_loader)
             if self.split_actions:
                 self._compute_overall_means()
-        else:
-            return
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -449,7 +455,6 @@ class EvaluationEngine:
         for i in self.target_frames['distance_metric']:
             predictions[i] = []
             targets[i] = []
-
         for batch_idx, data in progress_bar:
             if batch_idx == self.num_iterations['distance_metric']:
                 break
@@ -561,26 +566,23 @@ class EvaluationEngine:
             self.evaluation_results['long_predictions'][action][timestep].update(eval_res)
             
     ###=== Visualization Functions ===###
-    def visualize(self, model: torch.nn.Module, num_visualizations: int = 1) -> None:
+    def visualize(self, model: torch.nn.Module, num_visualizations: int = 1, data_augmentor: DataAugmentor = None) -> None:
         model.eval()
         if self.h36m_evaluation:
-            print_(f"Start evaluation on H3.6M dataset using actions: {self.actions}")
-            for action, dataset in self.datasets.items():
-                data_loader = torch.utils.data.DataLoader(
-                    dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
-                )
-                self.data_augmentor = DataAugmentor(normalize=self.normalize)
-                if self.normalize:
-                    mean, var = dataset.get_mean_variance()
-                    self.data_augmentor.set_mean_var(mean.to(self.device), var.to(self.device))
-                if self.visualization_2d_active:
-                    self.visualization_2d_loop(model, action, num_visualizations, data_loader)
-                if self.visualization_3d_active:
-                    self.visualization_3d_loop(model, action, num_visualizations, data_loader)
-            if self.split_actions:
-                self._compute_overall_means()
+            print_(f"Start visualization on H3.6M dataset using actions: {self.actions}")
         else:
-            return
+            print_(f"Start visualization on the AIS dataset")
+        self.data_augmentor = data_augmentor
+        for action, dataset in self.datasets.items():
+            data_loader = torch.utils.data.DataLoader(
+                dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
+            )
+            if self.visualization_2d_active:
+                self.visualization_2d_loop(model, action, num_visualizations, data_loader)
+            if self.visualization_3d_active:
+                self.visualization_3d_loop(model, action, num_visualizations, data_loader)
+        if self.split_actions:
+            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -813,7 +815,7 @@ class EvaluationEngine:
                         metric_data
                     )
 
-    def _print_results(self) -> None:
+    def _print_results(self, file_name: str = None) -> None:
         """
         Print the results into the console using the PrettyTable library.
         """
@@ -822,9 +824,9 @@ class EvaluationEngine:
                 continue
             for a in self.evaluation_results[eval_type].keys():
                 if a == "overall":
-                    print_(f"Average over all actions:")
+                    print_(f"Average over all actions:", "info", file_name, "log")
                 else:
-                    print_(f"Evaluation results for action {a}:")
+                    print_(f"Evaluation results for action {a}:", "info", file_name, "log")
                 table = PrettyTable()
                 if eval_type == 'long_predictions':
                     table.field_names = ["Pred. length"] + list(self.distribution_metrics)
@@ -835,7 +837,7 @@ class EvaluationEngine:
                         [pred_length]
                         + list(self.evaluation_results[eval_type][a][pred_length].values())
                     )
-                print_(table)
+                print_(table, "info", file_name, "log")
     
     def _get_skeleton_model(self) -> dict:
         if self.skeleton_representation == "s26":
