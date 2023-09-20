@@ -12,7 +12,7 @@ from abc import abstractmethod
 
 from ..utils import get_conv_from_axis_angle
 from .data_loading import load_data_h36m, load_data_visionlab3DPoses
-from .skeleton_utils import parse_h36m_to_s26, h36m_forward_kinematics, convert_s26_to_s21, convert_s21_to_s16
+from .skeleton_utils import parse_h36m_to_s26, h36m_forward_kinematics, convert_s26_to_s21, convert_s21_to_s16, smooth_sequence
 from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT, H36M_DATASET_ACTIONS
 
 #####===== Helper Functions =====#####
@@ -229,7 +229,8 @@ class AISDataset(Dataset):
                  seed_length: int,
                  target_length: int,
                  sequence_spacing: int,
-                 absolute_position: Optional[bool] = False):
+                 absolute_position: Optional[bool] = False,
+                 smooth: Optional[bool] = True,):
         """
             Initialize the dataset.
 
@@ -243,6 +244,7 @@ class AISDataset(Dataset):
         self.target_length = target_length
         self.sequence_spacing = sequence_spacing
         self.absolute_position = absolute_position
+        self.smooth = smooth
         self.data = self._load_data()
         self.len = len(self.data)
 
@@ -257,9 +259,12 @@ class AISDataset(Dataset):
         full_data = []
         # Load the raw data
         raw_data = load_data_visionlab3DPoses(self.absolute_position)
+
         # Iterate through each sequence
         for fname, data in raw_data.items():
             max_ind = len(data)
+            if self.smooth:
+                data = smooth_sequence(data, 1.0)
             # Compute possible starting indices
             start_inds = np.arange(len(data))
             start_inds = start_inds[::self.sequence_spacing]

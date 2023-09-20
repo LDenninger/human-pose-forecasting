@@ -392,3 +392,15 @@ def _transform_representation(seq: torch.Tensor, conversion_func: Optional[calla
         seq = conversion_func(seq)
         seq = torch.reshape(seq,(seq.shape[0], 21, -1))
     return seq
+
+def smooth_sequence(seq: torch.Tensor, sigma: float = 1.0, num: int = 5) -> torch.Tensor:
+    """
+        Smooth a given sequence using an exponential moving average.
+    """
+    k = sigma / (num+1)
+    for i in range(seq.shape[0]):
+        if i == 0:
+            continue
+        seq[i] = seq[i]*k + (1-k)*seq[i-1]
+
+    return seq

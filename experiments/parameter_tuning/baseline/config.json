@@ -91,7 +91,9 @@
         "timestep_cutout_portion": [
             1,
             4
-        ]
+        ],
+        "gaussian_noise_prob": 0.0,
+        "gaussian_noise_std": 0.005
     }
 
 }
