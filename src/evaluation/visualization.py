@@ -33,10 +33,12 @@ def compare_sequences_plotly(
     sequences: List[torch.Tensor],
     time_steps_ms: List[List[int]],
     skeleton_structure: dict,
+    parent_ids: List[int],
     prediction_positions: List[int] = None,
     title_text: str = "",
     save_path: str = None,
     line_width: int = 4,
+    font_size: int = 24,
     colors: Tuple[str, str] = ("green", "blue"),
     show_joints: bool = False,
     size: int = 500,
@@ -47,11 +49,14 @@ def compare_sequences_plotly(
     @param sequence_names: List of sequence names - ['gt', 'pred']
     @param sequences: List of sequences - [gt_seq, pred_seq]
     @param prediction_positions: List of positions of where prediction starts in the sequence
+    @param skeleton_structure: Dictionary containing the skeleton structure
+    @param parent_ids: List of parent ids for each joint
     @param time_steps_ms: List of time steps in milliseconds for each sequence
     @param title_text: Title of the plot
     @param figsize: Size of the figure (width, height) in pixels
     @param save_path: Path to save the figure to
-    @param line_width: Width of the lines in the plot
+    @param line_width: Width of the lines in the plot (scaled with size of plot)
+    @param font_size: Font size of the text in the plot (scaled with size of plot)
     @param colors: Tuple of two colors of the lines in the plot. First one is the color the ground truth should have, second one is the color the prediction should have.
     @param show_joints: Whether to show the joints in the plot
     @param size: Size of the plot (roughly in pixels, gets multiplied by aspect (so 500 with two rows equates a 4000x1000 plot))
@@ -59,7 +64,6 @@ def compare_sequences_plotly(
     @return: Numpy array of the image
 
     """
-    import ipdb; ipdb.set_trace()
     # Make sure the number of sequence names, sequences and prediction positions are the same
     assert len(sequence_names) == len(sequences)
     if prediction_positions is not None:
@@ -69,9 +73,8 @@ def compare_sequences_plotly(
 
     max_sequence_length = max([sequence.shape[0] for sequence in sequences])
 
-
     # Calculate aspect ratio of the plot (0.215 came from trial and error)
-    aspect = (0.215 * max_sequence_length, len(sequences))
+    aspect = (0.215 * max_sequence_length,  len(sequences))
 
     # Round size up to the nearest multiple of 100
     figsize = (
@@ -79,16 +82,22 @@ def compare_sequences_plotly(
         math.ceil(aspect[1] * size / 100) * 100,
     )
 
+    # Make fontsize and linewidth scale with size
+    font_size = int(24 / 500 * size)
+    line_width = int(4 / 500 * size)
+
     # Flatten time_steps_ms if it is not None
     if time_steps_ms is not None:
         time_steps_ms = time_steps_ms
+    # Turn time_steps_ms into a list of strings
+    time_steps_ms = list(map(lambda x: str(x), time_steps_ms))
 
     # Create a figure with no gaps between subplots
     fig = make_subplots(
         rows=nrows,
         cols=ncols,
         specs=[[{"type": "scatter3d"} for i in range(ncols)] for j in range(nrows)],
-        vertical_spacing=0.1,
+        vertical_spacing=0,
         horizontal_spacing=0,
         subplot_titles=time_steps_ms,
     )
@@ -98,9 +107,8 @@ def compare_sequences_plotly(
 
     # Loop through the sequences and frames
     for i, (name, sequence) in enumerate(zip(sequence_names, sequences)):
-        prediction_position = (
-            prediction_positions[i] if prediction_positions else math.inf
-        )
+        prediction_position = math.inf if prediction_positions is None or len(prediction_positions) == 0 or prediction_positions[i] is None else prediction_positions[i]
+        
         for j in range(ncols):
             # Get joint positions from skeleton
             joint_positions = sequence[j]
@@ -117,6 +125,7 @@ def compare_sequences_plotly(
                 ),
                 joint_positions,
                 skeleton_structure,
+                parent_ids,
                 show_joints=show_joints,
             )
 
@@ -134,7 +143,7 @@ def compare_sequences_plotly(
             y=y_coord,
             text=name,
             showarrow=False,
-            font=dict(size=24),
+            font=dict(size=font_size),
             textangle=-90,  # Rotate text 90 degrees counter-clockwise
         )
 
@@ -144,7 +153,7 @@ def compare_sequences_plotly(
         showlegend=False,
         width=figsize[0],
         height=figsize[1],
-        margin=dict(l=100, r=0, b=0, t=100, pad=0),
+        margin=dict(l=100, r=150, b=0, t=100, pad=0),
     )
     # Remove axes and background and ticks
     fig.update_scenes(
@@ -156,6 +165,9 @@ def compare_sequences_plotly(
             aspectratio=dict(x=0.375, y=0.25, z=1.875),
         )
     )
+
+    # Update font size
+    fig.update_annotations(font_size=font_size)
 
     if save_path is not None:
         fig.write_image(save_path)

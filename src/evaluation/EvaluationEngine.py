@@ -12,6 +12,7 @@ from tqdm import tqdm
 import os
 from prettytable import PrettyTable
 from typing import Optional, Dict, Any, List, Union, Literal
+from PIL import Image
 
 from ..utils import print_, log_function, LOGGER
 from ..data_utils import (
@@ -29,6 +30,7 @@ from ..data_utils import (
     SkeletonModel32,
     h36m_forward_kinematics,
     DataAugmentor,
+    get_data_augmentor
 )
 from .metrics import (
     evaluate_distance_metrics,
@@ -37,6 +39,9 @@ from .metrics import (
     positional_mse,
     euler_angle_error,
     accuracy_under_curve,
+    ps_entropy,
+    ps_kld,
+    npss
 )
 
 from .visualization import(
@@ -50,6 +55,11 @@ METRICS_IMPLEMENTED = {
     "positional_mse": positional_mse,
     "euler_error": euler_angle_error,
     "auc": accuracy_under_curve,
+}
+DISTRIBUTION_METRICS_IMPLEMENTED = {
+    "ps_entropy": ps_entropy,
+    "ps_kld": ps_kld,
+    "npss": npss,
 }
 VISUALIZATION_IMPLEMENTED = {"3dpose": geodesic_distance}  # placeholder
 
@@ -132,7 +142,7 @@ class EvaluationEngine:
             print_(f"Goal prediction timesteps: {prediction_timesteps} not reachable using timesteps: {prediction_steps_real}","warn")
         self.target_frames['long_predictions'] = target_frames.tolist()
         self.prediction_timesteps['visualization_2d'] = prediction_steps_real
-        self.distribution_metrics = metric_names
+        self.distribution_metrics = metric_names if metric_names is not None else list(DISTRIBUTION_METRICS_IMPLEMENTED.keys())
         self.long_predictions_active = True
         for t in prediction_timesteps:
             self.evaluation_results['long_predictions'][t] = {}
@@ -220,6 +230,7 @@ class EvaluationEngine:
             skeleton_representation: Optional[Literal['s26','s21','s16']] = 's26',
             batch_size: Optional[int] = 32,
             normalize: Optional[bool] = False,
+            augmentation_config: Optional[dict] = None,
     ):
         """
             Load the evaluation data.
@@ -389,7 +400,7 @@ class EvaluationEngine:
 
     #####===== Evaluation Functions =====#####
     @log_function
-    def evaluate(self, model: torch.nn.Module):
+    def evaluate(self, model: torch.nn.Module, data_augmentor: Optional[DataAugmentor] = None) -> None:
         """
         Evaluate the provided model on the H3.6M dataset.
         For this the evaluation needs to be initialized.
@@ -402,7 +413,7 @@ class EvaluationEngine:
                 data_loader = torch.utils.data.DataLoader(
                     dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
                 )
-                self.data_augmentor = DataAugmentor(normalize=self.normalize)
+                self.data_augmentor = data_augmentor
                 if self.normalize:
                     self.data_augmentor.set_mean_var(self.norm_mean.to(self.device), self.norm_var.to(self.device))
                 if self.distance_metric_active:
@@ -445,7 +456,7 @@ class EvaluationEngine:
             # Load data
             data = data.to(self.device)
             # Set input for the model
-            cur_input = self.data_augmentor(data[:, : self.seed_length])
+            cur_input = self.data_augmentor(data[:, : self.seed_length], is_train=False)
             # Predict future frames in an auto-regressive manner
             for i in range(1,max(self.target_frames['distance_metric']) + 1):
                 # Compute the output
@@ -592,6 +603,7 @@ class EvaluationEngine:
         targets = []
 
         data = next(iter(data_loader))
+        # data = data.reshape([1, *data.shape])
         # Load data
         data = data.to(self.device)
         # Set input for the model
@@ -610,31 +622,71 @@ class EvaluationEngine:
                 else:
                     pred = output[:, -1].detach().cpu()
                 predictions.append(pred)
-                targets.append(data[:, self.seed_length + i].detach().cpu())
+                targets.append(data[:, self.seed_length + i - 1].detach().cpu())
             # Update model input for auto-regressive prediction
             cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
         # Create visualizations
         logger = LOGGER
+        
         predictions = torch.stack(predictions)  # [seq_len, batch_size, num_joints, joint_dim]
         predictions = torch.transpose(predictions, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
         # Get as many batches as specified in self.visualizations_per_batch
         targets = torch.stack(targets)  # [seq_len, batch_size, num_joints, joint_dim]
         targets = torch.transpose(targets, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
+        
+        # Add seed data in front of predictions and targets
+        # seed_data is of shape [batch_size, seq_len, num_joints, joint_dim]
+        # seed_data should be added in seq_len dimension in front of the rest of the data
+        seed_data = data[:, : self.seed_length]
+        
+        predictions = torch.cat((seed_data, predictions), 1)
+        targets = torch.cat((seed_data, targets), 1)
+
+        # Create millisecond timesteps backward for the seed data
+        seed_timesteps = [i * -40 for i in range(self.seed_length)]
+        seed_timesteps.reverse()
+        # Insert seed timestepsbefore the prediction timesteps
+        seed_timesteps.extend(self.prediction_timesteps['visualization_2d'])
+        # Add constant to each timestep to make them positive
+        seed_timesteps = [i + 40 * (self.seed_length -1) for i in seed_timesteps]
+        time_steps_ms = seed_timesteps
+
+        # Get joint positions from forward kinematics for visualization
+        if self.representation!= 'pos':
+            targets, _ = h36m_forward_kinematics(targets, self.representation)
+            targets /= 1000
+            predictions, _ = h36m_forward_kinematics(predictions, self.representation)
+            predictions /= 1000
+            seed_data, _ = h36m_forward_kinematics(seed_data, self.representation)
+            seed_data /= 1000
         # Get the skeleton model for the visualization
         skeleton_structure = self._get_skeleton_model()
+        # Get parents for drawing
+        parent_ids = self._get_skeleton_parents()
         # Create visualizations
         for i in range(num):
-            import ipdb; ipdb.set_trace()
-
             comparison_img = compare_sequences_plotly(
                 sequence_names=["ground truth", "prediction"],
                 sequences=[targets[i], predictions[i]],
-                time_steps_ms=self.prediction_timesteps['visualization_2d'],
-                skeleton_structure=skeleton_structure
+                time_steps_ms=time_steps_ms,
+                skeleton_structure=skeleton_structure,
+                parent_ids=parent_ids,
+                prediction_positions=[None, self.seed_length]
             )
             # Log comparison image
             if logger is not None:
                 logger.log_image(name=f"vis_{action}_i", image=comparison_img)
+            # Show image
+            save_dir = logger.get_path('visualization')
+            fname = f"h36m_{action}_{i}" if self.h36m_evaluation else f"ais_{i}"
+            save_to = os.path.join(save_dir, "sequences", fname + "_skeleton")
+            # Create save_to directory if it does not exist
+            if not os.path.exists(save_to):
+                os.makedirs(save_to)
+            # Store image in that directory
+            pil_image = Image.fromarray(comparison_img)
+            pil_image.save(os.path.join(save_to, f"sequence_{i:0>4}.png"))
+            # Image.fromarray(comparison_img).show()
     
     def visualization_3d_loop(
         self,

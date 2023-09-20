@@ -27,9 +27,10 @@ function setup() {
 }
 
 function sync_exp() {
-    machine="$1"
+    user="$1"
+    machine="$2"
     dest="$exp_path/$CURRENT_EXP/$CURRENT_RUN/checkpoints"
-    src="denninge@$machine.informatik.uni-bonn.de:~/human-pose-forecasting/experiments/$CURRENT_EXP/$CURRENT_RUN/checkpoints/*"
+    src="$user@$machine.informatik.uni-bonn.de:/home/user/denninge/human-pose-forecasting/experiments/$CURRENT_EXP/$CURRENT_RUN/checkpoints/*"
     scp -r "$src" "$dest"
 }
 

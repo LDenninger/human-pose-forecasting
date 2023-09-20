@@ -100,7 +100,7 @@ def main():
     parser.add_argument('-s', '--seed', type=int, default=None, help='Random seed')
     parser.add_argument('-d', '--dataset', type=str, default='h36m', help='Dataset to visualize')
     parser.add_argument('--vis2d', action='store_true', default=False, help='2D visualization')
-    parser.add_argument('--num', type=int, default=None, help='Number of sequences to visualize')
+    parser.add_argument('--num', type=int, default=1, help='Number of sequences to visualize')
     parser.add_argument("--vis3d", action='store_true', default=False, help='3D visualization')
     parser.add_argument('--length', type=int, default=None, help='Length of the sequence to be visualized')
     parser.add_argument('--interactive', action='store_true', default=False, help='Interactive visualization')
