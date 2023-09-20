@@ -2,7 +2,7 @@
     "training_scheme": "single_step",
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 50,
+    "num_epochs": 100,
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 10,
@@ -40,9 +40,10 @@
         "reduction": "mean"
     },
     "lr_scheduler": {
-        "type": "exponential",
-        "gamma": 0.95,
-        "warmup": 1000,
+        "type": "cosine",
+        "max_iterations": 100000,
+        "warmup": 2000,
+        "min_learning_rate": 0.0,
         "update_frequency": 1000,
         "base_lr": 3e-04
     },
@@ -57,6 +58,7 @@
     },
     "evaluation": {
         "metrics": ["positional_mse", "auc"],
+        "distribution_metrics": [],
         "frequency": 1,
         "exhaustive_evaluation": true,
         "timesteps": [80,120,160,200,240,280,320]
@@ -66,6 +68,7 @@
         "seed_length": 10,
         "target_length": 1,
         "downsampling_factor": 2,
+        "normalize_orientation": false,
         "spacing": 5,
         "training_size": 1000,
         "validation_size": 1000,
@@ -76,8 +79,23 @@
         "normalize": true,
         "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
+        "snp_noise_portion": [
+            0.05,
+            0.4
+        ],
         "joint_cutout_prob": 0.0,
-        "timestep_cutout_prob": 0.0   
+        "joint_cutout_portion": [
+            1,
+            4
+        ],
+        "timestep_cutout_prob": 0.0,
+        "timestep_cutout_portion": [
+            1,
+            4
+        ],
+        "gaussian_noise_prob": 0.0,
+        "gaussian_noise_std": 0.005
     }
+
 
 }
