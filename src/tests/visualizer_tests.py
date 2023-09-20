@@ -11,12 +11,13 @@ from ..data_utils import (
     H36M_SKELETON_STRUCTURE,
     H36M_SKELETON_PARENTS,
     H36M_NON_REDUNDANT_PARENT_IDS,
+    SH_SKELETON_PARENTS,
     baseline_forward_kinematics,
     convert_baseline_representation,
     expmap2rotmat,
     axis_angle_to_matrix,
     h36m_forward_kinematics,
-
+    normalize_sequence_orientation
 )
 from ..visualization import visualize_skeleton, compare_skeleton, animate_pose_matplotlib
 from ..evaluation import (
@@ -78,7 +79,8 @@ def test_baseline_visualization():
         target_length=target_length,
         down_sampling_factor=2,
         rot_representation = 'pos',
-        sequence_spacing=0,
+        stacked_hourglass=True,
+        sequence_spacing=100,
         return_label=False,
         raw_data=False,
         is_train=True,
@@ -86,17 +88,17 @@ def test_baseline_visualization():
 
     for seq in dataset:
 
-        seq = seq[...,[2,0,1]]
+        #seq = seq[...,[2,0,1]]
+        seq_orth = normalize_sequence_orientation(seq)
 
         animate_pose_matplotlib(
-                positions = (seq.numpy(), seq.numpy()),
+                positions = (seq_orth.numpy(), seq.numpy()),
                 colors = ('g', 'g'),
-                titles = ("test_1", "test_2"),
+                titles = ("norm", "gt"),
                 fig_title = "Visualization Test",
-                parents = list(H36M_NON_REDUNDANT_PARENT_IDS.values()),
+                parents = SH_SKELETON_PARENTS,
                 change_color_after_frame=(seed_length, None),
-                fname="test_1",
-                out_dir="debug",
+                show_axis=True,
                 color_after_change='r',
                 overlay=False,
                 fps=25,
