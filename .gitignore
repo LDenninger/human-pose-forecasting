@@ -23,6 +23,8 @@ wandb/*
 !kld.pt
 !test_ps.pt
 
+*eval_results*.json
+
 compare_sequences_plotly_*
 
 ~

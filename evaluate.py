@@ -3,11 +3,13 @@
 
     Author: Luis Denninger <l_denninger@uni-bonn.de>
 """
+import json
 
 import torch
 import argparse
 import os
 from typing import List
+from pathlib import Path as P
 
 from src import Session
 from src.utils import print_ 
@@ -88,6 +90,12 @@ def run_distribution_evaluation(experiment_name: str,
     # Save the evaluation results
     file_name = f'eval_results_distribution_{checkpoint_name}.txt'
     session.evaluation_engine.print(file_name)
+    # Save evaluation results as json file
+    json_file_name = P(f'eval_results_distribution_{checkpoint_name}.json')
+    save_path = session.logger.get_path('log') / json_file_name
+    with open(save_path, 'w') as f:
+        json.dump(session.evaluation_engine.evaluation_results['long_predictions'], f)
+
 
 
 #####===== Meta Information =====#####

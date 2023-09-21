@@ -166,10 +166,7 @@ class EvaluationEngine:
         self.prediction_timesteps['long_predictions'] = prediction_steps_real
         self.distribution_metrics = metric_names if metric_names is not None else list(DISTRIBUTION_METRICS_IMPLEMENTED.keys())
         self.long_predictions_active = True
-        for t in prediction_timesteps:
-            self.evaluation_results['long_predictions'][t] = {}
-            for m in metric_names:
-                self.evaluation_results['long_predictions'][t][m] = []
+
 
 
     def initialize_distance_evaluation(self,
@@ -177,7 +174,7 @@ class EvaluationEngine:
                                        metric_names: List[str],
                                        prediction_timesteps: List[int]):
         """
-            Initialize the evaluation for long predictions using distribution metrics
+            Initialize the evaluation for short predictions using distance metrics
 
             Arguments:
                 iterations (int): Number of iterations for the evaluation
@@ -394,6 +391,8 @@ class EvaluationEngine:
         data_dir = {}
         actions = self.actions + ["overall"] if self.split_actions else ['overall']
         for eval_type in self.evaluation_results.keys():
+            if eval_type == "long_predictions":
+                continue
             if len(self.evaluation_results[eval_type]) == 0:
                 continue
             for a in actions:
@@ -600,11 +599,8 @@ class EvaluationEngine:
         ent_per_seq_len = torch.mean(ent_per_seq_len, dim=0)
         # Draw plot of entropy per sequence length
         # Comparing it to the reference entropy
-        plt.plot(ent_per_seq_len, label='predicted')
-        entropies = [entropy for _ in range(len(ent_per_seq_len))]
-        plt.plot(entropies, label='reference')
-        plt.legend()
-        plt.show()
+        entropies = [entropy.item() for _ in range(len(ent_per_seq_len))]
+
 
         # Create 25 frame bins for each sequence in sequences_tensor
         # Calculate the power spectrum of each bin
@@ -625,58 +621,18 @@ class EvaluationEngine:
         klds = torch.mean(klds, dim=0)
         # Draw plot of kld per bin
         # Comparing it to the reference kld
-        plt.plot(klds, label='predicted')
-        klds_ref = [kld for _ in range(len(klds))]
-        plt.plot(klds_ref, label='reference')
-        plt.legend()
-        plt.show()
+        klds_ref = [kld.item() for _ in range(len(klds))]
 
-        
-
+        # Reset evaluation results of long predictions
+        self.evaluation_results['long_predictions'] = {}
+        self.evaluation_results['long_predictions'][action] = {}
+        # Add results to evaluation results
+        self.evaluation_results['long_predictions'][action]['entropy'] = ent_per_seq_len.tolist()
+        self.evaluation_results['long_predictions'][action]['entropy_baseline'] = entropies
+        self.evaluation_results['long_predictions'][action]['kld'] = klds.tolist()
+        self.evaluation_results['long_predictions'][action]['kld_baseline'] = klds_ref
         pass
 
-        # for batch_idx, data in progress_bar:
-        #     if batch_idx == self.num_iterations['long_predictions']:
-        #         break
-        #     # Load data
-        #     data = data.to(self.device)
-        #     # Set input for the model
-        #     cur_input = self.data_augmentor(data[:, : self.seed_length])
-        #     # Predict future frames in an auto-regressive manner
-        #     for i in range(1,max(self.target_frames['long_predictions']) + 1):
-        #         # Compute the output
-        #         output = model(cur_input)
-        #         # Check if we want to compute metrics for this timestep
-        #         if i in self.target_frames['long_predictions']:
-        #             # Compute the implemented metrics
-        #             if self.normalize:
-        #                 pred = self.data_augmentor.reverse_normalization(
-        #                     output[:, -1].detach().cpu()
-        #                 )
-        #             else:
-        #                 pred = output[:, -1].detach().cpu()
-        #             predictions[i].append(pred)
-        #             targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
-        #         # Update model input for auto-regressive prediction
-        #         cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze()], dim=1)
-        # # Compute the distance metrics for each timestep
-        # for i, frame in enumerate(self.target_frames['long_predictions']):
-        #     timestep = self.prediction_timesteps['long_predictions'][i]
-        #     timestep_prediction = torch.stack(predictions[frame])
-        #     timestep_target = torch.stack(targets[frame])
-        #     # Needs stacked tensor instead of flattened one
-        #     eval_res = evaluate_distribution_metrics(
-        #         timestep_prediction,
-        #         timestep_target,
-        #         reduction="mean",
-        #         metrics=self.distribution_metrics,
-        #     )
-        #     # If eval_res is of shape [1], extract the value
-        #     for key, val in eval_res.items():
-        #         if val.numel() == 1:
-        #             eval_res[key] = val.item()
-        #     self.evaluation_results['long_predictions'][action][timestep].update(eval_res)
-            
     ###=== Visualization Functions ===###
     def visualize(self, model: torch.nn.Module, num_visualizations: int = 1, data_augmentor: DataAugmentor = None) -> None:
         model.eval()
@@ -932,6 +888,8 @@ class EvaluationEngine:
         Print the results into the console using the PrettyTable library.
         """
         for eval_type in self.evaluation_results.keys():
+            if eval_type == 'long_predictions':
+                continue
             if len(self.evaluation_results[eval_type])==0:
                 continue
             for a in self.evaluation_results[eval_type].keys():
@@ -940,9 +898,7 @@ class EvaluationEngine:
                 else:
                     print_(f"Evaluation results for action {a}:", "info", file_name, "log")
                 table = PrettyTable()
-                if eval_type == 'long_predictions':
-                    table.field_names = ["Pred. length"] + list(self.distribution_metrics)
-                elif eval_type == 'distance_metric':
+                if eval_type == 'distance_metric':
                     table.field_names = ["Pred. length"] + list(self.distance_metrics)
                 for pred_length in self.evaluation_results[eval_type][a].keys():
                     table.add_row(
