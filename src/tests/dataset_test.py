@@ -44,7 +44,8 @@ def test_ais_data_loading():
         seed_length=10,
         target_length=10,
         sequence_spacing=5,
-        absolute_position=False
+        absolute_position=False,
+        smooth=True
     )
     import ipdb; ipdb.set_trace()
     for i, data in enumerate(dataset):

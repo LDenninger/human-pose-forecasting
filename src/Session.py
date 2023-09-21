@@ -200,9 +200,14 @@ class Session:
         """
             Load the training data.
         """
+        if "absolute" in self.config['joint_representation']:
+            absolute_position = self.config['joint_representation']['absolute']
+        else:
+            absolute_position = False
         dataset = getDataset(
             self.config['dataset'],
             joint_representation = self.config['joint_representation']['type'],
+            absolute_position= absolute_position,
             skeleton_model = self.config['skeleton']['type'],
             is_train=True,
             debug=self.debug
@@ -414,12 +419,17 @@ class Session:
                               dataset: Literal['h36m','ais'], 
                               split_actions: Optional[bool]=False, 
                               prediction_length: Optional[int]=None):
+        if "absolute" in self.config['joint_representation']:
+            absolute_position = self.config['joint_representation']['absolute']
+        else:
+            absolute_position = False
         self.evaluation_engine.load_data(
             dataset=dataset,
             seed_length = self.config['dataset']['seed_length'],
             prediction_length = prediction_length,
             down_sampling_factor=self.config['dataset']['downsampling_factor'],
             split_actions=split_actions,
+            absolute_positions=absolute_position,
             sequence_spacing=self.config['dataset']['spacing'],
             skeleton_representation = self.config['skeleton']['type'],
             normalize=self.config['data_augmentation']['normalize'],

@@ -92,7 +92,7 @@
             1,
             4
         ],
-        "gaussian_noise_prob": 0.5,
+        "gaussian_noise_prob": 0.0,
         "gaussian_noise_std": 0.005
     }
 

@@ -169,7 +169,7 @@ class DataAugmentor(nn.Module):
         batch_mask = torch.rand(bs, device=x.device) < self.gaussian_noise_prob
         # Compute the additive gaussian noise
         noise = self.gaussian_noise_std * torch.randn(size=x.shape, device=x.device)
-        noise = torch.where(batch_mask, noise, torch.zeros(x.shape[1:], device=x.device))
+        noise = torch.where(batch_mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1), noise, torch.zeros(x.shape, device=x.device))
         return x + noise
     
     def _reverse(self, x: torch.Tensor) -> torch.Tensor:

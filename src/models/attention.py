@@ -146,7 +146,7 @@ class TemporalAttention(AttentionBase):
         return out
 
     def set_mask(self) -> None:
-        self.mask = torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
+        self.mask = -torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
 
 class SpatialAttention(AttentionBase):
     def __init__(self,
@@ -237,4 +237,4 @@ class VanillaAttention(AttentionBase):
         return out
     
     def set_mask(self) -> None:
-        self.mask = torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
+        self.mask = -torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9

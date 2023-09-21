@@ -12,12 +12,14 @@ from abc import abstractmethod
 
 from ..utils import get_conv_from_axis_angle
 from .data_loading import load_data_h36m, load_data_visionlab3DPoses
-from .skeleton_utils import parse_h36m_to_s26, h36m_forward_kinematics, convert_s26_to_s21, convert_s21_to_s16
+from .skeleton_utils import parse_h36m_to_s26, h36m_forward_kinematics, convert_s26_to_s21, convert_s21_to_s16, smooth_sequence, normalize_sequence_orientation
 from .meta_info import H36M_TRAIN_SUBJECTS, H36M_TEST_SUBJECTS, H36M_DEBUG_SPLIT, H36M_DATASET_ACTIONS
 
 #####===== Helper Functions =====#####
 
-def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_train: Optional[bool] =True, debug: Optional[bool] = False, **kwargs) -> torch.utils.data.Dataset:
+def getDataset(config: dict, joint_representation: str,
+                skeleton_model: str, is_train: Optional[bool] =True, 
+                    debug: Optional[bool] = False, absolute_position: Optional[bool] =False, **kwargs) -> torch.utils.data.Dataset:
     """
         Load a dataset using a run config.
 
@@ -33,6 +35,8 @@ def getDataset(config: dict, joint_representation: str, skeleton_model: str, is_
             stacked_hourglass= True if skeleton_model=='s16' else False,
             reverse_prob=config['reverse_prob'],
             target_length=config["target_length"],
+            absolute_position=absolute_position,
+            normalize_orientation=config["normalize_orientation"],
             down_sampling_factor=config["downsampling_factor"],
             sequence_spacing=config["spacing"],
             is_train=is_train,
@@ -152,6 +156,7 @@ class H36MDataset(H36MDatasetBase):
                     rot_representation: Optional[Literal['axis', 'mat', 'quat', '6d', 'pos']] = 'axis',
                     stacked_hourglass: Optional[bool] = False,
                     absolute_position: Optional[bool] = False,
+                    normalize_orientation: Optional[bool] = False,
                     return_label: Optional[bool] = False,
                     is_train: Optional[bool]=True,
                     raw_data: Optional[bool] = False,
@@ -200,6 +205,8 @@ class H36MDataset(H36MDatasetBase):
                 self.data = convert_s26_to_s21(self.data)
                 if stacked_hourglass:
                     self.data = convert_s21_to_s16(self.data)
+                    if normalize_orientation:
+                        self.data = normalize_sequence_orientation(self.data)
                 self.data /= 1000
             
         self.full_length = len(self.data)
@@ -229,7 +236,8 @@ class AISDataset(Dataset):
                  seed_length: int,
                  target_length: int,
                  sequence_spacing: int,
-                 absolute_position: Optional[bool] = False):
+                 absolute_position: Optional[bool] = False,
+                 smooth: Optional[bool] = True,):
         """
             Initialize the dataset.
 
@@ -243,6 +251,7 @@ class AISDataset(Dataset):
         self.target_length = target_length
         self.sequence_spacing = sequence_spacing
         self.absolute_position = absolute_position
+        self.smooth = smooth
         self.data = self._load_data()
         self.len = len(self.data)
 
@@ -257,9 +266,12 @@ class AISDataset(Dataset):
         full_data = []
         # Load the raw data
         raw_data = load_data_visionlab3DPoses(self.absolute_position)
+
         # Iterate through each sequence
         for fname, data in raw_data.items():
             max_ind = len(data)
+            if self.smooth:
+                data = smooth_sequence(data, 1.0)
             # Compute possible starting indices
             start_inds = np.arange(len(data))
             start_inds = start_inds[::self.sequence_spacing]

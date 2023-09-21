@@ -1,6 +1,6 @@
 {
     "training_scheme": "auto_regressive",
-    "random_seed": 42,
+    "random_seed": 34,
     "batch_size": 32,
     "num_epochs": 100,
     "num_train_iterations": 1000,
@@ -36,7 +36,7 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "geodesic",
+        "type": "position_mse",
         "reduction": "mean"
     },
     "lr_scheduler": {
@@ -48,16 +48,16 @@
         "base_lr": 3e-04
     },
     "skeleton": {
-        "type": "s26",
-        "num_joints": 26
+        "type": "s16",
+        "num_joints": 16
     },
     "joint_representation": {
-        "type": "6d",
-        "absolute": true,
-        "joint_dim": 6
+        "type": "pos",
+        "absolute": false,
+        "joint_dim": 3
     },
     "evaluation": {
-        "metrics": ["geodesic_distance", "positional_mse", "euler_error", "auc"],
+        "metrics": ["positional_mse", "auc"],
         "distribution_metrics": [],
         "frequency": 1,
         "exhaustive_evaluation": true,
@@ -68,15 +68,15 @@
         "seed_length": 10,
         "target_length": 10,
         "downsampling_factor": 2,
+        "normalize_orientation": true,
         "spacing": 5,
-        "normalize_orientation": false,
         "training_size": 1000,
         "validation_size": 1000,
         "test_size": 1000,
         "reverse_prob": 0.5
     },
     "data_augmentation": {
-        "normalize": false,
+        "normalize": true,
         "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
         "snp_noise_portion": [
@@ -96,6 +96,5 @@
         "gaussian_noise_prob": 0.0,
         "gaussian_noise_std": 0.005
     }
-
 
 }
