@@ -21,6 +21,7 @@ wandb/*
 !var.pt
 !entropy.pt
 !kld.pt
+!test_ps.pt
 
 compare_sequences_plotly_*
 

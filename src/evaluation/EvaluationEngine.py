@@ -13,6 +13,7 @@ import os
 from prettytable import PrettyTable
 from typing import Optional, Dict, Any, List, Union, Literal
 from PIL import Image
+from matplotlib import pyplot as plt
 
 from ..utils import print_, log_function, LOGGER
 from ..data_utils import (
@@ -39,6 +40,7 @@ from .metrics import (
     positional_mse,
     euler_angle_error,
     accuracy_under_curve,
+    power_spectrum,
     ps_entropy,
     ps_kld,
     npss
@@ -125,7 +127,10 @@ class EvaluationEngine:
     def initialize_long_prediction_evaluation(self,
                                            iterations: int,
                                            metric_names: List[str],
-                                           prediction_timesteps: List[int]):
+                                           skeleton_model: str,
+                                           prediction_timesteps: List[int],
+                                           distr_pred_sec: int = 15,
+                                           ):
         """
             Initialize the evaluation for long predictions using distribution metrics
 
@@ -134,14 +139,31 @@ class EvaluationEngine:
                 metric_names (List[str]): List of the metrics to compute
                 prediction_timesteps (List[int]): List of the prediction timesteps to compute the metrics for
         """
+        # Load distribution metrics of dataset
+        self.skeleton_model = skeleton_model
+        try:
+            entropy = torch.load(f'configurations/distribution_values/entropy_{self.skeleton_model}.pt')
+            kld = torch.load(f'configurations/distribution_values/kld_{self.skeleton_model}.pt')
+            test_ps = torch.load(f'configurations/distribution_values/test_ps_{self.skeleton_model}.pt')
+        except IOError as e:
+            print_(f"Could not load distribution metrics from disk: {e}", "error")
+            return
+        # Store them in dictionary
+        self.distribution_values = {
+            'entropy': entropy,
+            'kld': kld,
+            'test_ps': test_ps
+        }
         self.num_iterations['long_predictions'] = iterations
-        self.prediction_timesteps['long_predictions'] = prediction_timesteps
+        self.distr_pred_sec = distr_pred_sec
+        self.prediction_timesteps['long_predictions'] = [40 * i for i in range(1, self.distr_pred_sec * 25 + 1)]
+        prediction_timesteps = self.prediction_timesteps['long_predictions']
         target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
         prediction_steps_real = (target_frames * self.step_size).tolist()
         if prediction_steps_real != prediction_timesteps:
             print_(f"Goal prediction timesteps: {prediction_timesteps} not reachable using timesteps: {prediction_steps_real}","warn")
         self.target_frames['long_predictions'] = target_frames.tolist()
-        self.prediction_timesteps['visualization_2d'] = prediction_steps_real
+        self.prediction_timesteps['long_predictions'] = prediction_steps_real
         self.distribution_metrics = metric_names if metric_names is not None else list(DISTRIBUTION_METRICS_IMPLEMENTED.keys())
         self.long_predictions_active = True
         for t in prediction_timesteps:
@@ -507,30 +529,36 @@ class EvaluationEngine:
         data_loader: torch.utils.data.DataLoader) -> None:
         """
         A single evaluation loop for an action.
+
+        TODO: 
+                - Calculate entropy for each predicted frame wrt the frames predicted beforehand.
+                - Create 1-second bins from the entire predicted sequence and calculate the 
+                  symmetric KL-divergence between the bins and randomly sampled 1-second sequences 
+                  from the test dataset.
         """
 
         model.eval()
         # Initialize progress bar
         dataset = self.datasets[action]
-        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
+        data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
         progress_bar = tqdm(enumerate(data_loader), total=self.num_iterations['long_predictions'])
         progress_bar.set_description(f"Evaluation {action}")
+        
+        # Get distribution values of the dataset which are loaded from disk by the Session class
+        entropy = self.distribution_values['entropy']
+        kld = self.distribution_values['kld']
+        test_ps = self.distribution_values['test_ps']
 
-        predictions = {}
-        targets = {}
-        for i in self.target_frames['long_predictions']:
-            predictions[i] = []
-            targets[i] = []
-
-        for batch_idx, data in progress_bar:
+        sequences =  [[] for _ in range(self.num_iterations['long_predictions'])]
+        for j, (batch_idx, data) in enumerate(progress_bar):
             if batch_idx == self.num_iterations['long_predictions']:
                 break
             # Load data
             data = data.to(self.device)
             # Set input for the model
-            cur_input = self.data_augmentor(data[:, : self.seed_length])
+            cur_input = self.data_augmentor(data[:, : self.seed_length], is_train=False)
             # Predict future frames in an auto-regressive manner
-            for i in range(1,max(self.target_frames['long_predictions']) + 1):
+            for i in tqdm(range(1,max(self.target_frames['long_predictions']) + 1), total=max(self.target_frames['long_predictions'])):
                 # Compute the output
                 output = model(cur_input)
                 # Check if we want to compute metrics for this timestep
@@ -542,28 +570,110 @@ class EvaluationEngine:
                         )
                     else:
                         pred = output[:, -1].detach().cpu()
-                    predictions[i].append(pred)
-                    targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
+                    # Change representation to joint position if needed
+                    # This is because the reference entropy on the dataset is also calculated using joint positions
+                    if self.representation != 'pos':
+                        pred, _ = h36m_forward_kinematics(pred, self.representation)
+                    # Add predicted frame to predicted_frames
+                    sequences[j].append(pred.squeeze())
+                    
                 # Update model input for auto-regressive prediction
                 cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+        # Compute distribution metrics
+        sequences_tensor = torch.stack([torch.stack(sequence) for sequence in sequences])
+        ent_per_seq_len = []
+        # Compute entropy
+        for j in range(sequences_tensor.shape[0]):
+            cur_sequence = sequences_tensor[j]
+            cur_ent = []
+            for i in range(1, sequences_tensor.shape[1] + 1):
+                # Calculate the power spectrum of the predicted sequences
+                ps = power_spectrum(cur_sequence[:i].unsqueeze(0))
+                # Calculate the entropy of the predicted sequences
+                entropy_pred = ps_entropy(ps)
+                cur_ent.append(torch.mean(entropy_pred))
+            ent_per_seq_len.append(torch.stack(cur_ent))
+        ent_per_seq_len = torch.stack(ent_per_seq_len)
+        # Get mean over all sequences
+        ent_per_seq_len = torch.mean(ent_per_seq_len, dim=0)
+        # Draw plot of entropy per sequence length
+        # Comparing it to the reference entropy
+        plt.plot(ent_per_seq_len, label='predicted')
+        entropies = [entropy for _ in range(len(ent_per_seq_len))]
+        plt.plot(entropies, label='reference')
+        plt.legend()
+        plt.show()
 
-        # Compute the distance metrics for each timestep
-        for i, frame in enumerate(self.target_frames['long_predictions']):
-            timestep = self.prediction_timesteps['long_predictions'][i]
-            timestep_prediction = torch.stack(predictions[frame])
-            timestep_target = torch.stack(targets[frame])
-            # Needs stacked tensor instead of flattened one
-            eval_res = evaluate_distribution_metrics(
-                timestep_prediction,
-                timestep_target,
-                reduction="mean",
-                metrics=self.distribution_metrics,
-            )
-            # If eval_res is of shape [1], extract the value
-            for key, val in eval_res.items():
-                if val.numel() == 1:
-                    eval_res[key] = val.item()
-            self.evaluation_results['long_predictions'][action][timestep].update(eval_res)
+        # Create 25 frame bins for each sequence in sequences_tensor
+        # Calculate the power spectrum of each bin
+        # Calculate the KL-divergence between the bins and the test dataset
+        bins = [[sequences_tensor[i, j*25:j*25+25] for j in range(int(sequences_tensor.shape[1] / 25))] for i in range(sequences_tensor.shape[0])]
+        klds = []
+        for i in range(len(bins)):
+            cur_klds = []
+            for j in range(len(bins[i])):
+                # Calculate the power spectrum of the predicted sequences
+                ps = power_spectrum(bins[i][j].unsqueeze(0))
+                # Calculate the KL-divergence between the bins and the test dataset
+                cur_klds.append(torch.mean(ps_kld(ps, test_ps)))
+
+            klds.append((torch.stack(cur_klds)))
+        klds = torch.stack(klds)
+        # Get mean over all sequences
+        klds = torch.mean(klds, dim=0)
+        # Draw plot of kld per bin
+        # Comparing it to the reference kld
+        plt.plot(klds, label='predicted')
+        klds_ref = [kld for _ in range(len(klds))]
+        plt.plot(klds_ref, label='reference')
+        plt.legend()
+        plt.show()
+
+        
+
+        pass
+
+        # for batch_idx, data in progress_bar:
+        #     if batch_idx == self.num_iterations['long_predictions']:
+        #         break
+        #     # Load data
+        #     data = data.to(self.device)
+        #     # Set input for the model
+        #     cur_input = self.data_augmentor(data[:, : self.seed_length])
+        #     # Predict future frames in an auto-regressive manner
+        #     for i in range(1,max(self.target_frames['long_predictions']) + 1):
+        #         # Compute the output
+        #         output = model(cur_input)
+        #         # Check if we want to compute metrics for this timestep
+        #         if i in self.target_frames['long_predictions']:
+        #             # Compute the implemented metrics
+        #             if self.normalize:
+        #                 pred = self.data_augmentor.reverse_normalization(
+        #                     output[:, -1].detach().cpu()
+        #                 )
+        #             else:
+        #                 pred = output[:, -1].detach().cpu()
+        #             predictions[i].append(pred)
+        #             targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
+        #         # Update model input for auto-regressive prediction
+        #         cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze()], dim=1)
+        # # Compute the distance metrics for each timestep
+        # for i, frame in enumerate(self.target_frames['long_predictions']):
+        #     timestep = self.prediction_timesteps['long_predictions'][i]
+        #     timestep_prediction = torch.stack(predictions[frame])
+        #     timestep_target = torch.stack(targets[frame])
+        #     # Needs stacked tensor instead of flattened one
+        #     eval_res = evaluate_distribution_metrics(
+        #         timestep_prediction,
+        #         timestep_target,
+        #         reduction="mean",
+        #         metrics=self.distribution_metrics,
+        #     )
+        #     # If eval_res is of shape [1], extract the value
+        #     for key, val in eval_res.items():
+        #         if val.numel() == 1:
+        #             eval_res[key] = val.item()
+        #     self.evaluation_results['long_predictions'][action][timestep].update(eval_res)
             
     ###=== Visualization Functions ===###
     def visualize(self, model: torch.nn.Module, num_visualizations: int = 1, data_augmentor: DataAugmentor = None) -> None:

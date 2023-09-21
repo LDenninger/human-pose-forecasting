@@ -58,7 +58,8 @@ def run_distribution_evaluation(experiment_name: str,
                                iterations: int = None,
                                 debug: bool = False,
                                  dataset: str = 'h36m',
-                                  split_actions: bool = False):
+                                  split_actions: bool = False,
+                                    distr_pred_sec: int = 15):
     num_threads = 0 if debug else 4
     # Initialize the evaluator
     session = Session(experiment_name, run_name, log_process_external=False, num_threads=num_threads, debug=debug)
@@ -75,7 +76,8 @@ def run_distribution_evaluation(experiment_name: str,
                                     distribution_metrics=DISTRIBUTION_METRICS,
                                     split_actions=split_actions,
                                     prediction_timesteps=DISTRIBUTION_PREDICTION_TIMESTEPS,
-                                    dataset = dataset
+                                    dataset = dataset,
+                                    distr_pred_sec = distr_pred_sec
                                   )
     if debug:
         session.num_iterations = 10
@@ -131,7 +133,8 @@ def main():
     parser.add_argument('--split_actions', action='store_true', default=False, help='Split the actions')
     # Use untrained model for debugging purposes
     parser.add_argument('--untrained', action='store_true', default=False, help='Use untrained model')
-
+    parser.add_argument('--distr_pred_sec', type=int, default=15, help='Number of seconds to predict for the distribution evaluation')
+    parser.add_argument('--distr_iterations', type=int, default=3, help='Number of iterations to run the distribution evaluation for')
 
     args = parser.parse_args()
     # Run an evaluation using the queued runs from above
@@ -161,10 +164,11 @@ def main():
                         experiment_name=exp_name,
                         run_name=run_name,
                         checkpoint_name=args.checkpoint,
-                        iterations=args.iterations,
+                        iterations=args.distr_iterations,
                         debug=args.debug,
                         dataset="h36m" if not args.ais else 'ais',
-                        split_actions=args.split_actions
+                        split_actions=args.split_actions,
+                        distr_pred_sec=args.distr_pred_sec
                     )
     # Run a single evaluation for the run defined by the environment or passed as arguments
     else:
@@ -202,10 +206,11 @@ def main():
                 experiment_name=exp_name,
                 run_name=run_name,
                 checkpoint_name=args.checkpoint,
-                iterations=args.iterations,
+                iterations=args.distr_iterations,
                 debug=args.debug,
                 dataset="h36m" if not args.ais else 'ais',
-                split_actions=args.split_actions
+                split_actions=args.split_actions,
+                distr_pred_sec=args.distr_pred_sec
             )
 
 if __name__ == '__main__':
