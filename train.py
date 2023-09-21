@@ -9,7 +9,7 @@ import argparse
 import os
 
 from src import Session
-from src.utils import print_
+from src.utils import print_, Logger
 
 #####===== Training Functions =====#####
 # Functions to initialize a session and run a training.
@@ -46,8 +46,8 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
 QUEUED = True # Activate the usage of the training queue
-EXPERIMENT_NAMES = ['augmentation_study']*3
-RUN_NAMES = ['joint_cutout', 'snp_noise', 'timestep_cutout']
+EXPERIMENT_NAMES = ['representation_study']*7
+RUN_NAMES = ['6d_abs_1', '6d_geo_1', 'baseline_1', 'baseline_geo_1', 'position_abs_1', 'quat_abs_1', 'quat_geo_1']
 
 #####===== Meta Information =====#####
 TRAINING_FUNCTIONS = {
@@ -93,7 +93,13 @@ def main():
             for i in range(len(EXPERIMENT_NAMES)):
                 exp_name = EXPERIMENT_NAMES[i]
                 run_name = RUN_NAMES[i]
-                run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
+                try:
+                    run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
+                except Exception as e:
+                    print_('Training crashed!')
+                    print_(f'Error: {e}')
+                    logger = Logger
+                    logger.finish_logging()
     # Run a single training for the run defined by the environment or passed as arguments
     else:
         if args.experiment is None:
@@ -114,8 +120,13 @@ def main():
                 run_name = os.environ['CURRENT_RUN']
         else:
             run_name = args.run
-        
-        run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
+        try:
+            run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
+        except Exception as e:
+            print_('Training crashed!')
+            print_(f'Error: {e}')
+            logger = Logger
+            logger.finish_logging()
 
 if __name__ == '__main__':
     main()

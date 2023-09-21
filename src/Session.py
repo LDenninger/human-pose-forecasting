@@ -42,6 +42,7 @@ class Session:
         # Load mean and var of data
         self.norm_mean = torch.load(f'configurations/mean.pt')
         self.norm_var = torch.load(f'configurations/var.pt')
+        
 
         self.metric_tracker = MetricTracker()
         # Load the config for the run
@@ -109,7 +110,8 @@ class Session:
                               distribution_metrics: List[str] = None,
                               split_actions: Optional[bool]=False,
                               prediction_timesteps: Optional[List[int]] = None,
-                              dataset: Literal['h36m','ais'] = 'h36m') -> bool:
+                              dataset: Literal['h36m','ais'] = 'h36m',
+                              distr_pred_sec: int = 15) -> bool:
         """
             Initialize the evaluation procedure and load the corresponding data
         """
@@ -133,6 +135,8 @@ class Session:
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
                 prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['distribution_metrics'] if distribution_metrics is None else distribution_metrics,
+                distr_pred_sec=distr_pred_sec,
+                skeleton_model=self.config['skeleton']['type']
             )
             self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
