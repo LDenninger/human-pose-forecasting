@@ -346,8 +346,10 @@ class Session:
         self.model.train()
         progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
         for batch_idx, data in progress_bar:
+            nan_encountered = False
             if batch_idx==self.num_iterations:
                 break
+                
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
             seed_data = self.data_augmentor(seed_data)
@@ -360,9 +362,14 @@ class Session:
             cur_input = seed_data
             for i in range(self.config['dataset']['target_length']):
                 output = self.model(cur_input)
+                if torch.isnan(output).any():
+                    nan_encountered = True
+                    break
                 predictions.append(output[...,-1,:,:])
                 cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
-            
+            if nan_encountered:
+                print_('NaN encounter in model output', 'warn')
+                continue
             predictions = torch.stack(predictions)
             predictions = torch.transpose(predictions, 0,1)
 
@@ -370,6 +377,9 @@ class Session:
             #    output = self.data_augmentor.reverse_normalization(output)
             # Compute loss using the target data
             loss = self.loss(predictions, target_data)
+            if torch.isnan(loss).any():
+                print_('NaN encounter in loss', 'warn')
+                continue
             # Backward pass through the network
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
@@ -433,6 +443,7 @@ class Session:
             sequence_spacing=self.config['dataset']['spacing'],
             skeleton_representation = self.config['skeleton']['type'],
             normalize=self.config['data_augmentation']['normalize'],
-            representation= self.config['joint_representation']['type']
+            representation= self.config['joint_representation']['type'],
+            normalize_orientation=self.config['dataset']['normalize_orientation'],
 
         )

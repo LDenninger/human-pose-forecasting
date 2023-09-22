@@ -249,7 +249,7 @@ class EvaluationEngine:
             skeleton_representation: Optional[Literal['s26','s21','s16']] = 's26',
             batch_size: Optional[int] = 32,
             normalize: Optional[bool] = False,
-            augmentation_config: Optional[dict] = None,
+            normalize_orientation: Optional[bool] = False,
     ):
         """
             Load the evaluation data.
@@ -301,6 +301,7 @@ class EvaluationEngine:
                         target_length=self.target_length,
                         sequence_spacing=sequence_spacing,
                         absolute_position=absolute_positions,
+                        normalize_orientation=normalize_orientation,
                         down_sampling_factor=self.down_sampling_factor,
                         stacked_hourglass=True if skeleton_representation == 's16' else False,
                         rot_representation=representation,
@@ -314,6 +315,7 @@ class EvaluationEngine:
                         target_length=self.target_length,
                         sequence_spacing=sequence_spacing,
                         absolute_position=absolute_positions,
+                        normalize_orientation=normalize_orientation,
                         down_sampling_factor=self.down_sampling_factor,
                         stacked_hourglass=True if skeleton_representation == 's16' else False,
                         rot_representation=representation,
@@ -333,6 +335,7 @@ class EvaluationEngine:
                 seed_length=self.seed_length,
                 target_length=self.target_length,
                 sequence_spacing=sequence_spacing,
+                normalize_orientation=normalize_orientation,
                 absolute_position=absolute_positions
             )
 
@@ -821,7 +824,7 @@ class EvaluationEngine:
 
         parent_ids = self._get_skeleton_parents()
         logger = LOGGER
-        adjust_dim = [2,0,1]
+        adjust_dim = [0,1,2]
         seed_data = seed_data[...,adjust_dim]
 
         for i in range(num):
