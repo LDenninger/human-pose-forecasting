@@ -94,7 +94,6 @@ class STDWeightedPositionMSE(LossBase):
         self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
     
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        import ipdb; ipdb.set_trace()
         # Compute the MSE loss per-joint
         loss = F.mse_loss(output, target, reduction='none')
         loss = torch.sum(loss, dim=-1) 
