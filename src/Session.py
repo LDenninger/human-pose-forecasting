@@ -55,6 +55,7 @@ class Session:
                 project_name='HumanPoseForecasting',
                 config=self.config
             )
+        self.variable_window = self.config['variable_window'] if 'variable_window' in self.config.keys() else False
         # Modules
         self.model = None
         self.evaluation_engine = EvaluationEngine(device=self.device)
@@ -127,6 +128,7 @@ class Session:
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
                 prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['metrics'] if distance_metrics is None else distance_metrics,
+                variable_window=self.variable_window
             )
             self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for joint distances with {self.evaluation_engine.num_iterations['distance_metric']}")
@@ -136,7 +138,8 @@ class Session:
                 prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['distribution_metrics'] if distribution_metrics is None else distribution_metrics,
                 distr_pred_sec=distr_pred_sec,
-                skeleton_model=self.config['skeleton']['type']
+                skeleton_model=self.config['skeleton']['type'],
+                variable_window=self.variable_window
             )
             self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
@@ -159,14 +162,16 @@ class Session:
         
         if '2d' in visualization_type:
             self.evaluation_engine.initialize_visualization_2d(
-                prediction_timesteps=prediction_timesteps
+                prediction_timesteps=prediction_timesteps,
+                variable_window=self.variable_window
             )
             self.visualize_model = True
         if '3d' in visualization_type:
             self.evaluation_engine.initialize_visualization_3d(
                 max_length=prediction_timesteps[-1],
                 interactive=interactive,
-                overlay=overlay_visualization
+                overlay=overlay_visualization,
+                variable_window=self.variable_window
             )
             self.visualize_model = True
 
@@ -366,7 +371,10 @@ class Session:
                     nan_encountered = True
                     break
                 predictions.append(output[...,-1,:,:])
-                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                if self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                else:
+                    cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
             if nan_encountered:
                 print_('NaN encounter in model output', 'warn')
                 continue

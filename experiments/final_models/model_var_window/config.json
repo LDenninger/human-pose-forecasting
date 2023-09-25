@@ -1,9 +1,8 @@
 {
     "training_scheme": "auto_regressive",
-    "variable_window": true,
     "random_seed": 34,
     "batch_size": 32,
-    "num_epochs": 120,
+    "num_epochs": 100,
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 10,
@@ -42,7 +41,7 @@
     },
     "lr_scheduler": {
         "type": "cosine",
-        "max_iterations": 120000,
+        "max_iterations": 100000,
         "warmup": 2000,
         "min_learning_rate": 0.0,
         "update_frequency": 1000,
@@ -54,7 +53,7 @@
     },
     "joint_representation": {
         "type": "pos",
-        "absolute": true,
+        "absolute": false,
         "joint_dim": 3
     },
     "evaluation": {
@@ -69,7 +68,7 @@
         "seed_length": 10,
         "target_length": 10,
         "downsampling_factor": 2,
-        "normalize_orientation": false,
+        "normalize_orientation": true,
         "spacing": 5,
         "training_size": 1000,
         "validation_size": 1000,
