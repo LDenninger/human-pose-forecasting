@@ -512,7 +512,7 @@ class EvaluationEngine:
                     predictions[i].append(pred)
                     targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
                 # Update model input for auto-regressive prediction
-                if self.variable_windows:
+                if self.variable_window:
                     cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
                 else:
                     cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
@@ -594,7 +594,7 @@ class EvaluationEngine:
                     sequences[j].append(pred.squeeze())
                     
                 # Update model input for auto-regressive prediction
-                if self.variable_windows:
+                if self.variable_window:
                     cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
                 else:
                     cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
@@ -712,7 +712,7 @@ class EvaluationEngine:
                 predictions.append(pred)
                 targets.append(data[:, self.seed_length + i - 1].detach().cpu())
             # Update model input for auto-regressive prediction
-            if self.variable_windows:
+            if self.variable_window:
                     cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
             else:
                 cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
@@ -824,7 +824,7 @@ class EvaluationEngine:
             predictions.append(pred)
             targets.append(data[:, self.seed_length + i].detach().cpu())
             # Update model input for auto-regressive prediction
-            if self.variable_windows:
+            if self.variable_window:
                     cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
             else:
                 cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
