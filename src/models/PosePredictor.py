@@ -27,7 +27,8 @@ def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
             num_blocks=config['model']['num_blocks'],
             emb_dim=config['model']['embedding_dim'],
             joint_dim=config['joint_representation']['joint_dim'],
-            input_dropout=config['model']['input_dropout']
+            input_dropout=config['model']['input_dropout'],
+            variable_window=config['variable_window'] if 'variable_window' in config.keys() else False
         ).to(device)
         return model
     else:
@@ -51,6 +52,7 @@ class PosePredictor(nn.Module):
                            joint_dim: int,
                             input_dropout: float = 0.0,
                              incl_abs_position: Optional[bool] = False,
+                              variable_window: Optional[bool] = False
 
                     ) -> None:
         
@@ -78,6 +80,7 @@ class PosePredictor(nn.Module):
         self.num_blocks = num_blocks
         self.emb_dim = emb_dim
         self.joint_dim = joint_dim
+        self.variable_window = variable_window
         self.incl_abs_position = incl_abs_position
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -138,7 +141,7 @@ class PosePredictor(nn.Module):
         if config["type"] =='sin':
             return PositionalEncodingSinusoidal(
                         dim_hidden = emb_dim,
-                        n_position = 100
+                        n_position = 1000 if self.variable_window else seq_len
             )
         else:
             raise NotImplementedError(f'Positional encoding type not implemented: {type}')
