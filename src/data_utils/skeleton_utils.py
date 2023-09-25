@@ -122,7 +122,7 @@ def parse_ais3dposes_to_s16(seq: torch.Tensor, absolute: Optional[bool] = False)
     seq_repr[...,15,:] = seq[...,4,:]
     if not absolute:
         seq_repr -= torch.repeat_interleave(seq_repr[...,0,:].unsqueeze(1), 16, dim=1)
-    seq_repr = seq_repr[...,[1,2,0]]
+    #seq_repr = seq_repr[...,[0,2,1]]
     return seq_repr
 
 

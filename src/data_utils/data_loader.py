@@ -236,6 +236,7 @@ class AISDataset(Dataset):
                  seed_length: int,
                  target_length: int,
                  sequence_spacing: int,
+                 normalize_orientation: Optional[bool] = True,
                  absolute_position: Optional[bool] = False,
                  smooth: Optional[bool] = True,):
         """
@@ -252,6 +253,7 @@ class AISDataset(Dataset):
         self.sequence_spacing = sequence_spacing
         self.absolute_position = absolute_position
         self.smooth = smooth
+        self.normalize_orientation = normalize_orientation
         self.data = self._load_data()
         self.len = len(self.data)
 
@@ -272,6 +274,8 @@ class AISDataset(Dataset):
             max_ind = len(data)
             if self.smooth:
                 data = smooth_sequence(data, 1.0)
+            if self.normalize_orientation:
+                data = normalize_sequence_orientation(data)
             # Compute possible starting indices
             start_inds = np.arange(len(data))
             start_inds = start_inds[::self.sequence_spacing]

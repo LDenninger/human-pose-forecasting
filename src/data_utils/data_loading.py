@@ -190,6 +190,7 @@ def load_data_visionlab3DPoses(absolute: Optional[bool] = False):
         file_name = path.stem
         raw_data = read_file_visionlab3DPoses(path, return_tensor=True)
         proc_data = parse_ais3dposes_to_s16(raw_data, absolute)
+        
         data[file_name] = proc_data
 
     return data
