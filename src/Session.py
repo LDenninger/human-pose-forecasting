@@ -365,7 +365,6 @@ class Session:
             predictions = []
             # Forward pass through the network
             cur_input = seed_data
-            import ipdb; ipdb.set_trace()
             for i in range(self.config['dataset']['target_length']):
                 output = self.model(cur_input)
                 if torch.isnan(output).any():
