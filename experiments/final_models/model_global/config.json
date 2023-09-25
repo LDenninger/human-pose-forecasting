@@ -2,7 +2,7 @@
     "training_scheme": "auto_regressive",
     "random_seed": 34,
     "batch_size": 32,
-    "num_epochs": 100,
+    "num_epochs": 120,
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 10,
@@ -41,7 +41,7 @@
     },
     "lr_scheduler": {
         "type": "cosine",
-        "max_iterations": 100000,
+        "max_iterations": 120000,
         "warmup": 2000,
         "min_learning_rate": 0.0,
         "update_frequency": 1000,
