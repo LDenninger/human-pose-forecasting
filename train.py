@@ -45,9 +45,9 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
-QUEUED = False # Activate the usage of the training queue
-EXPERIMENT_NAMES = ['representation_study']*2
-RUN_NAMES = ['6d_abs_1', '6d_geo_1']
+QUEUED = True # Activate the usage of the training queue
+EXPERIMENT_NAMES = ['training_schemes', 'transformer_study']
+RUN_NAMES = ['baseline_training', 'vanilla']
 
 #####===== Meta Information =====#####
 TRAINING_FUNCTIONS = {
@@ -94,7 +94,7 @@ def main():
                 exp_name = EXPERIMENT_NAMES[i]
                 run_name = RUN_NAMES[i]
                 try:
-                    run_training(exp_name, run_name, args.cexperiments/final_models/model_baseheckpoint, args.training_id, args.log, args.debug)
+                    run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
                 except Exception as e:
                     print_('Training crashed!')
                     print_(f'Error: {e}')
