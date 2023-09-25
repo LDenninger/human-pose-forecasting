@@ -94,7 +94,7 @@ def main():
                 exp_name = EXPERIMENT_NAMES[i]
                 run_name = RUN_NAMES[i]
                 try:
-                    run_training(exp_name, run_name, args.checkpoint, args.training_id, args.log, args.debug)
+                    run_training(exp_name, run_name, args.cexperiments/final_models/model_baseheckpoint, args.training_id, args.log, args.debug)
                 except Exception as e:
                     print_('Training crashed!')
                     print_(f'Error: {e}')

@@ -138,7 +138,7 @@ class PosePredictor(nn.Module):
         if config["type"] =='sin':
             return PositionalEncodingSinusoidal(
                         dim_hidden = emb_dim,
-                        n_position = seq_len
+                        n_position = 100
             )
         else:
             raise NotImplementedError(f'Positional encoding type not implemented: {type}')

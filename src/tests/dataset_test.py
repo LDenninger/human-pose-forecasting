@@ -49,6 +49,7 @@ def test_ais_data_loading():
     )
     import ipdb; ipdb.set_trace()
     for i, data in enumerate(dataset):
+        import ipdb; ipdb.set_trace()
         animate_pose_matplotlib(
                 positions = (data.numpy(), data.numpy()),
                 colors = ('g', 'g'),

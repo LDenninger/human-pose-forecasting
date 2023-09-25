@@ -42,6 +42,7 @@ class Session:
         # Load mean and var of data
         self.norm_mean = torch.load(f'configurations/mean.pt')
         self.norm_var = torch.load(f'configurations/var.pt')
+        
 
         self.metric_tracker = MetricTracker()
         # Load the config for the run
@@ -54,6 +55,7 @@ class Session:
                 project_name='HumanPoseForecasting',
                 config=self.config
             )
+        self.variable_window = self.config['variable_window'] if 'variable_window' in self.config.keys() else False
         # Modules
         self.model = None
         self.evaluation_engine = EvaluationEngine(device=self.device)
@@ -109,7 +111,8 @@ class Session:
                               distribution_metrics: List[str] = None,
                               split_actions: Optional[bool]=False,
                               prediction_timesteps: Optional[List[int]] = None,
-                              dataset: Literal['h36m','ais'] = 'h36m') -> bool:
+                              dataset: Literal['h36m','ais'] = 'h36m',
+                              distr_pred_sec: int = 15) -> bool:
         """
             Initialize the evaluation procedure and load the corresponding data
         """
@@ -125,6 +128,7 @@ class Session:
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
                 prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['metrics'] if distance_metrics is None else distance_metrics,
+                variable_window=self.variable_window
             )
             self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for joint distances with {self.evaluation_engine.num_iterations['distance_metric']}")
@@ -133,6 +137,9 @@ class Session:
                 iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations,
                 prediction_timesteps = prediction_timesteps,
                 metric_names=self.config['evaluation']['distribution_metrics'] if distribution_metrics is None else distribution_metrics,
+                distr_pred_sec=distr_pred_sec,
+                skeleton_model=self.config['skeleton']['type'],
+                variable_window=self.variable_window
             )
             self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
@@ -155,14 +162,16 @@ class Session:
         
         if '2d' in visualization_type:
             self.evaluation_engine.initialize_visualization_2d(
-                prediction_timesteps=prediction_timesteps
+                prediction_timesteps=prediction_timesteps,
+                variable_window=self.variable_window
             )
             self.visualize_model = True
         if '3d' in visualization_type:
             self.evaluation_engine.initialize_visualization_3d(
                 max_length=prediction_timesteps[-1],
                 interactive=interactive,
-                overlay=overlay_visualization
+                overlay=overlay_visualization,
+                variable_window=self.variable_window
             )
             self.visualize_model = True
 
@@ -342,8 +351,10 @@ class Session:
         self.model.train()
         progress_bar = tqdm(enumerate(self.train_loader), total=self.num_iterations)
         for batch_idx, data in progress_bar:
+            nan_encountered = False
             if batch_idx==self.num_iterations:
                 break
+                
             # Load data to GPU and split into seed and target data
             seed_data, target_data = self._prepare_data(data)
             seed_data = self.data_augmentor(seed_data)
@@ -356,9 +367,17 @@ class Session:
             cur_input = seed_data
             for i in range(self.config['dataset']['target_length']):
                 output = self.model(cur_input)
+                if torch.isnan(output).any():
+                    nan_encountered = True
+                    break
                 predictions.append(output[...,-1,:,:])
-                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
-            
+                if self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                else:
+                    cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
+            if nan_encountered:
+                print_('NaN encounter in model output', 'warn')
+                continue
             predictions = torch.stack(predictions)
             predictions = torch.transpose(predictions, 0,1)
 
@@ -366,6 +385,9 @@ class Session:
             #    output = self.data_augmentor.reverse_normalization(output)
             # Compute loss using the target data
             loss = self.loss(predictions, target_data)
+            if torch.isnan(loss).any():
+                print_('NaN encounter in loss', 'warn')
+                continue
             # Backward pass through the network
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
@@ -429,6 +451,7 @@ class Session:
             sequence_spacing=self.config['dataset']['spacing'],
             skeleton_representation = self.config['skeleton']['type'],
             normalize=self.config['data_augmentation']['normalize'],
-            representation= self.config['joint_representation']['type']
+            representation= self.config['joint_representation']['type'],
+            normalize_orientation=self.config['dataset']['normalize_orientation'],
 
         )
