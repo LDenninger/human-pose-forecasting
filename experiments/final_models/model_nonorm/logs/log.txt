@@ -1,0 +1,37 @@
+2023-09-26-12:18:00   [info]: Initialized trainer for run: final_models/model_nonorm
+2023-09-26-12:18:00   [info]: Using device: cuda
+2023-09-26-12:18:00   [info]: No evaluation queue defined.
+2023-09-26-12:18:00   [info]: Calling: initialize_model...
+2023-09-26-12:18:00   [warn]: Cannot watch model without WandB
+2023-09-26-12:18:00   [info]: Initialized model
+2023-09-26-12:18:00   [info]: Calling: load_checkpoint...
+2023-09-26-12:18:01   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_nonorm/checkpoints/checkpoint_epoch_80.pth
+2023-09-26-12:18:01   [info]: Calling: initialize_evaluation...
+2023-09-26-12:18:01   [info]: Load the evaluation data for each action
+2023-09-26-12:18:05   [info]: Initialized an evaluation for joint distances with 2000
+2023-09-26-12:18:05   [info]: Calling: evaluate...
+2023-09-26-12:18:05   [info]: Calling: evaluate...
+2023-09-26-12:18:05   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-26-12:20:58   [info]: Evaluation finished!
+2023-09-26-12:20:58   [info]: Iterations completed: 0 Results:
+ 
+2023-09-26-12:20:58   [info]: Evaluation Results:
+
+2023-09-26-12:20:58   [info]: Average over all actions:
+2023-09-26-12:20:58   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      |  0.00463103735819459  | 87.32669519053566 |
+|     120      | 0.0068635959178209305 | 83.83847607506645 |
+|     160      |  0.009155979380011559 | 81.04595012134976 |
+|     200      |  0.011521812528371811 | 78.73004111978743 |
+|     240      |  0.013908946886658669 | 76.80552071995206 |
+|     280      |  0.01630665920674801  | 75.17934325668547 |
+|     320      |  0.01871728152036667  | 73.74710126055611 |
+|     360      |  0.021101588383316994 | 72.46857864989174 |
+|     400      |  0.023448290303349495 | 71.33570081657834 |
+|     440      |  0.025780368596315384 | 70.29910186926523 |
+|     480      |  0.028045235201716423 | 69.36275876230664 |
+|     520      |  0.03033539466559887  | 68.46648040744994 |
+|     560      |  0.03259320929646492  | 67.62845632102754 |
++--------------+-----------------------+-------------------+

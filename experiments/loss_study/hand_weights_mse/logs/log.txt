@@ -1,0 +1,62 @@
+2023-09-18-11:25:57   [info]: Initialized trainer for run: loss_study/hand_weights_mse
+2023-09-18-11:25:57   [info]: Using device: cuda
+2023-09-18-11:25:57   [info]: No training queue defined.
+2023-09-18-11:25:57   [info]: Calling: initialize_model...
+2023-09-18-11:25:57   [warn]: Cannot watch model without WandB
+2023-09-18-11:25:57   [info]: Initialized model
+2023-09-18-11:25:57   [info]: Calling: initialize_optimization...
+2023-09-18-11:25:57   [info]: Initialized optimizer
+2023-09-18-11:25:57   [info]: Calling: load_train_data...
+2023-09-18-11:25:58   [info]: Loaded training data: Length: 12313, Batched length: 384, Iterations per epoch: 1000
+2023-09-18-11:25:58   [info]: Calling: initialize_evaluation...
+2023-09-18-11:25:58   [info]: Load the evaluation data for each action
+2023-09-18-11:26:02   [info]: Initialized an evaluation for joint distances with 200
+2023-09-18-11:26:02   [info]: Calling: train...
+2023-09-18-11:26:02   [info]: Calling: training_loop...
+2023-09-18-11:26:02   [info]: Start training for run loss_study/hand_weights_mse
+2023-09-18-11:26:02   [info]: Calling: evaluate...
+2023-09-18-11:26:02   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-18-11:26:15   [info]: Evaluation finished!
+2023-09-18-11:26:15   [info]: Iterations completed: 0 Results:
+ 
+2023-09-18-11:26:15   [info]: Evaluation Results:
+
+2023-09-18-11:26:15   [info]: Average over all actions:
+2023-09-18-11:26:15   [info]: +--------------+---------------------+--------------------+
+| Pred. length |    positional_mse   |        auc         |
++--------------+---------------------+--------------------+
+|      80      | 0.10148559510707855 | 46.401475866635636 |
+|     120      | 0.15223535895347595 | 37.202148139476776 |
+|     160      | 0.20301003754138947 | 31.574543979432846 |
+|     200      | 0.25380006432533264 | 26.04090753528807  |
+|     240      |  0.3046208620071411 | 23.77669256594446  |
+|     280      | 0.35546183586120605 | 21.54036429193285  |
+|     320      | 0.40631645917892456 | 20.455512238873375 |
++--------------+---------------------+--------------------+
+2023-09-18-11:26:15   [info]: Epoch 1/100
+2023-09-18-11:26:37   [error]: Traceback (most recent call last):
+  File "/home/user/denninge/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 269, in training_loop
+    self.train_epoch_auto_regressive()
+  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 362, in train_epoch_auto_regressive
+    loss = self.loss(predictions, target_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/utils/losses.py", line 132, in forward
+    loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+           ^
+  File "/home/user/denninge/human-pose-forecasting/src/utils/losses.py", line 132, in forward
+    loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+           ^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/bdb.py", line 90, in trace_dispatch
+    return self.dispatch_line(frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/bdb.py", line 115, in dispatch_line
+    if self.quitting: raise BdbQuit
+                      ^^^^^^^^^^^^^
+bdb.BdbQuit
+

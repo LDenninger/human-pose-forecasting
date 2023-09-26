@@ -1,0 +1,34 @@
+2023-09-11-16:47:49   [info]: Initialized trainer for run: representation_study/position_rel_1
+2023-09-11-16:47:49   [info]: Using device: cuda
+2023-09-11-16:47:49   [info]: Training Queue:representation_study/position_rel_1
+ representation_study/6d_abs_1
+ representation_study/6d_geo_1
+ representation_study/baseline_geo_1
+ representation_study/position_abs_1
+ representation_study/quat_abs_1
+ representation_study/quat_geo_1
+2023-09-11-16:47:49   [info]: Calling: initialize_model...
+2023-09-11-16:47:49   [warn]: Cannot watch model without WandB
+2023-09-11-16:47:49   [info]: Initialized model
+2023-09-11-16:47:49   [info]: Calling: initialize_optimization...
+2023-09-11-16:48:10   [error]: Traceback (most recent call last):
+  File "/home/user/denninge/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 164, in initialize_optimization
+    self.loss = getLoss(self.config['loss'], self.config['joint_representation']['type'])
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/utils/helper_functions.py", line 43, in getLoss
+    if config['type'] == "mse":
+       ^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/utils/helper_functions.py", line 43, in getLoss
+    if config['type'] == "mse":
+       ^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/bdb.py", line 90, in trace_dispatch
+    return self.dispatch_line(frame)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/bdb.py", line 115, in dispatch_line
+    if self.quitting: raise BdbQuit
+                      ^^^^^^^^^^^^^
+bdb.BdbQuit
+
