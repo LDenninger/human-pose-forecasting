@@ -102,9 +102,9 @@ def run_distribution_evaluation(experiment_name: str,
 # Define a queue of runs to be evaluated.
 # Definition of the evaluation to be run.
 QUEUED = False # Activate the usage of the evaluation queue
-EXPERIMENT_NAMES = ['repr_loss_study']*7
-RUN_NAMES = ['6d_abs_1', '6d_geo_1', '6d_matMSE_1', 'mat_geo_1', 'quat_geo_1', 'quat_matMSE_1', 'quat_quatLoss_1']
-DISTANCE_METRICS = ['positional_mse', 'auc']
+EXPERIMENT_NAMES = ['repr_loss_study']*2
+RUN_NAMES = ['baseline_1','baseline_geo_1']
+DISTANCE_METRICS = ['positional_mse', 'auc', 'euler_error', 'geodesic_distance']
 DISTRIBUTION_METRICS = ['ps_entropy', 'ps_kld', 'npss']
 DISTANCE_PREDICTION_TIMESTEPS = [80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560]
 #DISTRIBUTION_PREDICTION_TIMESTEPS = [200, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000]
