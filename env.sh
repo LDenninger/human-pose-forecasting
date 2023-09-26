@@ -35,21 +35,30 @@ function setup() {
 }
 
 function sync_exp() {
-    user="$1"
-    machine="$2"
-    dest="$exp_path/$CURRENT_EXP/$CURRENT_RUN/checkpoints"
-    src="$user@$machine.informatik.uni-bonn.de:/home/user/denninge/human-pose-forecasting/experiments/$CURRENT_EXP/$CURRENT_RUN/checkpoints/*"
+    user=${1:-$CURRENT_USER}
+    machine=${2:-$CURRENT_MACHINE}
+    exp=${3:-$CURRENT_EXP}
+    run=${4:-$CURRENT_RUN}
+
+    dest="$exp_path/$exp/$run/checkpoints"
+    src="$user@$machine.informatik.uni-bonn.de:/home/user/denninge/human-pose-forecasting/experiments/$exp/$run/checkpoints/*"
     scp -r "$src" "$dest"
 }
 
-function sync_exp_all(){
-    user="$1"
-    machine="$2"
+function sync_exp_all_content(){
+    user=${1:-$CURRENT_USER}
+    machine=${2:-$CURRENT_MACHINE}
+    exp=${3:-$CURRENT_EXP}
+    run=${4:-$CURRENT_RUN}
+
+    dest="$exp_path/$exp/$run"
+    src="$user@$machine.informatik.uni-bonn.de:/home/user/denninge/human-pose-forecasting/experiments/$exp/$run/*"
+    scp -r "$src" "$dest"
     
 }
 
 function get_checkpoints() {
-  local checkpoint="${1:-final}"
+  local checkpoint="${1:-*}"
   local directory="experiments"
   local experiments=()
   
@@ -77,7 +86,7 @@ function get_checkpoints() {
 
       # Load final checkpoint from remote server
       dest="$(pwd)/$experiment/$run/checkpoints"
-      src="$CURRENT_USER@$CURRENT_MACHINE.informatik.uni-bonn.de:/home/user/denninge/human-pose-forecasting/experiments/$run/checkpoints/*$checkpoint.pth"
+      src="$CURRENT_USER@$CURRENT_MACHINE.informatik.uni-bonn.de:/home/user/denninge/human-pose-forecasting/$run/checkpoints/*"
 
       # Check if the file exists
       if ssh "$CURRENT_USER@$CURRENT_MACHINE.informatik.uni-bonn.de" "[ -f $src ]"; then
@@ -85,7 +94,7 @@ function get_checkpoints() {
           scp -r "$src" "$dest"
       else
           echo "$src"
-          echo "Checkpoint $checkpoint not found for $experiment/$run"
+          echo "Checkpoint $checkpoint not found for $run"
       fi
     done
   done
