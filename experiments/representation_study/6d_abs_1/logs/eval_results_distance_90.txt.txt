@@ -1,24 +1,5 @@
-2023-09-26-14:23:33   [info]: Initialized trainer for run: representation_study/6d_abs_1
-2023-09-26-14:23:33   [info]: Using device: cuda
-2023-09-26-14:23:33   [info]: No evaluation queue defined.
-2023-09-26-14:23:33   [info]: Calling: initialize_model...
-2023-09-26-14:23:33   [warn]: Cannot watch model without WandB
-2023-09-26-14:23:33   [info]: Initialized model
-2023-09-26-14:23:33   [info]: Calling: load_checkpoint...
-2023-09-26-14:23:33   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_abs_1/checkpoints/checkpoint_epoch_90.pth
-2023-09-26-14:23:33   [info]: Calling: initialize_evaluation...
-2023-09-26-14:23:33   [info]: Load the evaluation data for each action
-2023-09-26-14:23:37   [info]: Initialized an evaluation for joint distances with 2000
-2023-09-26-14:23:37   [info]: Calling: evaluate...
-2023-09-26-14:23:37   [info]: Calling: evaluate...
-2023-09-26-14:23:37   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-26-14:26:16   [info]: Evaluation finished!
-2023-09-26-14:26:16   [info]: Iterations completed: 0 Results:
- 
-2023-09-26-14:26:16   [info]: Evaluation Results:
-
-2023-09-26-14:26:16   [info]: Average over all actions:
-2023-09-26-14:26:16   [info]: +--------------+----------------------+--------------------+----------------------+----------------------+
+Average over all actions:
++--------------+----------------------+--------------------+----------------------+----------------------+
 | Pred. length |    positional_mse    |        auc         |     euler_error      |  geodesic_distance   |
 +--------------+----------------------+--------------------+----------------------+----------------------+
 |      80      | 0.02035185694694519  |  84.8366465833452  | 0.013962619006633759 | 0.014466647990047932 |

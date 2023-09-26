@@ -345,14 +345,29 @@ def geodesic_distance(
     Returns:
         The geodesic distance for each joint as a torch tensor of shape (..., n_joints)
     """
-    preds, _ = _fix_dimensions(predictions)
-    targs, orig_shape = _fix_dimensions(targets)
-    # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
-    r = torch.matmul(preds, targs.transpose(-2, -1))
-    angles = matrix_to_axis_angle(r)
-    angles = torch.linalg.vector_norm(angles, dim=-1)
+    
+    batch=predictions.shape[0]
+    m = torch.bmm(predictions, targets.transpose(1,2)) #batch*3*3
+    
+    cos = (  m[:,0,0] + m[:,1,1] + m[:,2,2] - 1 )/2
+    cos = torch.min(cos, torch.autograd.Variable(torch.ones(batch).cuda()) )
+    cos = torch.max(cos, torch.autograd.Variable(torch.ones(batch).cuda())*-1 )
+    
+    
+    theta = torch.acos(cos)
+    
+    #theta = torch.min(theta, 2*np.pi - theta)
+    
+    
+    return theta
+    # preds, _ = _fix_dimensions(predictions)
+    # targs, orig_shape = _fix_dimensions(targets)
+    # # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
+    # r = torch.matmul(preds, targs.transpose(-2, -1))
+    # angles = matrix_to_axis_angle(r)
+    # angles = torch.linalg.vector_norm(angles, dim=-1)
 
-    return _reduce(angles.view(*orig_shape), reduction)
+    # return _reduce(angles.view(*orig_shape), reduction)
 
 
 def positional_mse(
