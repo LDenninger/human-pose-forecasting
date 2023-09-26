@@ -371,7 +371,7 @@ class Session:
                     nan_encountered = True
                     break
                 predictions.append(output[...,-1,:,:])
-                if self.variable_window:
+                if not self.variable_window:
                     cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
                 else:
                     cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)

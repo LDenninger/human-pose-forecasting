@@ -27,7 +27,9 @@ def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
             num_blocks=config['model']['num_blocks'],
             emb_dim=config['model']['embedding_dim'],
             joint_dim=config['joint_representation']['joint_dim'],
-            input_dropout=config['model']['input_dropout']
+            input_dropout=config['model']['input_dropout'],
+            variable_window=config['variable_window'] if 'variable_window' in config.keys() else False,
+            device=device
         ).to(device)
         return model
     else:
@@ -51,12 +53,16 @@ class PosePredictor(nn.Module):
                            joint_dim: int,
                             input_dropout: float = 0.0,
                              incl_abs_position: Optional[bool] = False,
+                              variable_window: Optional[bool] = False,
+                                device: str = 'cpu'
 
                     ) -> None:
         
         super(PosePredictor, self).__init__()
         # Build the model 
         # Initial linear layer for embedding each joint into the embedding space
+        self.variable_window = variable_window
+        self.device = device
         self.joint_encoder = PointWiseLinear(joint_dim, emb_dim, num_joints)
         if incl_abs_position: 
             self.position_encoder = nn.Linear(3, emb_dim)
@@ -138,7 +144,8 @@ class PosePredictor(nn.Module):
         if config["type"] =='sin':
             return PositionalEncodingSinusoidal(
                         dim_hidden = emb_dim,
-                        n_position = 100
+                        n_position = 1000 if self.variable_window else seq_len,
+                        device=self.device
             )
         else:
             raise NotImplementedError(f'Positional encoding type not implemented: {type}')
