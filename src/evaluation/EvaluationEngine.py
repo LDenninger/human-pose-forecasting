@@ -769,7 +769,7 @@ class EvaluationEngine:
                 logger.log_image(name=f"vis_{action}_i", image=comparison_img)
             # Show image
             save_dir = logger.get_path('visualization')
-            fname = f"h36m_{action}_{i}" if self.h36m_evaluation else f"ais_{i}"
+            fname = f"h36m_{action}" if self.h36m_evaluation else f"ais_{action}"
             save_to = os.path.join(save_dir, "sequences", fname + "_skeleton")
             # Create save_to directory if it does not exist
             if not os.path.exists(save_to):

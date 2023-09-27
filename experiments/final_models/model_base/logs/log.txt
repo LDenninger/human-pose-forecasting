@@ -1,30 +1,12 @@
-2023-09-27-12:58:01   [info]: Initialized trainer for run: final_models/model_base
-2023-09-27-12:58:01   [info]: Using device: cuda
-2023-09-27-12:58:01   [info]: No evaluation queue defined.
-2023-09-27-12:58:01   [info]: Calling: initialize_model...
-2023-09-27-12:58:01   [warn]: Cannot watch model without WandB
-2023-09-27-12:58:01   [info]: Initialized model
-2023-09-27-12:58:01   [info]: Calling: load_checkpoint...
-2023-09-27-12:58:02   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/final_models/model_base/checkpoints/checkpoint_epoch_20.pth
-2023-09-27-12:58:02   [info]: Calling: initialize_evaluation...
-2023-09-27-12:58:02   [info]: Load the evaluation data for each action
-2023-09-27-12:58:06   [info]: Initialized an evaluation for joint distances with 2000
-2023-09-27-12:58:06   [info]: Calling: evaluate...
-2023-09-27-12:58:06   [info]: Calling: evaluate...
-2023-09-27-12:58:06   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-27-12:59:57   [info]: Evaluation functions received invalid input shape: torch.Size([27264, 16, 3])
-2023-09-27-12:59:57   [error]: Traceback (most recent call last):
-  File "/home/l/Documents/VisionLabProject/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
-    return func(*args, **kwargs)
-  File "/home/l/Documents/VisionLabProject/human-pose-forecasting/src/evaluation/EvaluationEngine.py", line 462, in evaluate
-    self.evaluation_loop_distance(action, model, data_loader)
-  File "/home/l/anaconda3/envs/hpf/lib/python3.9/site-packages/torch/utils/_contextlib.py", line 115, in decorate_context
-    return func(*args, **kwargs)
-  File "/home/l/Documents/VisionLabProject/human-pose-forecasting/src/evaluation/EvaluationEngine.py", line 532, in evaluation_loop_distance
-    self.evaluation_results['distance_metric'][action][timestep].update(evaluate_distance_metrics(
-  File "/home/l/Documents/VisionLabProject/human-pose-forecasting/src/evaluation/metrics.py", line 152, in evaluate_distance_metrics
-    results[metric] = METRICS_IMPLEMENTED[metric](
-  File "/home/l/Documents/VisionLabProject/human-pose-forecasting/src/evaluation/metrics.py", line 419, in euler_angle_error
-    preds, _ = _fix_dimensions(predictions)
-TypeError: cannot unpack non-iterable NoneType object
-
+2023-09-27-15:59:42   [info]: Initialized trainer for run: final_models/model_base
+2023-09-27-15:59:42   [info]: Using device: cuda
+2023-09-27-15:59:42   [info]: No training queue defined.
+2023-09-27-15:59:42   [info]: Calling: initialize_model...
+2023-09-27-15:59:42   [warn]: Cannot watch model without WandB
+2023-09-27-15:59:42   [info]: Initialized model
+2023-09-27-15:59:42   [info]: Calling: load_checkpoint...
+2023-09-27-15:59:42   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/final_models/model_base/checkpoints/checkpoint_epoch_60.pth
+2023-09-27-15:59:42   [info]: Calling: initialize_visualization...
+2023-09-27-15:59:42   [info]: Load the evaluation data for each action
+2023-09-27-15:59:49   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-27-15:59:55   [info]: Evaluation finished!

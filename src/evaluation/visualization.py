@@ -74,7 +74,7 @@ def compare_sequences_plotly(
     max_sequence_length = max([sequence.shape[0] for sequence in sequences])
 
     # Calculate aspect ratio of the plot (0.215 came from trial and error)
-    aspect = (0.215 * max_sequence_length,  len(sequences))
+    aspect = (0.28 * max_sequence_length,  len(sequences))
 
     # Round size up to the nearest multiple of 100
     figsize = (
