@@ -24,8 +24,8 @@ class PositionalEncodingSinusoidal(nn.Module):
         # Sinusoidal encoding
         sin_table[:,0::2] = np.sin(sin_table[:,0::2]) # even -> sinus encoding
         sin_table[:,1::2] = np.cos(sin_table[:,1::2]) # odd -> cosinus encoding
-        self.positional_encoding = torch.FloatTensor(sin_table).unsqueeze(0).to(device)
-        # self.register_buffer('positional_encoding', torch.FloatTensor(sin_table).unsqueeze(0))
+        # self.positional_encoding = torch.FloatTensor(sin_table).unsqueeze(0).to(device)
+        self.register_buffer('positional_encoding', torch.FloatTensor(sin_table).unsqueeze(0))
     def forward(self, x):
         """
             Computes the positional encoding.
