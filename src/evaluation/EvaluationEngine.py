@@ -728,7 +728,7 @@ class EvaluationEngine:
         # Add seed data in front of predictions and targets
         # seed_data is of shape [batch_size, seq_len, num_joints, joint_dim]
         # seed_data should be added in seq_len dimension in front of the rest of the data
-        seed_data = data[:, : self.seed_length]
+        seed_data = data[:, : self.seed_length].detach().cpu()
         
         predictions = torch.cat((seed_data, predictions), 1)
         targets = torch.cat((seed_data, targets), 1)

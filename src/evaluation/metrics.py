@@ -347,19 +347,28 @@ def geodesic_distance(
     """
     
     batch=predictions.shape[0]
-    m = torch.bmm(predictions, targets.transpose(1,2)) #batch*3*3
-    
-    cos = (  m[:,0,0] + m[:,1,1] + m[:,2,2] - 1 )/2
-    cos = torch.min(cos, torch.autograd.Variable(torch.ones(batch).cuda()) )
-    cos = torch.max(cos, torch.autograd.Variable(torch.ones(batch).cuda())*-1 )
-    
-    
-    theta = torch.acos(cos)
-    
-    #theta = torch.min(theta, 2*np.pi - theta)
-    
-    
-    return theta
+    # Transpose preds and targets, so that they are of (n_joints, batch_size, 9)
+    predictions = torch.transpose(predictions, 0, 1)
+    targets = torch.transpose(targets, 0, 1)
+    # Reshape them so the last dimension is 3x3
+    predictions = torch.reshape(predictions, (predictions.shape[0], predictions.shape[1], 3, 3))
+    targets = torch.reshape(targets, (targets.shape[0], targets.shape[1], 3, 3))
+    # Loop over all joints
+    thetas = []
+    for i in range(predictions.shape[0]):
+        m = torch.bmm(predictions[i], targets[i].transpose(1,2)) #batch*3*3
+        cos = (  m[:,0,0] + m[:,1,1] + m[:,2,2] - 1 )/2
+        cos = torch.min(cos, torch.ones(batch))
+        cos = torch.max(cos, torch.ones(batch)*-1 )
+        theta = torch.acos(cos)
+        thetas.append(theta)
+    # Stack the list of tensors to one tensor
+    thetas = torch.stack(thetas)
+
+    # Transpose to (batch_size, n_joints)
+    thetas = torch.transpose(thetas, 0, 1)
+
+    return _reduce(theta, reduction)
     # preds, _ = _fix_dimensions(predictions)
     # targs, orig_shape = _fix_dimensions(targets)
     # # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
