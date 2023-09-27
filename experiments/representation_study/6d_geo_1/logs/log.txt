@@ -1,37 +1,12 @@
-2023-09-26-17:42:09   [info]: Initialized trainer for run: representation_study/6d_geo_1
-2023-09-26-17:42:09   [info]: Using device: cuda
-2023-09-26-17:42:09   [info]: No evaluation queue defined.
-2023-09-26-17:42:09   [info]: Calling: initialize_model...
-2023-09-26-17:42:09   [warn]: Cannot watch model without WandB
-2023-09-26-17:42:09   [info]: Initialized model
-2023-09-26-17:42:09   [info]: Calling: load_checkpoint...
-2023-09-26-17:42:09   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_geo_1/checkpoints/checkpoint_epoch_90.pth
-2023-09-26-17:42:09   [info]: Calling: initialize_evaluation...
-2023-09-26-17:42:09   [info]: Load the evaluation data for each action
-2023-09-26-17:42:13   [info]: Initialized an evaluation for joint distances with 2000
-2023-09-26-17:42:13   [info]: Calling: evaluate...
-2023-09-26-17:42:13   [info]: Calling: evaluate...
-2023-09-26-17:42:13   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-26-17:45:14   [info]: Evaluation finished!
-2023-09-26-17:45:14   [info]: Iterations completed: 0 Results:
- 
-2023-09-26-17:45:14   [info]: Evaluation Results:
-
-2023-09-26-17:45:14   [info]: Average over all actions:
-2023-09-26-17:45:14   [info]: +--------------+----------------------+--------------------+----------------------+----------------------+
-| Pred. length |    positional_mse    |        auc         |     euler_error      |  geodesic_distance   |
-+--------------+----------------------+--------------------+----------------------+----------------------+
-|      80      | 0.02008652314543724  | 84.77869662973616  | 0.013632512651383877 | 0.01422520074993372  |
-|     120      | 0.028893258422613144 | 80.87808969948027  | 0.021941721439361572 | 0.020478518679738045 |
-|     160      | 0.03751159831881523  | 77.86415931251314  | 0.030250541865825653 | 0.026598922908306122 |
-|     200      | 0.04600017890334129  | 75.42963872353235  | 0.03730618953704834  | 0.03263555467128754  |
-|     240      | 0.05423210188746452  | 73.42600954903496  | 0.04473797231912613  | 0.03849378228187561  |
-|     280      | 0.062228355556726456 | 71.73374046881995  | 0.04785611853003502  | 0.04419068992137909  |
-|     320      | 0.06982393562793732  | 70.23090074459711  | 0.05553299933671951  | 0.049602631479501724 |
-|     360      | 0.07710514962673187  | 68.88738671938577  |  0.0620594248175621  | 0.054801877588033676 |
-|     400      | 0.08403915911912918  | 67.71275252103806  | 0.06910961121320724  | 0.059761662036180496 |
-|     440      | 0.09069975465536118  | 66.63812365796831  | 0.07650168240070343  | 0.06453222036361694  |
-|     480      | 0.09711869060993195  | 65.65915528270934  | 0.08291270583868027  | 0.06913216412067413  |
-|     520      | 0.10328664630651474  |  64.7378072142601  | 0.08847279101610184  | 0.07355782389640808  |
-|     560      | 0.10927795618772507  | 63.897573782338036 |  0.0942760705947876  | 0.07786720991134644  |
-+--------------+----------------------+--------------------+----------------------+----------------------+
+2023-09-27-13:26:41   [info]: Initialized trainer for run: representation_study/6d_geo_1
+2023-09-27-13:26:41   [info]: Using device: cuda
+2023-09-27-13:26:41   [info]: No training queue defined.
+2023-09-27-13:26:41   [info]: Calling: initialize_model...
+2023-09-27-13:26:41   [warn]: Cannot watch model without WandB
+2023-09-27-13:26:41   [info]: Initialized model
+2023-09-27-13:26:41   [info]: Calling: load_checkpoint...
+2023-09-27-13:26:41   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_geo_1/checkpoints/checkpoint_epoch_80.pth
+2023-09-27-13:26:41   [info]: Calling: initialize_visualization...
+2023-09-27-13:26:41   [info]: Load the evaluation data for each action
+2023-09-27-13:26:45   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-27-13:26:50   [info]: Evaluation finished!

@@ -346,37 +346,40 @@ def geodesic_distance(
         The geodesic distance for each joint as a torch tensor of shape (..., n_joints)
     """
     
-    batch=predictions.shape[0]
-    # Transpose preds and targets, so that they are of (n_joints, batch_size, 9)
-    predictions = torch.transpose(predictions, 0, 1)
-    targets = torch.transpose(targets, 0, 1)
-    # Reshape them so the last dimension is 3x3
-    predictions = torch.reshape(predictions, (predictions.shape[0], predictions.shape[1], 3, 3))
-    targets = torch.reshape(targets, (targets.shape[0], targets.shape[1], 3, 3))
-    # Loop over all joints
-    thetas = []
-    for i in range(predictions.shape[0]):
-        m = torch.bmm(predictions[i], targets[i].transpose(1,2)) #batch*3*3
-        cos = (  m[:,0,0] + m[:,1,1] + m[:,2,2] - 1 )/2
-        cos = torch.min(cos, torch.ones(batch))
-        cos = torch.max(cos, torch.ones(batch)*-1 )
-        theta = torch.acos(cos)
-        thetas.append(theta)
-    # Stack the list of tensors to one tensor
-    thetas = torch.stack(thetas)
 
-    # Transpose to (batch_size, n_joints)
-    thetas = torch.transpose(thetas, 0, 1)
+    preds, _ = _fix_dimensions(predictions)
+    targs, orig_shape = _fix_dimensions(targets)
+    # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
+    r = torch.matmul(preds, targs.transpose(-2, -1))
+    angles = matrix_to_axis_angle(r)
+    angles = torch.linalg.vector_norm(angles, dim=-1)
 
-    return _reduce(theta, reduction)
-    # preds, _ = _fix_dimensions(predictions)
-    # targs, orig_shape = _fix_dimensions(targets)
-    # # compute R1 * R2.T, if prediction and target match, this will be the identity matrix
-    # r = torch.matmul(preds, targs.transpose(-2, -1))
-    # angles = matrix_to_axis_angle(r)
-    # angles = torch.linalg.vector_norm(angles, dim=-1)
+    return _reduce(angles.view(*orig_shape), reduction)
 
-    # return _reduce(angles.view(*orig_shape), reduction)
+    # batch=predictions.shape[0]
+    # # Transpose preds and targets, so that they are of (n_joints, batch_size, 9)
+    # predictions = torch.transpose(predictions, 0, 1)
+    # targets = torch.transpose(targets, 0, 1)
+    # # Reshape them so the last dimension is 3x3
+    # predictions = torch.reshape(predictions, (predictions.shape[0], predictions.shape[1], 3, 3))
+    # targets = torch.reshape(targets, (targets.shape[0], targets.shape[1], 3, 3))
+    # # Loop over all joints
+    # thetas = []
+    # for i in range(predictions.shape[0]):
+    #     m = torch.bmm(predictions[i], targets[i].transpose(1,2)) #batch*3*3
+    #     cos = (  m[:,0,0] + m[:,1,1] + m[:,2,2] - 1 )/2
+    #     cos = torch.min(cos, torch.ones(batch))
+    #     cos = torch.max(cos, torch.ones(batch)*-1 )
+    #     theta = torch.acos(cos)
+    #     thetas.append(theta)
+    # # Stack the list of tensors to one tensor
+    # thetas = torch.stack(thetas)
+
+    # # Transpose to (batch_size, n_joints)
+    # thetas = torch.transpose(thetas, 0, 1)
+
+    # return _reduce(theta, reduction)
+    
 
 
 def positional_mse(
