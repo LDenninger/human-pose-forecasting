@@ -673,8 +673,6 @@ class EvaluationEngine:
                 self.visualization_2d_loop(model, action, num_visualizations, data_loader)
             if self.visualization_3d_active:
                 self.visualization_3d_loop(model, action, num_visualizations, data_loader)
-        if self.split_actions:
-            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -855,7 +853,8 @@ class EvaluationEngine:
         logger = LOGGER
         adjust_dim = [0,1,2]
         seed_data = seed_data[...,adjust_dim]
-
+        # Detach seed_data
+        seed_data = seed_data.detach().cpu()
         for i in range(num):
             cur_pred = predictions[i,...,adjust_dim].numpy()
             cur_pred = np.concatenate([seed_data[i].numpy(), cur_pred], axis=0)

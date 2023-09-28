@@ -45,7 +45,7 @@ def compare_sequences_plotly(
     save_path: str = None,
     line_width: int = 4,
     font_size: int = 24,
-    colors: Tuple[str, str] = ("green", "blue"),
+    colors: Tuple[str, str] = ("green", "red"),
     show_joints: bool = False,
     size: int = 500,
 ):
