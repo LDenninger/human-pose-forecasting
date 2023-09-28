@@ -29,6 +29,8 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
     log_script_setup()
     # Initialize the model
     session.initialize_model()
+    if checkpoint_name is not None:
+        session.load_checkpoint(checkpoint_name)
     # Initialize the components of the optimization process (optimizer, scheduler, loss function)
     session.initialize_optimization()
     # Load the data
@@ -45,7 +47,7 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
-QUEUED = True # Activate the usage of the training queue
+QUEUED = False # Activate the usage of the training queue
 EXPERIMENT_NAMES = ['training_schemes', 'transformer_study']
 RUN_NAMES = ['baseline_training', 'vanilla']
 

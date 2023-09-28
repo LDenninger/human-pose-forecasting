@@ -376,6 +376,7 @@ class Session:
                 else:
                     cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
             if nan_encountered:
+                import ipdb; ipdb.set_trace()
                 print_('NaN encounter in model output', 'warn')
                 continue
             predictions = torch.stack(predictions)

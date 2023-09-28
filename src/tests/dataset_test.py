@@ -68,7 +68,7 @@ def test_data_augmentation():
 
     ##== Augmentation Parameters ==##
     params = {
-        "normalize": False,
+        "normalize": True,
         "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
         "snp_noise_portion": [
@@ -85,7 +85,7 @@ def test_data_augmentation():
             1,
             4
         ],
-        "gaussian_noise_prob": 1.0,
+        "gaussian_noise_prob": 0.0,
         "gaussian_noise_std": 0.005
     }
 
@@ -95,25 +95,34 @@ def test_data_augmentation():
         down_sampling_factor=2,
         stacked_hourglass=True,
         rot_representation="pos",
+        normalize_orientation=True,
         sequence_spacing=0,
         return_label=False,
         is_train=True,
-        debug=True
+        debug=False
     )
 
     data_augmentor = get_data_augmentor(params)
-    for i, seq in enumerate(dataset):
+    mean, var = dataset.get_mean_variance()
+    data_augmentor.set_mean_var(mean, var)
+    progress_bar = tqdm(enumerate(dataset), total=len(dataset))
+    for i, seq in progress_bar:
         seq = data_augmentor(seq.unsqueeze(0)).squeeze()
-        animate_pose_matplotlib(
-                positions = (seq.numpy(), seq.numpy()),
-                colors = ('g', 'g'),
-                titles = ("test_1", "test_2"),
-                fig_title = "Visualization Test",
-                parents = SH_SKELETON_PARENTS,
-                change_color_after_frame=(None, None),
-                color_after_change='r',
-                overlay=True,
-                show_axis=True,
-                fps=25,
-                
-            )
+        if torch.isnan(seq).any():
+            import ipdb; ipdb.set_trace()
+            print('nan encountered')
+
+        #seq = data_augmentor(seq.unsqueeze(0)).squeeze()
+        #animate_pose_matplotlib(
+        #        positions = (seq.numpy(), seq.numpy()),
+        #        colors = ('g', 'g'),
+        #        titles = ("test_1", "test_2"),
+        #        fig_title = "Visualization Test",
+        #        parents = SH_SKELETON_PARENTS,
+        #        change_color_after_frame=(None, None),
+        #        color_after_change='r',
+        #        overlay=True,
+        #        show_axis=True,
+        #        fps=25,
+        #        
+        #    )

@@ -103,6 +103,7 @@ def evaluate_distance_metrics(
     metrics: List[str] = None,
     reduction: Optional[Literal["mean", "sum", "mse", None]] = None,
     representation: Optional[Literal["axis", "mat", "quat", "6d", "pos"]] = "mat",
+    s16_mask: Optional[bool] = False
 ):
     """
     Compute the pair-wise distance metrics between single joints.
@@ -129,7 +130,6 @@ def evaluate_distance_metrics(
     if representation != "pos":
         predictions = torch.reshape(predictions, (*predictions.shape[:-2], 9))
         targets = torch.reshape(targets, (*targets.shape[:-2], 9))
-
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
