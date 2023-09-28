@@ -1,43 +1,11 @@
-2023-09-28-15:36:26   [info]: Initialized trainer for run: final_models/model_final_2
-2023-09-28-15:36:26   [info]: Using device: cuda
-2023-09-28-15:36:26   [info]: Calling: initialize_model...
-2023-09-28-15:36:26   [warn]: Cannot watch model without WandB
-2023-09-28-15:36:26   [info]: Initialized model
-2023-09-28-15:36:26   [info]: Calling: load_checkpoint...
-2023-09-28-15:36:26   [error]: Checkpoint could not been load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_final_2/checkpoints/checkpoint_epoch_80.pth
-2023-09-28-15:36:26   [error]: Exception: [Errno 2] No such file or directory: '/home/user/denninge/human-pose-forecasting/experiments/final_models/model_final_2/checkpoints/checkpoint_epoch_80.pth'
-2023-09-28-15:36:26   [info]: Calling: initialize_evaluation...
-2023-09-28-15:36:26   [info]: Load the evaluation data for each action
-2023-09-28-15:36:26   [error]: Traceback (most recent call last):
-  File "/home/user/denninge/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 135, in initialize_evaluation
-    self.evaluation_engine.initialize_distance_evaluation(
-  File "/home/user/denninge/human-pose-forecasting/src/evaluation/EvaluationEngine.py", line 188, in initialize_distance_evaluation
-    target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
-                                                              ^^^^^^^^^^^^^^
-AttributeError: 'EvaluationEngine' object has no attribute 'step_size'
-
-2023-09-28-15:40:25   [info]: Calling: evaluate...
-2023-09-28-15:40:25   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-28-15:40:38   [info]: Evaluation finished!
-2023-09-28-15:40:38   [info]: Iterations completed: 75000 Results:
- train loss: mean: 0.1143, var: 0.0002
-2023-09-28-15:40:38   [info]: Evaluation Results:
-
-2023-09-28-15:40:38   [info]: Average over all actions:
-2023-09-28-15:40:38   [info]: +--------------+----------------------+-------------------+
-| Pred. length |    positional_mse    |        auc        |
-+--------------+----------------------+-------------------+
-|      80      | 0.004004691727459431 | 88.37098545498318 |
-|     120      | 0.00605403445661068  | 84.96853212515512 |
-|     160      | 0.008226322010159492 |  82.2161465883255 |
-|     200      | 0.010484568774700165 | 79.97113631831276 |
-|     240      | 0.012797827832400799 | 78.05815902021196 |
-|     280      | 0.01514207199215889  | 76.41059011220932 |
-|     320      | 0.017486192286014557 | 74.95811680952707 |
-+--------------+----------------------+-------------------+
-2023-09-28-15:40:38   [info]: Calling: save_checkpoint...
-2023-09-28-15:40:38   [info]: Checkpoint was saved to: experiments/final_models/model_final_2/checkpoints/checkpoint_epoch_75.pth
-2023-09-28-15:40:38   [info]: Epoch 76/120
+2023-09-28-16:43:23   [info]: Initialized trainer for run: final_models/model_final_2
+2023-09-28-16:43:23   [info]: Using device: cuda
+2023-09-28-16:43:23   [info]: Calling: initialize_model...
+2023-09-28-16:43:23   [warn]: Cannot watch model without WandB
+2023-09-28-16:43:23   [info]: Initialized model
+2023-09-28-16:43:23   [info]: Calling: load_checkpoint...
+2023-09-28-16:43:23   [error]: Checkpoint could not been load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/final_models/model_final_2/checkpoints/checkpoint_epoch_80.pth
+2023-09-28-16:43:23   [error]: Exception: [Errno 2] No such file or directory: '/home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/final_models/model_final_2/checkpoints/checkpoint_epoch_80.pth'
+2023-09-28-16:43:23   [info]: Calling: initialize_evaluation...
+2023-09-28-16:44:19   [info]: Load the evaluation data for each action
+2023-09-28-16:46:11   [info]: Calling: __init__...

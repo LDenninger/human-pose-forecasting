@@ -886,7 +886,7 @@ class EvaluationEngine:
         """
         Compute the mean over the metrics logged for several iterations
         """
-        for eval_type in self.evaluation_results.keys:
+        for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0 or sub_type not in self.evaluation_results[eval_type].keys():
                 continue
             for pred_length in self.evaluation_results[eval_type][sub_type].keys():
@@ -899,7 +899,7 @@ class EvaluationEngine:
         """
         Compute the mean over all actions.
         """
-        for eval_type in self.evaluation_results.keys:
+        for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0:
                 continue
             for pred_length in self.evaluation_results[eval_type]["overall"].keys():
