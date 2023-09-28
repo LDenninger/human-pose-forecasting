@@ -14,8 +14,9 @@ import numpy as np
 
     Skeleton names:
         s26: Describes the skeleton with 26 active joints used in the H3.6M dataset
+        s21: Describes the H36M dataset with the positionally redundant joints removed
         s19: Describes the skeleton with 19 active joints used in the VisionLab3DPose dataset
-        
+        s16: Describes the skeleton reduced to the important joints
 """
 
 #####===== H36M General Information =====#####
