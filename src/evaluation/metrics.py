@@ -18,7 +18,7 @@ from ..utils import (
     correct_rotation_matrix,
     get_conv_from_axis_angle
 )
-from ..data_utils import h36m_forward_kinematics
+from ..data_utils import h36m_forward_kinematics, SH_MASK_FROM_H36M
 
 #####===== General Evaluation Constants =====#####
 ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
@@ -140,6 +140,9 @@ def evaluate_distance_metrics(
                 target_positions, _ = h36m_forward_kinematics(targets, 'mat')
                 prediction_positions /= 1000
                 target_positions /= 1000
+                if s16_mask:
+                    prediction_positions = prediction_positions[...,SH_MASK_FROM_H36M,:]
+                    target_positions = target_positions[...,SH_MASK_FROM_H36M,:]
             else:
                 prediction_positions = predictions
                 target_positions = targets
