@@ -540,6 +540,7 @@ class EvaluationEngine:
                 reduction="mean",
                 metrics=self.distance_metrics,
                 representation=self.representation,
+                s16_mask=True if self.skeleton_representation=="s26" else False,
             ))
 
     @torch.no_grad()
