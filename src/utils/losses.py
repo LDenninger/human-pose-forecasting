@@ -156,7 +156,6 @@ class LearningPositionMSE(LossBase):
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         # Do not learn during warm-up steps
-        import ipdb; ipdb.set_trace()
         if self.device is None:
             self.device = output.device
             self.weights = nn.Parameter(self.weights.to(self.device))
@@ -206,7 +205,6 @@ class GeodesicLoss(LossBase):
 class EulerLoss(LossBase):
     """
         Module to compute a loss on euler angles using an absolute difference between two rotation.
-        import ipdb; ipdb.set_trace()
 
         Implementation according to: https://towardsdatascience.com/better-rotation-representations-for-accurate-pose-estimation-e890a7e1317f
     """
