@@ -373,6 +373,9 @@ class Session:
             predictions = []
             # Forward pass through the network
             cur_input = seed_data
+            if torch.isnan(cur_input).any():
+                print_('NaN encounter in seed sequence', 'warn')
+                continue
             for i in range(self.config['dataset']['target_length']):
                 output = self.model(cur_input)
                 if torch.isnan(output).any():
@@ -384,7 +387,6 @@ class Session:
                 else:
                     cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
             if nan_encountered:
-                import ipdb; ipdb.set_trace()
                 print_('NaN encounter in model output', 'warn')
                 continue
             predictions = torch.stack(predictions)
