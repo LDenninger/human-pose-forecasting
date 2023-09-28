@@ -194,12 +194,11 @@ class GeodesicLoss(LossBase):
             If rotation matrices are directly inputted, we assume they are flattened.
         """
         output, target = self._flatten_leading(output), self._flatten_leading(target)
-    
         output = self.conversion_func(output)
         target = self.conversion_func(target)
-        R_diffs = input @ target.permute(0, 2, 1)
+        R_diffs = output @ target.permute(0, 2, 1)
         traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
-        dists = torch.acos(torch.clamp((traces - 1) / 2, -1 + self.eps, 1 - self.eps))
+        dists = torch.acos(torch.clamp((traces - 1) / 2, -1 + torch.finfo(torch.float32).eps, 1 -torch.finfo(torch.float32).eps))
         return self.reduction_func(dists)
     
 class EulerLoss(LossBase):

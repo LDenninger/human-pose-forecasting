@@ -53,7 +53,7 @@
     },
     "joint_representation": {
         "type": "quat",
-        "absolute": true,
+        "absolute": false,
         "joint_dim": 4
     },
     "evaluation": {
