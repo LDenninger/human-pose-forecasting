@@ -96,7 +96,7 @@ def load_config(config_name):
 
 def save_config(config, exp_name, run_name):
     """ Save a configuration to a run directory. """
-    with open(os.path.join(os.getcwd(), 'experiments', exp_name, run_name), 'w') as f:
+    with open(os.path.join(os.getcwd(), 'experiments', exp_name, run_name, 'config.json'), 'w') as f:
         json.dump(config, f, indent=4)
 
 
