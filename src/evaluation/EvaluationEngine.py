@@ -129,6 +129,7 @@ class EvaluationEngine:
                                            metric_names: List[str],
                                            skeleton_model: str,
                                            prediction_timesteps: List[int],
+                                           variable_window: bool = False,
                                            distr_pred_sec: int = 15,
                                            ):
         """
@@ -166,13 +167,15 @@ class EvaluationEngine:
         self.prediction_timesteps['long_predictions'] = prediction_steps_real
         self.distribution_metrics = metric_names if metric_names is not None else list(DISTRIBUTION_METRICS_IMPLEMENTED.keys())
         self.long_predictions_active = True
+        self.variable_window = variable_window
 
 
 
     def initialize_distance_evaluation(self,
                                        iterations: int,
                                        metric_names: List[str],
-                                       prediction_timesteps: List[int]):
+                                       prediction_timesteps: List[int],
+                                       variable_window: bool = False):
         """
             Initialize the evaluation for short predictions using distance metrics
 
@@ -190,13 +193,15 @@ class EvaluationEngine:
         self.prediction_timesteps['distance_metric'] = prediction_steps_real
         self.distance_metrics = metric_names
         self.distance_metric_active = True
+        self.variable_window = variable_window
         for t in prediction_timesteps:
             self.evaluation_results['distance_metric'][t] = {}
             for m in metric_names:
                 self.evaluation_results['distance_metric'][t][m] = []
     
     def initialize_visualization_2d(self,
-                                    prediction_timesteps: List[int]):
+                                    prediction_timesteps: List[int],
+                                    variable_window: bool = False):
         """
             Initialize the 2d visualization
 
@@ -209,12 +214,14 @@ class EvaluationEngine:
             print_(f"Goal prediction timesteps: {prediction_timesteps} not reachable using timesteps: {prediction_steps_real}","warn")
         self.target_frames['visualization_2d'] = target_frames.tolist()
         self.prediction_timesteps['visualization_2d'] = prediction_steps_real
+        self.variable_window = variable_window
         self.visualization_2d_active = True
     
     def initialize_visualization_3d(self,
                                     interactive: bool,
                                     max_length: int,
                                     overlay: Optional[bool]=False,
+                                    variable_window: Optional[bool] = False,
                                     ):
         """
             Initialize the 2d visualization
@@ -233,6 +240,7 @@ class EvaluationEngine:
         self.visualization_3d_active = True
         self.interactive_visualization = interactive
         self.overlay_visualization = overlay 
+        self.variable_window = variable_window
 
 
     def load_data(self,
@@ -509,7 +517,11 @@ class EvaluationEngine:
                     predictions[i].append(pred)
                     targets[i].append(data[:, self.seed_length + i -1].detach().cpu())
                 # Update model input for auto-regressive prediction
-                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                if not self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                else:
+                    cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
+
         # Compute the distance metrics for each timestep
         for i, frame in enumerate(self.target_frames['distance_metric']):
             timestep = self.prediction_timesteps['distance_metric'][i]
@@ -587,7 +599,10 @@ class EvaluationEngine:
                     sequences[j].append(pred.squeeze())
                     
                 # Update model input for auto-regressive prediction
-                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                if not self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                else:
+                    cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
         # Compute distribution metrics
         sequences_tensor = torch.stack([torch.stack(sequence) for sequence in sequences])
         ent_per_seq_len = []
@@ -702,7 +717,10 @@ class EvaluationEngine:
                 predictions.append(pred)
                 targets.append(data[:, self.seed_length + i - 1].detach().cpu())
             # Update model input for auto-regressive prediction
-            cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+            if not self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+            else:
+                cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
         # Create visualizations
         logger = LOGGER
         
@@ -715,7 +733,7 @@ class EvaluationEngine:
         # Add seed data in front of predictions and targets
         # seed_data is of shape [batch_size, seq_len, num_joints, joint_dim]
         # seed_data should be added in seq_len dimension in front of the rest of the data
-        seed_data = data[:, : self.seed_length]
+        seed_data = data[:, : self.seed_length].detach().cpu()
         
         predictions = torch.cat((seed_data, predictions), 1)
         targets = torch.cat((seed_data, targets), 1)
@@ -756,7 +774,7 @@ class EvaluationEngine:
                 logger.log_image(name=f"vis_{action}_i", image=comparison_img)
             # Show image
             save_dir = logger.get_path('visualization')
-            fname = f"h36m_{action}_{i}" if self.h36m_evaluation else f"ais_{i}"
+            fname = f"h36m_{action}" if self.h36m_evaluation else f"ais_{action}"
             save_to = os.path.join(save_dir, "sequences", fname + "_skeleton")
             # Create save_to directory if it does not exist
             if not os.path.exists(save_to):
@@ -811,7 +829,10 @@ class EvaluationEngine:
             predictions.append(pred)
             targets.append(data[:, self.seed_length + i].detach().cpu())
             # Update model input for auto-regressive prediction
-            cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+            if not self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+            else:
+                cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
 
 
         predictions = torch.stack(predictions)

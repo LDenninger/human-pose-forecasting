@@ -1,0 +1,83 @@
+2023-09-17-10:38:16   [info]: WandB initialized
+project_name: HumanPoseForecasting, entity: None, group: None, job_type: None, resume: None, mode: online
+2023-09-17-10:38:16   [config]:
+  training_scheme: auto_regressive
+  random_seed: 42
+  batch_size: 32
+  num_epochs: 100
+  num_train_iterations: 1000
+  num_eval_iterations: 200
+  seq_length: 10
+  checkpoint_frequency: 5
+  model: {'type': 'st_transformer', 'num_blocks': 8, 'input_dropout': 0.1, 'embedding_dim': 64, 'positional_encoding': {'type': 'sin'}, 'transformer': {'type': 'parallel', 'spatial_heads': 4, 'temporal_heads': 4, 'spatial_dropout': 0.1, 'temporal_dropout': 0.1, 'ff_dimension': 128, 'ff_dropout': 0.1, 'input_dropout': 0.1}}
+  optimizer: {'type': 'Adam', 'learning_rate': 0.001, 'betas': [0.9, 0.98], 'epsilon': 1e-08}
+  loss: {'type': 'position_mse', 'reduction': 'mean'}
+  lr_scheduler: {'type': 'cosine', 'max_iterations': 100000, 'warmup': 2000, 'min_learning_rate': 0.0, 'update_frequency': 1000, 'base_lr': 0.0003}
+  skeleton: {'type': 's16', 'num_joints': 16}
+  joint_representation: {'type': 'pos', 'absolute': False, 'joint_dim': 3}
+  evaluation: {'metrics': ['positional_mse', 'auc'], 'distribution_metrics': [], 'frequency': 1, 'exhaustive_evaluation': True, 'timesteps': [80, 120, 160, 200, 240, 280, 320]}
+  dataset: {'name': 'h36m', 'seed_length': 10, 'target_length': 15, 'downsampling_factor': 2, 'spacing': 5, 'training_size': 1000, 'validation_size': 1000, 'test_size': 1000, 'reverse_prob': 0.5}
+  data_augmentation: {'normalize': True, 'reverse_prob': 0.0, 'snp_noise_prob': 0.0, 'joint_cutout_prob': 0.0, 'timestep_cutout_prob': 0.0}2023-09-17-10:38:16   [info]: Initialized trainer for run: parameter_tuning/target_15
+2023-09-17-10:38:16   [info]: Using device: cuda
+2023-09-17-10:38:16   [info]: Training Queue:parameter_tuning/baseline
+ parameter_tuning/blocks_6
+ parameter_tuning/blocks_10
+ parameter_tuning/bs_64
+ parameter_tuning/emb_128
+ parameter_tuning/emb_256
+ parameter_tuning/target_15
+2023-09-17-10:38:16   [info]: Calling: initialize_model...
+2023-09-17-10:38:16   [info]: Initialized model
+2023-09-17-10:38:16   [info]: Calling: initialize_optimization...
+2023-09-17-10:38:16   [info]: Initialized optimizer
+2023-09-17-10:38:16   [info]: Calling: load_train_data...
+2023-09-17-10:38:26   [info]: Loaded training data: Length: 77297, Batched length: 2415, Iterations per epoch: 1000
+2023-09-17-10:38:26   [info]: Calling: initialize_evaluation...
+2023-09-17-10:38:26   [info]: Load the evaluation data for each action
+2023-09-17-10:38:30   [info]: Initialized an evaluation for joint distances with 200
+2023-09-17-10:38:30   [info]: Calling: train...
+2023-09-17-10:38:30   [info]: Calling: training_loop...
+2023-09-17-10:38:30   [info]: Start training for run parameter_tuning/target_15
+2023-09-17-10:38:30   [info]: Calling: evaluate...
+2023-09-17-10:38:30   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-17-10:38:41   [info]: Evaluation finished!
+2023-09-17-10:38:41   [info]: Iterations completed: 0 Results:
+ 
+2023-09-17-10:38:41   [info]: Evaluation Results:
+
+2023-09-17-10:38:41   [info]: Average over all actions:
+2023-09-17-10:38:41   [info]: +--------------+---------------------+--------------------+
+| Pred. length |    positional_mse   |        auc         |
++--------------+---------------------+--------------------+
+|      80      | 0.11727678030729294 | 42.82769064108531  |
+|     120      | 0.17605513334274292 | 33.78190100193024  |
+|     160      | 0.23493562638759613 | 27.57454448276096  |
+|     200      | 0.29389962553977966 | 22.864583300219643 |
+|     240      |  0.3529587686061859 | 20.937500066227383 |
+|     280      |  0.4120941162109375 | 18.94466115368737  |
+|     320      |  0.4712900221347809 | 18.74815540181266  |
++--------------+---------------------+--------------------+
+2023-09-17-10:38:41   [info]: Epoch 1/100
+2023-09-17-10:38:42   [error]: Traceback (most recent call last):
+  File "/home/user/denninge/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 268, in training_loop
+    self.train_epoch_auto_regressive()
+  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 361, in train_epoch_auto_regressive
+    loss = self.loss(predictions, target_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/human-pose-forecasting/src/utils/losses.py", line 80, in forward
+    loss = F.mse_loss(output, target, reduction='none') # mse loss between joints
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/site-packages/torch/nn/functional.py", line 3294, in mse_loss
+    expanded_input, expanded_target = torch.broadcast_tensors(input, target)
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/denninge/anaconda3/envs/vision_lab/lib/python3.11/site-packages/torch/functional.py", line 74, in broadcast_tensors
+    return _VF.broadcast_tensors(tensors)  # type: ignore[attr-defined]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The size of tensor a (15) must match the size of tensor b (10) at non-singleton dimension 1
+

@@ -18,12 +18,12 @@ if __name__ == "__main__":
     config = json.load(open(basepath + "/configurations/baseline_config.json", "r"))
 
     # Get dataset
-    dataset = getDataset(config = config["dataset"], joint_representation = "pos", skeleton_model = "s16", is_train = True, debug = False)
+    dataset = getDataset(config = config["dataset"], absolute_position=True, joint_representation = "pos", skeleton_model = "s16", is_train = True, debug = False)
     mean, var = dataset.get_mean_variance()
 
     # Save the two tensors
-    torch.save(mean, basepath + "/configurations/mean.pt")
-    torch.save(var, basepath + "/configurations/var.pt")
+    torch.save(mean, basepath + "/configurations/mean_global.pt")
+    torch.save(var, basepath + "/configurations/var_global.pt")
 
     # Load tensors and print
     mean = torch.load(basepath + "/configurations/mean.pt")

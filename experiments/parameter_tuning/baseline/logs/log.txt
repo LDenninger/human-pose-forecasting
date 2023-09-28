@@ -1,0 +1,12 @@
+2023-09-27-12:01:48   [info]: Initialized trainer for run: parameter_tuning/baseline
+2023-09-27-12:01:48   [info]: Using device: cuda
+2023-09-27-12:01:48   [info]: No training queue defined.
+2023-09-27-12:01:48   [info]: Calling: initialize_model...
+2023-09-27-12:01:48   [warn]: Cannot watch model without WandB
+2023-09-27-12:01:48   [info]: Initialized model
+2023-09-27-12:01:48   [info]: Calling: load_checkpoint...
+2023-09-27-12:01:48   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/parameter_tuning/baseline/checkpoints/checkpoint_epoch_90.pth
+2023-09-27-12:01:48   [info]: Calling: initialize_visualization...
+2023-09-27-12:01:48   [info]: Load the evaluation data for each action
+2023-09-27-12:01:53   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-27-12:01:59   [info]: Evaluation finished!

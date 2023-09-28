@@ -441,4 +441,3 @@ def normalize_sequence_orientation(seq: torch.Tensor) -> torch.Tensor:
     seq = torch.reshape(seq, orig_shape)
 
     return seq
-

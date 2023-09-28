@@ -117,7 +117,7 @@ class TemporalAttention(AttentionBase):
         self.register_parameter('W_key', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
         self.register_parameter('W_value', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
         self.register_parameter('W_output', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
-        self.set_mask()
+        self.set_mask(num_tokens)
         self._reset_parameters()
     
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -127,6 +127,10 @@ class TemporalAttention(AttentionBase):
             Input:
                 x [batch_size, seq_len, num_joints, emb_dim]
         """
+        # Set dynamic mask for variable temporal window
+        self.set_mask(x.shape[1])
+        self.mask = self.mask.to(x.device)
+
         x = x.permute(0, 2, 1, 3) # [batch_size, num_joints, seq_len, emb_dim]
         # Compute the query, key, and value embeddings
         Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size, num_joints, num_tokens, token_dim]
@@ -159,11 +163,8 @@ class TemporalAttention(AttentionBase):
         out = out.view(*shape)
         return out
 
-    def set_mask(self) -> None:
-        """
-            Set the attention mask in the log space (Look-ahead matrix).
-        """
-        self.mask = -torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
+    def set_mask(self, num_tokens) -> None:
+        self.mask = -torch.triu(torch.ones(num_tokens, num_tokens), diagonal=1) * 1e9
 
 class SpatialAttention(AttentionBase):
     """
@@ -257,6 +258,7 @@ class VanillaAttention(AttentionBase):
         self.register_parameter('W_key', nn.Parameter(torch.Tensor(token_dim, token_dim)))
         self.register_parameter('W_value', nn.Parameter(torch.Tensor(token_dim, token_dim)))
         self.register_parameter('W_output', nn.Parameter(torch.Tensor(token_dim, token_dim)))
+        self.set_mask(num_tokens)
         self._reset_parameters()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -266,6 +268,9 @@ class VanillaAttention(AttentionBase):
             Input:
                 x [batch_size, seq_len, num_joints * emb_dim]
         """
+        self.set_mask(x.shape[1])
+        self.mask = self.mask.to(x.device)
+        
         Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size,num_tokens, token_dim]
         K = self.multi_head_linear_embedding(x, self.W_key)
         V = self.multi_head_linear_embedding(x, self.W_value)
@@ -276,5 +281,5 @@ class VanillaAttention(AttentionBase):
         out = self.linear_embedding(out, self.W_output)
         return out
     
-    def set_mask(self) -> None:
-        self.mask = -torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
+    def set_mask(self, num_tokens) -> None:
+        self.mask = -torch.triu(torch.ones(num_tokens, num_tokens), diagonal=1) * 1e9

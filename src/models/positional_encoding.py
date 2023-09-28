@@ -16,7 +16,7 @@ class PositionalEncodingSinusoidal(nn.Module):
         Positional encoding according to "Attention Is All You Need" (https://arxiv.org/pdf/1706.03762.pdf)
     
     """
-    def __init__(self, dim_hidden, n_position):
+    def __init__(self, dim_hidden, n_position, device='cpu'):
         super(PositionalEncodingSinusoidal, self).__init__()
         # Pre-compute sin and cos tables for positional encoding
         # Generate wave lengths for encoding
@@ -24,9 +24,8 @@ class PositionalEncodingSinusoidal(nn.Module):
         # Sinusoidal encoding
         sin_table[:,0::2] = np.sin(sin_table[:,0::2]) # even -> sinus encoding
         sin_table[:,1::2] = np.cos(sin_table[:,1::2]) # odd -> cosinus encoding
-        
-        self.register_buffer('positional_encoding', torch.FloatTensor(sin_table).unsqueeze(0))
-
+        self.positional_encoding = torch.FloatTensor(sin_table).unsqueeze(0).to(device)
+        #self.register_buffer('positional_encoding', torch.FloatTensor(sin_table).unsqueeze(0))
     def forward(self, x):
         """
             Computes the positional encoding.
@@ -34,7 +33,6 @@ class PositionalEncodingSinusoidal(nn.Module):
             Arguments:
                 x: Input tensor, shape: [batch_size, seq_len, num_emb, emb_dim]
         """
-
         return x + self.positional_encoding[:, :x.shape[1]].unsqueeze(-2).clone().detach()
     
 

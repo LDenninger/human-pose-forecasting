@@ -1,0 +1,2105 @@
+2023-09-16-12:08:36   [info]: WandB initialized
+project_name: HumanPoseForecasting, entity: None, group: None, job_type: None, resume: None, mode: online
+2023-09-16-12:08:36   [config]:
+  training_scheme: auto_regressive
+  random_seed: 42
+  batch_size: 64
+  num_epochs: 100
+  num_train_iterations: 1000
+  num_eval_iterations: 200
+  seq_length: 10
+  checkpoint_frequency: 5
+  model: {'type': 'st_transformer', 'num_blocks': 8, 'input_dropout': 0.1, 'embedding_dim': 64, 'positional_encoding': {'type': 'sin'}, 'transformer': {'type': 'parallel', 'spatial_heads': 4, 'temporal_heads': 4, 'spatial_dropout': 0.1, 'temporal_dropout': 0.1, 'ff_dimension': 128, 'ff_dropout': 0.1, 'input_dropout': 0.1}}
+  optimizer: {'type': 'Adam', 'learning_rate': 0.001, 'betas': [0.9, 0.98], 'epsilon': 1e-08}
+  loss: {'type': 'position_mse', 'reduction': 'mean'}
+  lr_scheduler: {'type': 'cosine', 'max_iterations': 100000, 'warmup': 2000, 'min_learning_rate': 0.0, 'update_frequency': 1000, 'base_lr': 0.0003}
+  skeleton: {'type': 's16', 'num_joints': 16}
+  joint_representation: {'type': 'pos', 'absolute': False, 'joint_dim': 3}
+  evaluation: {'metrics': ['positional_mse', 'auc'], 'distribution_metrics': [], 'frequency': 1, 'exhaustive_evaluation': True, 'timesteps': [80, 120, 160, 200, 240, 280, 320]}
+  dataset: {'name': 'h36m', 'seed_length': 10, 'target_length': 10, 'downsampling_factor': 2, 'spacing': 5, 'training_size': 1000, 'validation_size': 1000, 'test_size': 1000, 'reverse_prob': 0.5}
+  data_augmentation: {'normalize': True, 'reverse_prob': 0.0, 'snp_noise_prob': 0.0, 'joint_cutout_prob': 0.0, 'timestep_cutout_prob': 0.0}2023-09-16-12:08:36   [info]: Initialized trainer for run: parameter_tuning/bs_64
+2023-09-16-12:08:36   [info]: Using device: cuda
+2023-09-16-12:08:36   [info]: Training Queue:parameter_tuning/baseline
+ parameter_tuning/blocks_6
+ parameter_tuning/blocks_10
+ parameter_tuning/bs_64
+ parameter_tuning/emb_128
+ parameter_tuning/emb_256
+ parameter_tuning/target_15
+2023-09-16-12:08:36   [info]: Calling: initialize_model...
+2023-09-16-12:08:36   [info]: Initialized model
+2023-09-16-12:08:36   [info]: Calling: initialize_optimization...
+2023-09-16-12:08:36   [info]: Initialized optimizer
+2023-09-16-12:08:36   [info]: Calling: load_train_data...
+2023-09-16-12:08:46   [info]: Loaded training data: Length: 77447, Batched length: 1210, Iterations per epoch: 1000
+2023-09-16-12:08:46   [info]: Calling: initialize_evaluation...
+2023-09-16-12:08:46   [info]: Load the evaluation data for each action
+2023-09-16-12:08:49   [info]: Initialized an evaluation for joint distances with 200
+2023-09-16-12:08:49   [info]: Calling: train...
+2023-09-16-12:08:49   [info]: Calling: training_loop...
+2023-09-16-12:08:49   [info]: Start training for run parameter_tuning/bs_64
+2023-09-16-12:08:49   [info]: Calling: evaluate...
+2023-09-16-12:08:49   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:09:00   [info]: Evaluation finished!
+2023-09-16-12:09:00   [info]: Iterations completed: 0 Results:
+ 
+2023-09-16-12:09:00   [info]: Evaluation Results:
+
+2023-09-16-12:09:00   [info]: Average over all actions:
+2023-09-16-12:09:00   [info]: +--------------+---------------------+--------------------+
+| Pred. length |    positional_mse   |        auc         |
++--------------+---------------------+--------------------+
+|      80      | 0.11727678030729294 | 42.82769064108531  |
+|     120      | 0.17605513334274292 | 33.78190100193024  |
+|     160      | 0.23493562638759613 | 27.57454448276096  |
+|     200      | 0.29389962553977966 | 22.864583300219643 |
+|     240      |  0.3529587686061859 | 20.937500066227383 |
+|     280      |  0.4120941162109375 | 18.94466115368737  |
+|     320      |  0.4712900221347809 | 18.74815540181266  |
++--------------+---------------------+--------------------+
+2023-09-16-12:09:00   [info]: Epoch 1/100
+2023-09-16-12:13:24   [info]: Calling: evaluate...
+2023-09-16-12:13:24   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:13:35   [info]: Evaluation finished!
+2023-09-16-12:13:35   [info]: Iterations completed: 1000 Results:
+ train loss: mean: 0.4499, var: 0.2679
+2023-09-16-12:13:35   [info]: Evaluation Results:
+
+2023-09-16-12:13:35   [info]: Average over all actions:
+2023-09-16-12:13:35   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.008383064530789852 | 82.25238819917044 |
+|     120      | 0.012370074167847633 | 78.40570824013817 |
+|     160      | 0.01614745892584324  | 75.42730040020413 |
+|     200      | 0.019837016239762306 |  73.053710659345  |
+|     240      | 0.023347733542323112 | 71.05197476016151 |
+|     280      | 0.02674381248652935  | 69.34418429931006 |
+|     320      | 0.030055508017539978 | 67.87055068545871 |
++--------------+----------------------+-------------------+
+2023-09-16-12:13:35   [info]: Epoch 2/100
+2023-09-16-12:18:00   [info]: Calling: evaluate...
+2023-09-16-12:18:00   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:18:11   [info]: Evaluation finished!
+2023-09-16-12:18:11   [info]: Iterations completed: 2000 Results:
+ train loss: mean: 0.2079, var: 0.0003
+2023-09-16-12:18:11   [info]: Evaluation Results:
+
+2023-09-16-12:18:11   [info]: Average over all actions:
+2023-09-16-12:18:11   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.007929783314466476 | 82.52246065272224 |
+|     120      | 0.011667332611978054 | 78.66514705949359 |
+|     160      | 0.015221547335386276 | 75.68022906780243 |
+|     200      |  0.0187138132750988  |  73.3057720793618 |
+|     240      | 0.022107752040028572 | 71.34396698739793 |
+|     280      | 0.025432348251342773 | 69.61632039811876 |
+|     320      | 0.028696009889245033 | 68.10449262460074 |
++--------------+----------------------+-------------------+
+2023-09-16-12:18:11   [info]: Epoch 3/100
+2023-09-16-12:22:35   [info]: Calling: evaluate...
+2023-09-16-12:22:35   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:22:46   [info]: Evaluation finished!
+2023-09-16-12:22:46   [info]: Iterations completed: 3000 Results:
+ train loss: mean: 0.1781, var: 0.0002
+2023-09-16-12:22:46   [info]: Evaluation Results:
+
+2023-09-16-12:22:46   [info]: Average over all actions:
+2023-09-16-12:22:46   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.007288619875907898 |  82.8604605462816 |
+|     120      | 0.010765902698040009 | 78.88791296217177 |
+|     160      | 0.014213839545845985 | 75.80067333247926 |
+|     200      | 0.017588376998901367 | 73.38802102539275 |
+|     240      | 0.02097080647945404  | 71.31467031108009 |
+|     280      | 0.024352241307497025 | 69.50423154566023 |
+|     320      | 0.027697302401065826 | 67.90277742677264 |
++--------------+----------------------+-------------------+
+2023-09-16-12:22:46   [info]: Epoch 4/100
+2023-09-16-12:27:11   [info]: Calling: evaluate...
+2023-09-16-12:27:11   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:27:22   [info]: Evaluation finished!
+2023-09-16-12:27:22   [info]: Iterations completed: 4000 Results:
+ train loss: mean: 0.1586, var: 0.0001
+2023-09-16-12:27:22   [info]: Evaluation Results:
+
+2023-09-16-12:27:22   [info]: Average over all actions:
+2023-09-16-12:27:22   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006999982986599207 | 83.36751262346903 |
+|     120      | 0.010299560613930225 | 79.47612785630756 |
+|     160      | 0.013557340949773788 | 76.49913198418088 |
+|     200      | 0.01689300686120987  | 73.97048655483458 |
+|     240      | 0.020216694101691246 | 71.81846731238895 |
+|     280      | 0.023530976846814156 |  69.997937977314  |
+|     320      | 0.026825018227100372 | 68.35937516556847 |
++--------------+----------------------+-------------------+
+2023-09-16-12:27:22   [info]: Epoch 5/100
+2023-09-16-12:31:47   [info]: Calling: evaluate...
+2023-09-16-12:31:47   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:31:58   [info]: Evaluation finished!
+2023-09-16-12:31:58   [info]: Iterations completed: 5000 Results:
+ train loss: mean: 0.1495, var: 0.0001
+2023-09-16-12:31:58   [info]: Evaluation Results:
+
+2023-09-16-12:31:58   [info]: Average over all actions:
+2023-09-16-12:31:58   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006452069152146578 | 84.14192679855559 |
+|     120      | 0.00957553368061781  | 80.22569434510338 |
+|     160      | 0.012645336799323559 | 77.22970909542508 |
+|     200      | 0.01569194719195366  | 74.82682317495346 |
+|     240      | 0.018735060468316078 |  72.7930767668618 |
+|     280      | 0.021797332912683487 | 71.05110734701157 |
+|     320      | 0.024854088202118874 | 69.51171904802322 |
++--------------+----------------------+-------------------+
+2023-09-16-12:31:58   [info]: Calling: save_checkpoint...
+2023-09-16-12:31:58   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_5.pth
+2023-09-16-12:31:58   [info]: Epoch 6/100
+2023-09-16-12:36:25   [info]: Calling: evaluate...
+2023-09-16-12:36:25   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:36:36   [info]: Evaluation finished!
+2023-09-16-12:36:36   [info]: Iterations completed: 6000 Results:
+ train loss: mean: 0.1429, var: 0.0001
+2023-09-16-12:36:36   [info]: Evaluation Results:
+
+2023-09-16-12:36:36   [info]: Average over all actions:
+2023-09-16-12:36:36   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006034495774656534 | 84.72243928247028 |
+|     120      | 0.008910064585506916 | 81.01041615009308 |
+|     160      | 0.01175700407475233  | 78.03038193119896 |
+|     200      | 0.014680426567792892 | 75.54904570182165 |
+|     240      |  0.0176208708435297  | 73.42035621404648 |
+|     280      | 0.020579451695084572 | 71.57921128802829 |
+|     320      | 0.023539578542113304 | 69.94932674699359 |
++--------------+----------------------+-------------------+
+2023-09-16-12:36:36   [info]: Epoch 7/100
+2023-09-16-12:41:00   [info]: Calling: evaluate...
+2023-09-16-12:41:00   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:41:11   [info]: Evaluation finished!
+2023-09-16-12:41:11   [info]: Iterations completed: 7000 Results:
+ train loss: mean: 0.1376, var: 0.0001
+2023-09-16-12:41:11   [info]: Evaluation Results:
+
+2023-09-16-12:41:11   [info]: Average over all actions:
+2023-09-16-12:41:11   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005747992545366287 | 85.12413253386816 |
+|     120      | 0.008596033789217472 |  81.3543826341629 |
+|     160      | 0.01144495140761137  | 78.47319824828041 |
+|     200      | 0.014281830750405788 | 76.10959162314734 |
+|     240      | 0.017112793400883675 | 74.09950180186165 |
+|     280      | 0.019959481433033943 |  72.353624800841  |
+|     320      | 0.022862840443849564 |  70.7813592420684 |
++--------------+----------------------+-------------------+
+2023-09-16-12:41:11   [info]: Epoch 8/100
+2023-09-16-12:45:35   [info]: Calling: evaluate...
+2023-09-16-12:45:35   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:45:47   [info]: Evaluation finished!
+2023-09-16-12:45:47   [info]: Iterations completed: 8000 Results:
+ train loss: mean: 0.1340, var: 0.0001
+2023-09-16-12:45:47   [info]: Evaluation Results:
+
+2023-09-16-12:45:47   [info]: Average over all actions:
+2023-09-16-12:45:47   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005749826319515705 | 84.98307350609038 |
+|     120      | 0.008580959402024746 | 81.30685703621971 |
+|     160      | 0.011474218219518661 | 78.43012164036432 |
+|     200      | 0.014340512454509735 |  76.0243053237597 |
+|     240      | 0.01723647303879261  | 73.94249124659432 |
+|     280      | 0.020099926739931107 | 72.17426167594063 |
+|     320      | 0.023035729303956032 | 70.57378391424814 |
++--------------+----------------------+-------------------+
+2023-09-16-12:45:47   [info]: Epoch 9/100
+2023-09-16-12:50:12   [info]: Calling: evaluate...
+2023-09-16-12:50:12   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:50:23   [info]: Evaluation finished!
+2023-09-16-12:50:23   [info]: Iterations completed: 9000 Results:
+ train loss: mean: 0.1318, var: 0.0001
+2023-09-16-12:50:23   [info]: Evaluation Results:
+
+2023-09-16-12:50:23   [info]: Average over all actions:
+2023-09-16-12:50:23   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005654021631926298 | 85.22960030370288 |
+|     120      | 0.008450483903288841 | 81.46299786037869 |
+|     160      | 0.011191971600055695 | 78.50358039140701 |
+|     200      | 0.01393125019967556  |  76.1315095755789 |
+|     240      | 0.016707707196474075 | 74.06966222657097 |
+|     280      | 0.019501345232129097 | 72.30099820428424 |
+|     320      | 0.02234569564461708  | 70.68457023964989 |
++--------------+----------------------+-------------------+
+2023-09-16-12:50:23   [info]: Epoch 10/100
+2023-09-16-12:54:49   [info]: Calling: evaluate...
+2023-09-16-12:54:49   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:55:00   [info]: Evaluation finished!
+2023-09-16-12:55:00   [info]: Iterations completed: 10000 Results:
+ train loss: mean: 0.1292, var: 0.0001
+2023-09-16-12:55:00   [info]: Evaluation Results:
+
+2023-09-16-12:55:00   [info]: Average over all actions:
+2023-09-16-12:55:00   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005508567206561565 | 85.52810351053873 |
+|     120      |  0.0082858856767416  | 81.81304252809949 |
+|     160      | 0.011027488857507706 |  78.9093964629703 |
+|     200      | 0.013823308981955051 |  76.5241973929935 |
+|     240      | 0.016675500199198723 | 74.51443158917957 |
+|     280      | 0.019556008279323578 |  72.7531467874845 |
+|     320      | 0.022442035377025604 | 71.14366359180875 |
++--------------+----------------------+-------------------+
+2023-09-16-12:55:00   [info]: Calling: save_checkpoint...
+2023-09-16-12:55:00   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_10.pth
+2023-09-16-12:55:00   [info]: Epoch 11/100
+2023-09-16-12:59:25   [info]: Calling: evaluate...
+2023-09-16-12:59:25   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-12:59:36   [info]: Evaluation finished!
+2023-09-16-12:59:36   [info]: Iterations completed: 11000 Results:
+ train loss: mean: 0.1277, var: 0.0001
+2023-09-16-12:59:36   [info]: Evaluation Results:
+
+2023-09-16-12:59:36   [info]: Average over all actions:
+2023-09-16-12:59:36   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005466514732688665 | 85.55913666884103 |
+|     120      | 0.008138004690408707 | 81.95779058668349 |
+|     160      | 0.010835342109203339 | 79.12467403544319 |
+|     200      | 0.013530747033655643 | 76.73491719696257 |
+|     240      | 0.01628183014690876  | 74.67968629466164 |
+|     280      | 0.019103465601801872 | 72.90440483225716 |
+|     320      | 0.021860333159565926 | 71.36122037967047 |
++--------------+----------------------+-------------------+
+2023-09-16-12:59:36   [info]: Epoch 12/100
+2023-09-16-13:04:03   [info]: Calling: evaluate...
+2023-09-16-13:04:03   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:04:14   [info]: Evaluation finished!
+2023-09-16-13:04:14   [info]: Iterations completed: 12000 Results:
+ train loss: mean: 0.1258, var: 0.0001
+2023-09-16-13:04:14   [info]: Evaluation Results:
+
+2023-09-16-13:04:14   [info]: Average over all actions:
+2023-09-16-13:04:14   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005498108919709921 | 85.55316858821445 |
+|     120      | 0.008165664970874786 | 81.91493021117317 |
+|     160      | 0.010868323035538197 | 79.00303800900778 |
+|     200      | 0.01361202634871006  | 76.59060292773776 |
+|     240      | 0.016334695741534233 | 74.56184890535143 |
+|     280      | 0.019042784348130226 | 72.88096828593147 |
+|     320      | 0.021778283640742302 | 71.34765618377261 |
++--------------+----------------------+-------------------+
+2023-09-16-13:04:14   [info]: Epoch 13/100
+2023-09-16-13:08:39   [info]: Calling: evaluate...
+2023-09-16-13:08:39   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:08:50   [info]: Evaluation finished!
+2023-09-16-13:08:50   [info]: Iterations completed: 13000 Results:
+ train loss: mean: 0.1246, var: 0.0001
+2023-09-16-13:08:50   [info]: Evaluation Results:
+
+2023-09-16-13:08:50   [info]: Average over all actions:
+2023-09-16-13:08:50   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005411820020526648 | 85.72797344790565 |
+|     120      | 0.008019932545721531 | 82.18543827533722 |
+|     160      | 0.010623100213706493 | 79.37999218702316 |
+|     200      | 0.013260073959827423 | 77.04285995827782 |
+|     240      | 0.016000093892216682 | 74.96484451823764 |
+|     280      | 0.018632162362337112 | 73.21733981370926 |
+|     320      | 0.021316878497600555 | 71.68684800465903 |
++--------------+----------------------+-------------------+
+2023-09-16-13:08:50   [info]: Epoch 14/100
+2023-09-16-13:13:16   [info]: Calling: evaluate...
+2023-09-16-13:13:16   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:13:28   [info]: Evaluation finished!
+2023-09-16-13:13:28   [info]: Iterations completed: 14000 Results:
+ train loss: mean: 0.1232, var: 0.0001
+2023-09-16-13:13:28   [info]: Evaluation Results:
+
+2023-09-16-13:13:28   [info]: Average over all actions:
+2023-09-16-13:13:28   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005314607638865709 | 85.81141399012672 |
+|     120      | 0.007933955639600754 |  82.175455821885  |
+|     160      | 0.010569256730377674 |  79.4220926033126 |
+|     200      | 0.01317750196903944  | 77.13205334213045 |
+|     240      | 0.015821509063243866 |  75.1522347331047 |
+|     280      | 0.018484406173229218 |  73.4495437807507 |
+|     320      | 0.021164551377296448 | 71.93001310030618 |
++--------------+----------------------+-------------------+
+2023-09-16-13:13:28   [info]: Epoch 15/100
+2023-09-16-13:17:52   [info]: Calling: evaluate...
+2023-09-16-13:17:52   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:18:04   [info]: Evaluation finished!
+2023-09-16-13:18:04   [info]: Iterations completed: 15000 Results:
+ train loss: mean: 0.1226, var: 0.0001
+2023-09-16-13:18:04   [info]: Evaluation Results:
+
+2023-09-16-13:18:04   [info]: Average over all actions:
+2023-09-16-13:18:04   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005319187417626381 | 85.78114178445604 |
+|     120      | 0.00797331240028143  | 82.12358819113838 |
+|     160      | 0.010613859631121159 |  79.2430559794108 |
+|     200      | 0.013263856992125511 | 76.86653700139787 |
+|     240      | 0.01593335159122944  | 74.83582894007364 |
+|     280      | 0.01856478489935398  | 73.10622880856195 |
+|     320      | 0.02128651551902294  | 71.51497354110083 |
++--------------+----------------------+-------------------+
+2023-09-16-13:18:04   [info]: Calling: save_checkpoint...
+2023-09-16-13:18:04   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_15.pth
+2023-09-16-13:18:04   [info]: Epoch 16/100
+2023-09-16-13:22:28   [info]: Calling: evaluate...
+2023-09-16-13:22:28   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:22:39   [info]: Evaluation finished!
+2023-09-16-13:22:39   [info]: Iterations completed: 16000 Results:
+ train loss: mean: 0.1218, var: 0.0001
+2023-09-16-13:22:39   [info]: Evaluation Results:
+
+2023-09-16-13:22:39   [info]: Average over all actions:
+2023-09-16-13:22:39   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005388506688177586 | 85.86263060569763 |
+|     120      | 0.00801391527056694  | 82.21473478608661 |
+|     160      | 0.01063136849552393  | 79.38726080788506 |
+|     200      | 0.013346267864108086 | 77.02680147356457 |
+|     240      | 0.015998845919966698 | 75.04481342103746 |
+|     280      | 0.018651187419891357 | 73.38812963830101 |
+|     320      | 0.021340511739253998 | 71.89984867970148 |
++--------------+----------------------+-------------------+
+2023-09-16-13:22:39   [info]: Epoch 17/100
+2023-09-16-13:27:04   [info]: Calling: evaluate...
+2023-09-16-13:27:04   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:27:15   [info]: Evaluation finished!
+2023-09-16-13:27:15   [info]: Iterations completed: 17000 Results:
+ train loss: mean: 0.1208, var: 0.0001
+2023-09-16-13:27:15   [info]: Evaluation Results:
+
+2023-09-16-13:27:15   [info]: Average over all actions:
+2023-09-16-13:27:15   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005180578213185072 | 86.18706597222221 |
+|     120      | 0.007744024507701397 | 82.48817274967828 |
+|     160      | 0.01035277172923088  |  79.6971567802959 |
+|     200      | 0.012994003482162952 |  77.3873688446151 |
+|     240      | 0.01564313843846321  | 75.45735670460594 |
+|     280      | 0.018328556790947914 | 73.76812100410461 |
+|     320      | 0.020947668701410294 |  72.2795138756434 |
++--------------+----------------------+-------------------+
+2023-09-16-13:27:15   [info]: Epoch 18/100
+2023-09-16-13:31:41   [info]: Calling: evaluate...
+2023-09-16-13:31:41   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:31:53   [info]: Evaluation finished!
+2023-09-16-13:31:53   [info]: Iterations completed: 18000 Results:
+ train loss: mean: 0.1200, var: 0.0001
+2023-09-16-13:31:53   [info]: Evaluation Results:
+
+2023-09-16-13:31:53   [info]: Average over all actions:
+2023-09-16-13:31:53   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005325132980942726 | 85.85384057627785 |
+|     120      | 0.007907174527645111 | 82.20518711540434 |
+|     160      | 0.010521517135202885 |  79.3742405043708 |
+|     200      | 0.013180372305214405 | 77.00466480520036 |
+|     240      | 0.015842759981751442 | 74.99240388472876 |
+|     280      | 0.01848977990448475  | 73.25282080305946 |
+|     320      |  0.0211668498814106  | 71.69075542026096 |
++--------------+----------------------+-------------------+
+2023-09-16-13:31:53   [info]: Epoch 19/100
+2023-09-16-13:36:17   [info]: Calling: evaluate...
+2023-09-16-13:36:17   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:36:29   [info]: Evaluation finished!
+2023-09-16-13:36:29   [info]: Iterations completed: 19000 Results:
+ train loss: mean: 0.1196, var: 0.0001
+2023-09-16-13:36:29   [info]: Evaluation Results:
+
+2023-09-16-13:36:29   [info]: Average over all actions:
+2023-09-16-13:36:29   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      |  0.005161468405276537 | 86.26638452212015 |
+|     120      | 0.0076933312229812145 | 82.62434833579593 |
+|     160      |  0.010208716616034508 | 79.87120168076622 |
+|     200      |  0.012788699939846992 | 77.59765668047798 |
+|     240      |  0.015308464877307415 | 75.69205727842119 |
+|     280      |  0.01784219779074192  | 74.04405491219627 |
+|     320      |  0.020421205088496208 | 72.54090706507364 |
++--------------+-----------------------+-------------------+
+2023-09-16-13:36:29   [info]: Epoch 20/100
+2023-09-16-13:40:53   [info]: Calling: evaluate...
+2023-09-16-13:40:53   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:41:04   [info]: Evaluation finished!
+2023-09-16-13:41:04   [info]: Iterations completed: 20000 Results:
+ train loss: mean: 0.1189, var: 0.0001
+2023-09-16-13:41:04   [info]: Evaluation Results:
+
+2023-09-16-13:41:04   [info]: Average over all actions:
+2023-09-16-13:41:04   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005204253364354372 | 86.07519600126479 |
+|     120      | 0.007735193241387606 | 82.45681441492505 |
+|     160      | 0.010305122472345829 |  79.6873915526602 |
+|     200      | 0.012948552146553993 | 77.36501726839278 |
+|     240      | 0.01553504727780819  | 75.42545563644833 |
+|     280      | 0.01818503811955452  | 73.74153683582941 |
+|     320      | 0.02077149599790573  |  72.2438148326344 |
++--------------+----------------------+-------------------+
+2023-09-16-13:41:04   [info]: Calling: save_checkpoint...
+2023-09-16-13:41:04   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_20.pth
+2023-09-16-13:41:04   [info]: Epoch 21/100
+2023-09-16-13:45:28   [info]: Calling: evaluate...
+2023-09-16-13:45:28   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:45:39   [info]: Evaluation finished!
+2023-09-16-13:45:39   [info]: Iterations completed: 21000 Results:
+ train loss: mean: 0.1184, var: 0.0001
+2023-09-16-13:45:39   [info]: Evaluation Results:
+
+2023-09-16-13:45:39   [info]: Average over all actions:
+2023-09-16-13:45:39   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005271700210869312 | 85.74641976091597 |
+|     120      | 0.007835451513528824 | 82.11675369077258 |
+|     160      | 0.010499089024960995 |  79.2115878727701 |
+|     200      | 0.013123326003551483 | 76.83398425579071 |
+|     240      | 0.01577972248196602  | 74.79459693034491 |
+|     280      | 0.01848318614065647  | 73.03461300002205 |
+|     320      | 0.021187210455536842 |  71.4267580045594 |
++--------------+----------------------+-------------------+
+2023-09-16-13:45:39   [info]: Epoch 22/100
+2023-09-16-13:50:03   [info]: Calling: evaluate...
+2023-09-16-13:50:03   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:50:14   [info]: Evaluation finished!
+2023-09-16-13:50:14   [info]: Iterations completed: 22000 Results:
+ train loss: mean: 0.1180, var: 0.0001
+2023-09-16-13:50:14   [info]: Evaluation Results:
+
+2023-09-16-13:50:14   [info]: Average over all actions:
+2023-09-16-13:50:14   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005288776010274887 | 85.97439196374681 |
+|     120      | 0.007892271503806114 | 82.33452704217699 |
+|     160      | 0.010542753152549267 | 79.47656313578287 |
+|     200      | 0.01318651158362627  | 77.14463969071707 |
+|     240      | 0.01587396115064621  |  75.1700308587816 |
+|     280      | 0.01859368197619915  | 73.43402852614722 |
+|     320      | 0.021333470940589905 | 71.87304761674669 |
++--------------+----------------------+-------------------+
+2023-09-16-13:50:14   [info]: Epoch 23/100
+2023-09-16-13:54:39   [info]: Calling: evaluate...
+2023-09-16-13:54:39   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:54:50   [info]: Evaluation finished!
+2023-09-16-13:54:50   [info]: Iterations completed: 23000 Results:
+ train loss: mean: 0.1181, var: 0.0001
+2023-09-16-13:54:50   [info]: Evaluation Results:
+
+2023-09-16-13:54:50   [info]: Average over all actions:
+2023-09-16-13:54:50   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005182824097573757 | 86.15429666307237 |
+|     120      | 0.007769876159727573 | 82.45681474606195 |
+|     160      | 0.010366634465754032 | 79.61425814363692 |
+|     200      | 0.012972047552466393 | 77.28287710083855 |
+|     240      | 0.015605839900672436 | 75.32921002970802 |
+|     280      | 0.01819961704313755  | 73.66395377450519 |
+|     320      | 0.020804982632398605 | 72.17806064420276 |
++--------------+----------------------+-------------------+
+2023-09-16-13:54:50   [info]: Epoch 24/100
+2023-09-16-13:59:15   [info]: Calling: evaluate...
+2023-09-16-13:59:15   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-13:59:27   [info]: Evaluation finished!
+2023-09-16-13:59:27   [info]: Iterations completed: 24000 Results:
+ train loss: mean: 0.1173, var: 0.0001
+2023-09-16-13:59:27   [info]: Evaluation Results:
+
+2023-09-16-13:59:27   [info]: Average over all actions:
+2023-09-16-13:59:27   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005289047956466675 | 85.90852916240692 |
+|     120      | 0.007864459417760372 | 82.30403545829985 |
+|     160      | 0.010501324199140072 | 79.48687109682295 |
+|     200      | 0.013159100897610188 | 77.11794707510207 |
+|     240      | 0.015807464718818665 | 75.09852482212914 |
+|     280      | 0.018470901995897293 | 73.36404108338886 |
+|     320      | 0.021118592470884323 | 71.82096375359428 |
++--------------+----------------------+-------------------+
+2023-09-16-13:59:27   [info]: Epoch 25/100
+2023-09-16-14:03:50   [info]: Calling: evaluate...
+2023-09-16-14:03:50   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:04:02   [info]: Evaluation finished!
+2023-09-16-14:04:02   [info]: Iterations completed: 25000 Results:
+ train loss: mean: 0.1169, var: 0.0001
+2023-09-16-14:04:02   [info]: Evaluation Results:
+
+2023-09-16-14:04:02   [info]: Average over all actions:
+2023-09-16-14:04:02   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005255462136119604 |  86.0465493467119 |
+|     120      | 0.007802095264196396 | 82.40451365709305 |
+|     160      | 0.01047034002840519  |  79.5495879318979 |
+|     200      | 0.013111033476889133 | 77.23513444264731 |
+|     240      | 0.015760963782668114 |  75.250976284345  |
+|     280      |  0.0185016468167305  | 73.53841165701547 |
+|     320      | 0.02124498412013054  | 72.00694431861243 |
++--------------+----------------------+-------------------+
+2023-09-16-14:04:02   [info]: Calling: save_checkpoint...
+2023-09-16-14:04:02   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_25.pth
+2023-09-16-14:04:02   [info]: Epoch 26/100
+2023-09-16-14:08:26   [info]: Calling: evaluate...
+2023-09-16-14:08:26   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:08:37   [info]: Evaluation finished!
+2023-09-16-14:08:37   [info]: Iterations completed: 26000 Results:
+ train loss: mean: 0.1172, var: 0.0001
+2023-09-16-14:08:37   [info]: Evaluation Results:
+
+2023-09-16-14:08:37   [info]: Average over all actions:
+2023-09-16-14:08:37   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005055843386799097 | 86.39941447310977 |
+|     120      | 0.007555651478469372 | 82.77376244465509 |
+|     160      |  0.0101242670789361  | 79.95214909315109 |
+|     200      | 0.012682894244790077 | 77.70562006367577 |
+|     240      | 0.015203510411083698 | 75.78363733159172 |
+|     280      | 0.01780509389936924  | 74.11534322632683 |
+|     320      | 0.020359259098768234 | 72.62749473253885 |
++--------------+----------------------+-------------------+
+2023-09-16-14:08:37   [info]: Epoch 27/100
+2023-09-16-14:13:01   [info]: Calling: evaluate...
+2023-09-16-14:13:01   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:13:12   [info]: Evaluation finished!
+2023-09-16-14:13:12   [info]: Iterations completed: 27000 Results:
+ train loss: mean: 0.1172, var: 0.0001
+2023-09-16-14:13:12   [info]: Evaluation Results:
+
+2023-09-16-14:13:12   [info]: Average over all actions:
+2023-09-16-14:13:12   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005274404305964708 |  86.0523005326589 |
+|     120      | 0.00788852944970131  | 82.36816343333986 |
+|     160      | 0.010461871512234211 | 79.55859419372347 |
+|     200      | 0.013173839077353477 | 77.20355855094063 |
+|     240      | 0.015868492424488068 | 75.21451810995737 |
+|     280      | 0.018612205982208252 | 73.50661870506075 |
+|     320      | 0.021325645968317986 | 71.96180572112402 |
++--------------+----------------------+-------------------+
+2023-09-16-14:13:12   [info]: Epoch 28/100
+2023-09-16-14:17:38   [info]: Calling: evaluate...
+2023-09-16-14:17:38   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:17:49   [info]: Evaluation finished!
+2023-09-16-14:17:49   [info]: Iterations completed: 28000 Results:
+ train loss: mean: 0.1167, var: 0.0001
+2023-09-16-14:17:49   [info]: Evaluation Results:
+
+2023-09-16-14:17:49   [info]: Average over all actions:
+2023-09-16-14:17:49   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005266999825835228 | 86.28276917669508 |
+|     120      | 0.007797613274306059 | 82.63552536567053 |
+|     160      | 0.01033014990389347  | 79.84168860647414 |
+|     200      | 0.01288115605711937  | 77.57400191492505 |
+|     240      | 0.015441699884831905 | 75.65516498353746 |
+|     280      | 0.018012316897511482 | 74.01573326852586 |
+|     320      |  0.0205621886998415  | 72.54882819122739 |
++--------------+----------------------+-------------------+
+2023-09-16-14:17:49   [info]: Epoch 29/100
+2023-09-16-14:22:14   [info]: Calling: evaluate...
+2023-09-16-14:22:14   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:22:25   [info]: Evaluation finished!
+2023-09-16-14:22:25   [info]: Iterations completed: 29000 Results:
+ train loss: mean: 0.1164, var: 0.0001
+2023-09-16-14:22:25   [info]: Evaluation Results:
+
+2023-09-16-14:22:25   [info]: Average over all actions:
+2023-09-16-14:22:25   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00529513182118535  | 86.05750799179077 |
+|     120      | 0.007882417179644108 | 82.40581485960219 |
+|     160      | 0.010436919517815113 |  79.6055782172415 |
+|     200      |  0.0130658820271492  | 77.24880592690575 |
+|     240      | 0.015678029507398605 | 75.25499214728674 |
+|     280      | 0.01833953894674778  | 73.54134089416928 |
+|     320      | 0.02100507915019989  | 72.00737877024544 |
++--------------+----------------------+-------------------+
+2023-09-16-14:22:25   [info]: Epoch 30/100
+2023-09-16-14:26:50   [info]: Calling: evaluate...
+2023-09-16-14:26:50   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:27:01   [info]: Evaluation finished!
+2023-09-16-14:27:01   [info]: Iterations completed: 30000 Results:
+ train loss: mean: 0.1177, var: 0.0001
+2023-09-16-14:27:01   [info]: Evaluation Results:
+
+2023-09-16-14:27:01   [info]: Average over all actions:
+2023-09-16-14:27:01   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005386983975768089 | 85.86046000321707 |
+|     120      | 0.007979016751050949 | 82.24381572670407 |
+|     160      | 0.01059441827237606  |  79.4270834989018 |
+|     200      | 0.013265753164887428 | 77.07747452788882 |
+|     240      | 0.015912305563688278 | 75.09711335102716 |
+|     280      | 0.018600305542349815 | 73.35666202836566 |
+|     320      | 0.02129931002855301  | 71.81249939733081 |
++--------------+----------------------+-------------------+
+2023-09-16-14:27:01   [info]: Calling: save_checkpoint...
+2023-09-16-14:27:01   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_30.pth
+2023-09-16-14:27:01   [info]: Epoch 31/100
+2023-09-16-14:31:27   [info]: Calling: evaluate...
+2023-09-16-14:31:27   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:31:39   [info]: Evaluation finished!
+2023-09-16-14:31:39   [info]: Iterations completed: 31000 Results:
+ train loss: mean: 0.1172, var: 0.0001
+2023-09-16-14:31:39   [info]: Evaluation Results:
+
+2023-09-16-14:31:39   [info]: Average over all actions:
+2023-09-16-14:31:39   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005223252810537815 | 86.13802095254263 |
+|     120      | 0.007758165709674358 | 82.48990939723122 |
+|     160      | 0.010283752344548702 | 79.73394112454521 |
+|     200      | 0.012895314954221249 |  77.4034289850129 |
+|     240      | 0.015558072365820408 | 75.45876801013947 |
+|     280      | 0.01821485161781311  | 73.77181053161621 |
+|     320      | 0.020856883376836777 | 72.28993044959175 |
++--------------+----------------------+-------------------+
+2023-09-16-14:31:39   [info]: Epoch 32/100
+2023-09-16-14:36:04   [info]: Calling: evaluate...
+2023-09-16-14:36:04   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:36:15   [info]: Evaluation finished!
+2023-09-16-14:36:15   [info]: Iterations completed: 32000 Results:
+ train loss: mean: 0.1158, var: 0.0001
+2023-09-16-14:36:15   [info]: Evaluation Results:
+
+2023-09-16-14:36:15   [info]: Average over all actions:
+2023-09-16-14:36:15   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005213003605604172 | 86.20279928048453 |
+|     120      | 0.00772419199347496  | 82.54947844478819 |
+|     160      | 0.010246382094919682 | 79.79698396391339 |
+|     200      | 0.012802660465240479 | 77.53819392787086 |
+|     240      | 0.015270138159394264 | 75.65212663677003 |
+|     280      | 0.01777191087603569  | 74.03960542546379 |
+|     320      | 0.020253395661711693 |  72.5864796174897 |
++--------------+----------------------+-------------------+
+2023-09-16-14:36:15   [info]: Epoch 33/100
+2023-09-16-14:40:40   [info]: Calling: evaluate...
+2023-09-16-14:40:40   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:40:52   [info]: Evaluation finished!
+2023-09-16-14:40:52   [info]: Iterations completed: 33000 Results:
+ train loss: mean: 0.1156, var: 0.0001
+2023-09-16-14:40:52   [info]: Evaluation Results:
+
+2023-09-16-14:40:52   [info]: Average over all actions:
+2023-09-16-14:40:52   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      |  0.00506342388689518  | 86.38953897688124 |
+|     120      | 0.0075532663613557816 | 82.75672710604138 |
+|     160      |  0.010067377239465714 |  80.0179026193089 |
+|     200      |  0.012672602199018002 | 77.72287295924293 |
+|     240      |  0.015224236063659191 | 75.79980492591858 |
+|     280      |  0.01773785799741745  | 74.16905363400778 |
+|     320      |  0.020329738035798073 | 72.66080727179846 |
++--------------+-----------------------+-------------------+
+2023-09-16-14:40:52   [info]: Epoch 34/100
+2023-09-16-14:45:16   [info]: Calling: evaluate...
+2023-09-16-14:45:16   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:45:27   [info]: Evaluation finished!
+2023-09-16-14:45:27   [info]: Iterations completed: 34000 Results:
+ train loss: mean: 0.1151, var: 0.0001
+2023-09-16-14:45:27   [info]: Evaluation Results:
+
+2023-09-16-14:45:27   [info]: Average over all actions:
+2023-09-16-14:45:27   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      |  0.00525327306240797  | 85.92241704463959 |
+|     120      | 0.0077939582988619804 | 82.32183092170291 |
+|     160      |  0.010364768095314503 | 79.52723486555946 |
+|     200      |  0.012975023128092289 | 77.18554569615257 |
+|     240      |  0.015554363839328289 | 75.25108539395862 |
+|     280      |  0.018158653751015663 | 73.53374494446648 |
+|     320      |   0.0207311250269413  |  72.018663585186  |
++--------------+-----------------------+-------------------+
+2023-09-16-14:45:27   [info]: Epoch 35/100
+2023-09-16-14:49:54   [info]: Calling: evaluate...
+2023-09-16-14:49:54   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:50:06   [info]: Evaluation finished!
+2023-09-16-14:50:06   [info]: Iterations completed: 35000 Results:
+ train loss: mean: 0.1154, var: 0.0001
+2023-09-16-14:50:06   [info]: Evaluation Results:
+
+2023-09-16-14:50:06   [info]: Average over all actions:
+2023-09-16-14:50:06   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0050111208111047745 | 86.38530704710219 |
+|     120      |  0.007545968983322382 |  82.7355682849884 |
+|     160      |  0.010028128512203693 | 79.95496988296509 |
+|     200      |  0.012537399306893349 | 77.61783864763048 |
+|     240      |   0.0150857949629426  | 75.69292551941342 |
+|     280      |  0.01758136972784996  | 74.03830289840698 |
+|     320      |  0.020140647888183594 | 72.55360268884235 |
++--------------+-----------------------+-------------------+
+2023-09-16-14:50:06   [info]: Calling: save_checkpoint...
+2023-09-16-14:50:06   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_35.pth
+2023-09-16-14:50:06   [info]: Epoch 36/100
+2023-09-16-14:54:32   [info]: Calling: evaluate...
+2023-09-16-14:54:32   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:54:43   [info]: Evaluation finished!
+2023-09-16-14:54:43   [info]: Iterations completed: 36000 Results:
+ train loss: mean: 0.1151, var: 0.0001
+2023-09-16-14:54:43   [info]: Evaluation Results:
+
+2023-09-16-14:54:43   [info]: Average over all actions:
+2023-09-16-14:54:43   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00505011435598135  | 86.42426265610588 |
+|     120      | 0.007557395845651627 | 82.74348941114214 |
+|     160      | 0.010079605504870415 | 79.94715670744577 |
+|     200      | 0.01257729809731245  | 77.69476953479979 |
+|     240      | 0.01515215914696455  | 75.77691011958652 |
+|     280      | 0.017794720828533173 | 74.10601145691342 |
+|     320      | 0.020418966189026833 | 72.60351594951418 |
++--------------+----------------------+-------------------+
+2023-09-16-14:54:43   [info]: Epoch 37/100
+2023-09-16-14:59:09   [info]: Calling: evaluate...
+2023-09-16-14:59:09   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-14:59:20   [info]: Evaluation finished!
+2023-09-16-14:59:20   [info]: Iterations completed: 37000 Results:
+ train loss: mean: 0.1147, var: 0.0001
+2023-09-16-14:59:20   [info]: Evaluation Results:
+
+2023-09-16-14:59:20   [info]: Average over all actions:
+2023-09-16-14:59:20   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005214257165789604 |  86.0090066989263 |
+|     120      | 0.007757342886179686 | 82.40679204463959 |
+|     160      | 0.010299536399543285 | 79.63954044712914 |
+|     200      | 0.012921064160764217 | 77.34331538279852 |
+|     240      | 0.015457072295248508 | 75.39822045299742 |
+|     280      | 0.01803119108080864  | 73.70496922069125 |
+|     320      | 0.020644614472985268 | 72.17003090514076 |
++--------------+----------------------+-------------------+
+2023-09-16-14:59:20   [info]: Epoch 38/100
+2023-09-16-15:03:46   [info]: Calling: evaluate...
+2023-09-16-15:03:46   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:03:57   [info]: Evaluation finished!
+2023-09-16-15:03:57   [info]: Iterations completed: 38000 Results:
+ train loss: mean: 0.1161, var: 0.0001
+2023-09-16-15:03:57   [info]: Evaluation Results:
+
+2023-09-16-15:03:57   [info]: Average over all actions:
+2023-09-16-15:03:57   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005279583856463432 | 85.95030340883467 |
+|     120      | 0.007863565348088741 | 82.30327698919508 |
+|     160      | 0.010468175634741783 | 79.53190058469772 |
+|     200      | 0.013101833872497082 | 77.25618547863431 |
+|     240      | 0.01572459377348423  |  75.3505857454406 |
+|     280      |  0.0183647982776165  | 73.68391950925192 |
+|     320      | 0.02102695405483246  | 72.17664933866925 |
++--------------+----------------------+-------------------+
+2023-09-16-15:03:57   [info]: Epoch 39/100
+2023-09-16-15:08:22   [info]: Calling: evaluate...
+2023-09-16-15:08:22   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:08:33   [info]: Evaluation finished!
+2023-09-16-15:08:33   [info]: Iterations completed: 39000 Results:
+ train loss: mean: 0.1160, var: 0.0001
+2023-09-16-15:08:33   [info]: Evaluation Results:
+
+2023-09-16-15:08:33   [info]: Average over all actions:
+2023-09-16-15:08:33   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005179340951144695 | 86.20898458692763 |
+|     120      | 0.007750724442303181 | 82.52495643165376 |
+|     160      | 0.010347673669457436 | 79.77951467037201 |
+|     200      | 0.012900340370833874 | 77.54795965221193 |
+|     240      | 0.015480637550354004 | 75.64225279622607 |
+|     280      | 0.01808306947350502  | 73.97862391339409 |
+|     320      | 0.020687006413936615 | 72.47656302319633 |
++--------------+----------------------+-------------------+
+2023-09-16-15:08:33   [info]: Epoch 40/100
+2023-09-16-15:12:59   [info]: Calling: evaluate...
+2023-09-16-15:12:59   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:13:10   [info]: Evaluation finished!
+2023-09-16-15:13:10   [info]: Iterations completed: 40000 Results:
+ train loss: mean: 0.1163, var: 0.0001
+2023-09-16-15:13:10   [info]: Evaluation Results:
+
+2023-09-16-15:13:10   [info]: Average over all actions:
+2023-09-16-15:13:10   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0052601988427340984 | 85.98459230528938 |
+|     120      |  0.007870117202401161 | 82.23296420441734 |
+|     160      |  0.010499813593924046 | 79.38921435011757 |
+|     200      |  0.013168122619390488 | 77.09819906287723 |
+|     240      |  0.01584174670279026  | 75.10622872246635 |
+|     280      |  0.01851392723619938  | 73.44097230169508 |
+|     320      |  0.021203532814979553 | 71.92176729440689 |
++--------------+-----------------------+-------------------+
+2023-09-16-15:13:10   [info]: Calling: save_checkpoint...
+2023-09-16-15:13:10   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_40.pth
+2023-09-16-15:13:10   [info]: Epoch 41/100
+2023-09-16-15:17:36   [info]: Calling: evaluate...
+2023-09-16-15:17:36   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:17:47   [info]: Evaluation finished!
+2023-09-16-15:17:47   [info]: Iterations completed: 41000 Results:
+ train loss: mean: 0.1235, var: 0.0002
+2023-09-16-15:17:47   [info]: Evaluation Results:
+
+2023-09-16-15:17:47   [info]: Average over all actions:
+2023-09-16-15:17:47   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005264857783913612 |  86.0105256239573 |
+|     120      | 0.007818225771188736 | 82.37608472506204 |
+|     160      | 0.010413926094770432 | 79.60774732960594 |
+|     200      | 0.01302952691912651  |  77.3103298412429 |
+|     240      | 0.01565735414624214  | 75.37066009309557 |
+|     280      | 0.01825532130897045  | 73.73209711578157 |
+|     320      | 0.020841484889388084 |  72.2456587685479 |
++--------------+----------------------+-------------------+
+2023-09-16-15:17:47   [info]: Epoch 42/100
+2023-09-16-15:22:12   [info]: Calling: evaluate...
+2023-09-16-15:22:12   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:22:23   [info]: Evaluation finished!
+2023-09-16-15:22:23   [info]: Iterations completed: 42000 Results:
+ train loss: mean: 0.1241, var: 0.0001
+2023-09-16-15:22:23   [info]: Evaluation Results:
+
+2023-09-16-15:22:23   [info]: Average over all actions:
+2023-09-16-15:22:23   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0054556988179683685 | 85.70974436071184 |
+|     120      |  0.008107809349894524 | 81.96538703309166 |
+|     160      |  0.010763406753540039 |   79.14170904292  |
+|     200      |  0.013448456302285194 | 76.81575384404924 |
+|     240      |  0.016128839924931526 | 74.85199686553743 |
+|     280      |  0.018832029774785042 | 73.16851135757234 |
+|     320      |  0.02151637338101864  | 71.69194800986183 |
++--------------+-----------------------+-------------------+
+2023-09-16-15:22:23   [info]: Epoch 43/100
+2023-09-16-15:26:51   [info]: Calling: evaluate...
+2023-09-16-15:26:51   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:27:02   [info]: Evaluation finished!
+2023-09-16-15:27:02   [info]: Iterations completed: 43000 Results:
+ train loss: mean: 0.1228, var: 0.0001
+2023-09-16-15:27:02   [info]: Evaluation Results:
+
+2023-09-16-15:27:02   [info]: Average over all actions:
+2023-09-16-15:27:02   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005255973432213068 | 86.08572052584755 |
+|     120      | 0.007770712487399578 | 82.45789971616533 |
+|     160      | 0.010308006778359413 | 79.68467871348062 |
+|     200      | 0.012919357977807522 | 77.37868875265121 |
+|     240      | 0.015497351065278053 | 75.43543858660591 |
+|     280      |  0.0180798526853323  | 73.77560751305687 |
+|     320      | 0.020710228011012077 | 72.25021686818864 |
++--------------+----------------------+-------------------+
+2023-09-16-15:27:02   [info]: Epoch 44/100
+2023-09-16-15:31:27   [info]: Calling: evaluate...
+2023-09-16-15:31:27   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:31:38   [info]: Evaluation finished!
+2023-09-16-15:31:38   [info]: Iterations completed: 44000 Results:
+ train loss: mean: 0.1236, var: 0.0001
+2023-09-16-15:31:38   [info]: Evaluation Results:
+
+2023-09-16-15:31:38   [info]: Average over all actions:
+2023-09-16-15:31:38   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005246628541499376 | 86.06423570050133 |
+|     120      | 0.007783745415508747 | 82.37749520275328 |
+|     160      | 0.010367732495069504 | 79.55696516566806 |
+|     200      | 0.012989905662834644 | 77.26454006301033 |
+|     240      | 0.01554739847779274  | 75.31966103447807 |
+|     280      |  0.0181309562176466  | 73.66970595386293 |
+|     320      | 0.020733175799250603 | 72.19118972619376 |
++--------------+----------------------+-------------------+
+2023-09-16-15:31:38   [info]: Epoch 45/100
+2023-09-16-15:36:03   [info]: Calling: evaluate...
+2023-09-16-15:36:03   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:36:14   [info]: Evaluation finished!
+2023-09-16-15:36:14   [info]: Iterations completed: 45000 Results:
+ train loss: mean: 0.1456, var: 0.0002
+2023-09-16-15:36:14   [info]: Evaluation Results:
+
+2023-09-16-15:36:14   [info]: Average over all actions:
+2023-09-16-15:36:14   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00553346099331975  | 85.54546435674033 |
+|     120      | 0.008170799352228642 |  81.9575728641616 |
+|     160      | 0.010803860612213612 | 79.18250842226875 |
+|     200      | 0.013482194393873215 | 76.85210539235008 |
+|     240      | 0.016137227416038513 | 74.92545677555931 |
+|     280      | 0.018838688731193542 | 73.22233004702461 |
+|     320      | 0.021553315222263336 | 71.68815003501045 |
++--------------+----------------------+-------------------+
+2023-09-16-15:36:14   [info]: Calling: save_checkpoint...
+2023-09-16-15:36:14   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_45.pth
+2023-09-16-15:36:14   [info]: Epoch 46/100
+2023-09-16-15:40:41   [info]: Calling: evaluate...
+2023-09-16-15:40:41   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:40:52   [info]: Evaluation finished!
+2023-09-16-15:40:52   [info]: Iterations completed: 46000 Results:
+ train loss: mean: 0.1373, var: 0.0003
+2023-09-16-15:40:52   [info]: Evaluation Results:
+
+2023-09-16-15:40:52   [info]: Average over all actions:
+2023-09-16-15:40:52   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005311188753694296 | 85.99240514967177 |
+|     120      | 0.007895276881754398 | 82.36187017626233 |
+|     160      | 0.010483179241418839 | 79.57703918218613 |
+|     200      | 0.013130247592926025 | 77.26920627885394 |
+|     240      | 0.015848008915781975 |  75.2836373117235 |
+|     280      | 0.01847926899790764  | 73.62445758448708 |
+|     320      | 0.021150603890419006 | 72.16059019168219 |
++--------------+----------------------+-------------------+
+2023-09-16-15:40:52   [info]: Epoch 47/100
+2023-09-16-15:45:17   [info]: Calling: evaluate...
+2023-09-16-15:45:17   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:45:29   [info]: Evaluation finished!
+2023-09-16-15:45:29   [info]: Iterations completed: 47000 Results:
+ train loss: mean: 0.1299, var: 0.0001
+2023-09-16-15:45:29   [info]: Evaluation Results:
+
+2023-09-16-15:45:29   [info]: Average over all actions:
+2023-09-16-15:45:29   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005168545059859753 | 86.04188395871056 |
+|     120      | 0.007723520509898663 | 82.41623176468742 |
+|     160      | 0.010309789329767227 | 79.60980931917825 |
+|     200      | 0.012884549796581268 | 77.36783921718597 |
+|     240      | 0.015522783622145653 | 75.42664955059686 |
+|     280      | 0.018087930977344513 | 73.73524357875189 |
+|     320      | 0.020707929506897926 | 72.25781232118607 |
++--------------+----------------------+-------------------+
+2023-09-16-15:45:29   [info]: Epoch 48/100
+2023-09-16-15:49:54   [info]: Calling: evaluate...
+2023-09-16-15:49:54   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:50:05   [info]: Evaluation finished!
+2023-09-16-15:50:05   [info]: Iterations completed: 48000 Results:
+ train loss: mean: 0.1278, var: 0.0001
+2023-09-16-15:50:05   [info]: Evaluation Results:
+
+2023-09-16-15:50:05   [info]: Average over all actions:
+2023-09-16-15:50:05   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005267665255814791 | 85.89713507228427 |
+|     120      | 0.00785744097083807  | 82.26963910791609 |
+|     160      | 0.01045941561460495  | 79.43457000785403 |
+|     200      | 0.013095414265990257 | 77.06456134716669 |
+|     240      | 0.015740737318992615 | 75.06629791524675 |
+|     280      | 0.018397020176053047 | 73.36013499233458 |
+|     320      | 0.021073363721370697 | 71.81336830059686 |
++--------------+----------------------+-------------------+
+2023-09-16-15:50:05   [info]: Epoch 49/100
+2023-09-16-15:54:31   [info]: Calling: evaluate...
+2023-09-16-15:54:31   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:54:43   [info]: Evaluation finished!
+2023-09-16-15:54:43   [info]: Iterations completed: 49000 Results:
+ train loss: mean: 0.1788, var: 0.0098
+2023-09-16-15:54:43   [info]: Evaluation Results:
+
+2023-09-16-15:54:43   [info]: Average over all actions:
+2023-09-16-15:54:43   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0053333924151957035 |  85.8012146419949 |
+|     120      |  0.007917645387351513 | 82.12163630459044 |
+|     160      |  0.010517945513129234 | 79.30164900090959 |
+|     200      |  0.013183101080358028 | 76.97602013746896 |
+|     240      |  0.01588115096092224  | 74.98296466138628 |
+|     280      |  0.018596086651086807 | 73.24707044495476 |
+|     320      |  0.02127709425985813  | 71.71777337789536 |
++--------------+-----------------------+-------------------+
+2023-09-16-15:54:43   [info]: Epoch 50/100
+2023-09-16-15:59:08   [info]: Calling: evaluate...
+2023-09-16-15:59:08   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-15:59:19   [info]: Evaluation finished!
+2023-09-16-15:59:19   [info]: Iterations completed: 50000 Results:
+ train loss: mean: 0.2292, var: 0.0150
+2023-09-16-15:59:19   [info]: Evaluation Results:
+
+2023-09-16-15:59:19   [info]: Average over all actions:
+2023-09-16-15:59:19   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.007518155034631491 | 82.08528641197417 |
+|     120      | 0.011193380691111088 | 77.62934035725064 |
+|     160      | 0.014806533232331276 | 74.51812095112271 |
+|     200      | 0.018521171063184738 | 71.83105382654402 |
+|     240      | 0.022167060524225235 | 69.67144111792246 |
+|     280      | 0.025798510760068893 |    67.919921875   |
+|     320      | 0.02942991815507412  | 66.42078989081912 |
++--------------+----------------------+-------------------+
+2023-09-16-15:59:19   [info]: Calling: save_checkpoint...
+2023-09-16-15:59:19   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_50.pth
+2023-09-16-15:59:19   [info]: Epoch 51/100
+2023-09-16-16:03:45   [info]: Calling: evaluate...
+2023-09-16-16:03:45   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:03:56   [info]: Evaluation finished!
+2023-09-16-16:03:56   [info]: Iterations completed: 51000 Results:
+ train loss: mean: 0.1863, var: 0.0008
+2023-09-16-16:03:56   [info]: Evaluation Results:
+
+2023-09-16-16:03:56   [info]: Average over all actions:
+2023-09-16-16:03:56   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006228713318705559 | 84.08615440130234 |
+|     120      | 0.009227444417774677 |  80.2080081568824 |
+|     160      | 0.012213940732181072 | 77.11577680375841 |
+|     200      | 0.015299848280847073 | 74.61675422059166 |
+|     240      | 0.018390363082289696 | 72.49045156770282 |
+|     280      |  0.0214427188038826  | 70.66145787636438 |
+|     320      | 0.024525409564375877 | 69.07465275790956 |
++--------------+----------------------+-------------------+
+2023-09-16-16:03:56   [info]: Epoch 52/100
+2023-09-16-16:08:22   [info]: Calling: evaluate...
+2023-09-16-16:08:22   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:08:33   [info]: Evaluation finished!
+2023-09-16-16:08:33   [info]: Iterations completed: 52000 Results:
+ train loss: mean: 0.1577, var: 0.0004
+2023-09-16-16:08:33   [info]: Evaluation Results:
+
+2023-09-16-16:08:33   [info]: Average over all actions:
+2023-09-16-16:08:33   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0057222903706133366 | 85.10362439685397 |
+|     120      |  0.00858719926327467  | 81.30739976962408 |
+|     160      |  0.011470290832221508 | 78.35297203726239 |
+|     200      |  0.014321155846118927 | 75.97319930791855 |
+|     240      |  0.01724039763212204  | 73.93164104885525 |
+|     280      |  0.020168695598840714 |  72.194661365615  |
+|     320      |  0.02309519238770008  | 70.65028217103746 |
++--------------+-----------------------+-------------------+
+2023-09-16-16:08:33   [info]: Epoch 53/100
+2023-09-16-16:13:00   [info]: Calling: evaluate...
+2023-09-16-16:13:00   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:13:11   [info]: Evaluation finished!
+2023-09-16-16:13:11   [info]: Iterations completed: 53000 Results:
+ train loss: mean: 0.1894, var: 0.0040
+2023-09-16-16:13:11   [info]: Evaluation Results:
+
+2023-09-16-16:13:11   [info]: Average over all actions:
+2023-09-16-16:13:11   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0056352377869188786 | 85.27832130591074 |
+|     120      |  0.008431416936218739 | 81.54665728410086 |
+|     160      |  0.011207181960344315 | 78.60199610392252 |
+|     200      |  0.01404461171478033  |  76.1820743481318 |
+|     240      |  0.016890324652194977 | 74.12358969449997 |
+|     280      |  0.019748158752918243 |  72.3372401462661 |
+|     320      |  0.022653477266430855 | 70.77625956800249 |
++--------------+-----------------------+-------------------+
+2023-09-16-16:13:11   [info]: Epoch 54/100
+2023-09-16-16:17:37   [info]: Calling: evaluate...
+2023-09-16-16:17:37   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:17:48   [info]: Evaluation finished!
+2023-09-16-16:17:48   [info]: Iterations completed: 54000 Results:
+ train loss: mean: 0.1447, var: 0.0003
+2023-09-16-16:17:48   [info]: Evaluation Results:
+
+2023-09-16-16:17:48   [info]: Average over all actions:
+2023-09-16-16:17:48   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0057156383991241455 | 85.17675764030881 |
+|     120      |  0.008510906249284744 | 81.55186639891731 |
+|     160      |  0.011327087879180908 | 78.70659761958652 |
+|     200      |  0.014134432189166546 |  76.3569881518682 |
+|     240      |  0.01700068637728691  | 74.34092925654518 |
+|     280      |  0.019783295691013336 |  72.6485456029574 |
+|     320      |  0.022613877430558205 | 71.10590371820662 |
++--------------+-----------------------+-------------------+
+2023-09-16-16:17:48   [info]: Epoch 55/100
+2023-09-16-16:22:14   [info]: Calling: evaluate...
+2023-09-16-16:22:14   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:22:25   [info]: Evaluation finished!
+2023-09-16-16:22:25   [info]: Iterations completed: 55000 Results:
+ train loss: mean: 0.1629, var: 0.0013
+2023-09-16-16:22:25   [info]: Evaluation Results:
+
+2023-09-16-16:22:25   [info]: Average over all actions:
+2023-09-16-16:22:25   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.007927371188998222 | 80.68424496385786 |
+|     120      | 0.011821539141237736 | 75.87586740652719 |
+|     160      | 0.015832090750336647 | 72.46929274664986 |
+|     200      | 0.019963981583714485 | 69.67024720377393 |
+|     240      | 0.024153759703040123 | 67.59939226839278 |
+|     280      | 0.028415387496352196 | 65.91634203990301 |
+|     320      | 0.032823607325553894 |  64.3056645989418 |
++--------------+----------------------+-------------------+
+2023-09-16-16:22:25   [info]: Calling: save_checkpoint...
+2023-09-16-16:22:25   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_55.pth
+2023-09-16-16:22:25   [info]: Epoch 56/100
+2023-09-16-16:26:50   [info]: Calling: evaluate...
+2023-09-16-16:26:50   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:27:01   [info]: Evaluation finished!
+2023-09-16-16:27:01   [info]: Iterations completed: 56000 Results:
+ train loss: mean: 0.1797, var: 0.0004
+2023-09-16-16:27:01   [info]: Evaluation Results:
+
+2023-09-16-16:27:01   [info]: Average over all actions:
+2023-09-16-16:27:01   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005612298846244812 | 85.47233045101166 |
+|     120      | 0.008324453607201576 | 81.84320777654648 |
+|     160      | 0.011075296439230442 | 79.03103282054266 |
+|     200      | 0.013753745704889297 | 76.75303816795349 |
+|     240      | 0.01649739220738411  | 74.81651422050264 |
+|     280      | 0.019198156893253326 |  73.1635206275516 |
+|     320      | 0.02188851311802864  |  71.6706814037429 |
++--------------+----------------------+-------------------+
+2023-09-16-16:27:01   [info]: Epoch 57/100
+2023-09-16-16:31:26   [info]: Calling: evaluate...
+2023-09-16-16:31:26   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:31:37   [info]: Evaluation finished!
+2023-09-16-16:31:37   [info]: Iterations completed: 57000 Results:
+ train loss: mean: 0.1854, var: 0.0020
+2023-09-16-16:31:37   [info]: Evaluation Results:
+
+2023-09-16-16:31:37   [info]: Average over all actions:
+2023-09-16-16:31:37   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.010068323463201523 | 77.20865789386961 |
+|     120      | 0.015261483378708363 | 72.19010293483734 |
+|     160      | 0.02078552171587944  |  68.4461803899871 |
+|     200      | 0.026567881926894188 | 65.83941015932295 |
+|     240      | 0.03269951045513153  | 63.61111071374681 |
+|     280      | 0.03920317068696022  | 61.43478684955173 |
+|     320      | 0.04602585732936859  | 59.35698846975962 |
++--------------+----------------------+-------------------+
+2023-09-16-16:31:37   [info]: Epoch 58/100
+2023-09-16-16:36:02   [info]: Calling: evaluate...
+2023-09-16-16:36:02   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:36:14   [info]: Evaluation finished!
+2023-09-16-16:36:14   [info]: Iterations completed: 58000 Results:
+ train loss: mean: 0.1872, var: 0.0018
+2023-09-16-16:36:14   [info]: Evaluation Results:
+
+2023-09-16-16:36:14   [info]: Average over all actions:
+2023-09-16-16:36:14   [info]: +--------------+----------------------+--------------------+
+| Pred. length |    positional_mse    |        auc         |
++--------------+----------------------+--------------------+
+|      80      | 0.00999481976032257  | 78.51009037759569  |
+|     120      | 0.015151205472648144 | 74.01377956072488  |
+|     160      | 0.020460786297917366 | 70.61121960481009  |
+|     200      | 0.025945371016860008 | 67.85481837060716  |
+|     240      | 0.03167910873889923  | 65.68652358320024  |
+|     280      | 0.03756747022271156  | 63.644422590732574 |
+|     320      | 0.04358610510826111  | 61.68804268042246  |
++--------------+----------------------+--------------------+
+2023-09-16-16:36:14   [info]: Epoch 59/100
+2023-09-16-16:40:38   [info]: Calling: evaluate...
+2023-09-16-16:40:38   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:40:49   [info]: Evaluation finished!
+2023-09-16-16:40:49   [info]: Iterations completed: 59000 Results:
+ train loss: mean: 0.1438, var: 0.0007
+2023-09-16-16:40:49   [info]: Evaluation Results:
+
+2023-09-16-16:40:49   [info]: Average over all actions:
+2023-09-16-16:40:49   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005466914270073175 | 85.74707011381784 |
+|     120      | 0.008147874847054482 |  82.0633676317003 |
+|     160      | 0.010789046064019203 | 79.25249487161636 |
+|     200      | 0.013396035879850388 | 76.98524329397414 |
+|     240      | 0.01603878289461136  | 75.08322497208914 |
+|     280      | 0.01865868829190731  | 73.42241836918724 |
+|     320      | 0.02131587080657482  | 71.91286947992113 |
++--------------+----------------------+-------------------+
+2023-09-16-16:40:49   [info]: Epoch 60/100
+2023-09-16-16:45:15   [info]: Calling: evaluate...
+2023-09-16-16:45:15   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:45:26   [info]: Evaluation finished!
+2023-09-16-16:45:26   [info]: Iterations completed: 60000 Results:
+ train loss: mean: 0.1380, var: 0.0003
+2023-09-16-16:45:26   [info]: Evaluation Results:
+
+2023-09-16-16:45:26   [info]: Average over all actions:
+2023-09-16-16:45:26   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005788886453956366 | 85.11924909220802 |
+|     120      | 0.008587571792304516 | 81.39550851451027 |
+|     160      | 0.011353152804076672 | 78.57400162352455 |
+|     200      | 0.014170843176543713 | 76.18771659003365 |
+|     240      | 0.01695830374956131  | 74.21321504645877 |
+|     280      | 0.01975623518228531  | 72.48198837041855 |
+|     320      | 0.02255096286535263  |  70.9076604909367 |
++--------------+----------------------+-------------------+
+2023-09-16-16:45:26   [info]: Calling: save_checkpoint...
+2023-09-16-16:45:26   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_60.pth
+2023-09-16-16:45:26   [info]: Epoch 61/100
+2023-09-16-16:49:52   [info]: Calling: evaluate...
+2023-09-16-16:49:52   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:50:03   [info]: Evaluation finished!
+2023-09-16-16:50:03   [info]: Iterations completed: 61000 Results:
+ train loss: mean: 0.1650, var: 0.0008
+2023-09-16-16:50:03   [info]: Evaluation Results:
+
+2023-09-16-16:50:03   [info]: Average over all actions:
+2023-09-16-16:50:03   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.007712954189628363 | 81.21853321790695 |
+|     120      | 0.01157795824110508  | 76.55685709582436 |
+|     160      | 0.015445580706000328 | 73.12358882692125 |
+|     200      | 0.01939483731985092  | 70.47265619039536 |
+|     240      | 0.02335151843726635  | 68.38606728447807 |
+|     280      | 0.02743031457066536  | 66.62934008571837 |
+|     320      |  0.0315236821770668  | 64.96668805678686 |
++--------------+----------------------+-------------------+
+2023-09-16-16:50:03   [info]: Epoch 62/100
+2023-09-16-16:54:28   [info]: Calling: evaluate...
+2023-09-16-16:54:28   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:54:39   [info]: Evaluation finished!
+2023-09-16-16:54:39   [info]: Iterations completed: 62000 Results:
+ train loss: mean: 0.1676, var: 0.0003
+2023-09-16-16:54:39   [info]: Evaluation Results:
+
+2023-09-16-16:54:39   [info]: Average over all actions:
+2023-09-16-16:54:39   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006190478336066008 | 84.27940474616157 |
+|     120      | 0.009202134795486927 | 80.42643186118868 |
+|     160      | 0.012144000269472599 | 77.51974910497665 |
+|     200      | 0.015146970748901367 | 75.09515997436311 |
+|     240      | 0.018143294379115105 | 73.00716158416536 |
+|     280      | 0.021130172535777092 | 71.27766923771965 |
+|     320      | 0.024114035069942474 | 69.77256933848062 |
++--------------+----------------------+-------------------+
+2023-09-16-16:54:39   [info]: Epoch 63/100
+2023-09-16-16:59:04   [info]: Calling: evaluate...
+2023-09-16-16:59:04   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-16:59:15   [info]: Evaluation finished!
+2023-09-16-16:59:15   [info]: Iterations completed: 63000 Results:
+ train loss: mean: 0.1387, var: 0.0001
+2023-09-16-16:59:15   [info]: Evaluation Results:
+
+2023-09-16-16:59:15   [info]: Average over all actions:
+2023-09-16-16:59:15   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00563611276447773  | 85.38031677405039 |
+|     120      | 0.008344484493136406 |  81.7234155204561 |
+|     160      | 0.011051017791032791 | 78.85948237445619 |
+|     200      | 0.013831374235451221 |  76.4871953262223 |
+|     240      | 0.016639720648527145 |  74.4875215821796 |
+|     280      | 0.019401831552386284 | 72.73893240425322 |
+|     320      | 0.022202415391802788 | 71.18012193176482 |
++--------------+----------------------+-------------------+
+2023-09-16-16:59:15   [info]: Epoch 64/100
+2023-09-16-17:03:40   [info]: Calling: evaluate...
+2023-09-16-17:03:40   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:03:51   [info]: Evaluation finished!
+2023-09-16-17:03:51   [info]: Iterations completed: 64000 Results:
+ train loss: mean: 0.1356, var: 0.0001
+2023-09-16-17:03:51   [info]: Evaluation Results:
+
+2023-09-16-17:03:51   [info]: Average over all actions:
+2023-09-16-17:03:51   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00556714553385973  | 85.43207380506728 |
+|     120      | 0.008300531655550003 |  81.7807075050142 |
+|     160      | 0.011036166921257973 | 78.89398833115897 |
+|     200      | 0.013813083060085773 | 76.54904458257887 |
+|     240      | 0.016611704602837563 | 74.51378057400385 |
+|     280      | 0.01938575692474842  | 72.76193582349353 |
+|     320      |  0.0221931841224432  | 71.19151403506598 |
++--------------+----------------------+-------------------+
+2023-09-16-17:03:51   [info]: Epoch 65/100
+2023-09-16-17:08:17   [info]: Calling: evaluate...
+2023-09-16-17:08:17   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:08:28   [info]: Evaluation finished!
+2023-09-16-17:08:28   [info]: Iterations completed: 65000 Results:
+ train loss: mean: 0.1395, var: 0.0001
+2023-09-16-17:08:28   [info]: Evaluation Results:
+
+2023-09-16-17:08:28   [info]: Average over all actions:
+2023-09-16-17:08:28   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005493449978530407 | 85.57996915446388 |
+|     120      | 0.008217117749154568 | 81.93381097581651 |
+|     160      | 0.010902401059865952 | 79.08593747350905 |
+|     200      | 0.01371913030743599  |  76.696072684394  |
+|     240      | 0.01651904731988907  |  74.6911894943979 |
+|     280      | 0.019254466518759727 |  73.0023874176873 |
+|     320      | 0.022005736827850342 | 71.46516856220033 |
++--------------+----------------------+-------------------+
+2023-09-16-17:08:28   [info]: Calling: save_checkpoint...
+2023-09-16-17:08:28   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_65.pth
+2023-09-16-17:08:28   [info]: Epoch 66/100
+2023-09-16-17:12:55   [info]: Calling: evaluate...
+2023-09-16-17:12:55   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:13:06   [info]: Evaluation finished!
+2023-09-16-17:13:06   [info]: Iterations completed: 66000 Results:
+ train loss: mean: 0.1283, var: 0.0002
+2023-09-16-17:13:06   [info]: Evaluation Results:
+
+2023-09-16-17:13:06   [info]: Average over all actions:
+2023-09-16-17:13:06   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00548912538215518  | 85.69878472222221 |
+|     120      | 0.008149617351591587 | 82.00726956129074 |
+|     160      | 0.010767094790935516 | 79.21853313843408 |
+|     200      | 0.013392792083323002 | 76.96658041742113 |
+|     240      | 0.015993375331163406 | 75.08214000198576 |
+|     280      | 0.01863464154303074  | 73.41460486253104 |
+|     320      | 0.02126946486532688  | 71.94281684027779 |
++--------------+----------------------+-------------------+
+2023-09-16-17:13:06   [info]: Epoch 67/100
+2023-09-16-17:17:31   [info]: Calling: evaluate...
+2023-09-16-17:17:31   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:17:43   [info]: Evaluation finished!
+2023-09-16-17:17:43   [info]: Iterations completed: 67000 Results:
+ train loss: mean: 0.1225, var: 0.0001
+2023-09-16-17:17:43   [info]: Evaluation Results:
+
+2023-09-16-17:17:43   [info]: Average over all actions:
+2023-09-16-17:17:43   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005580665078014135 |  85.3832463423411 |
+|     120      | 0.008350967429578304 | 81.67393654584885 |
+|     160      | 0.01114113349467516  | 78.69173238674799 |
+|     200      | 0.013931471854448318 |  76.1965059571796 |
+|     240      | 0.016738038510084152 | 74.13129342926872 |
+|     280      | 0.019583124667406082 | 72.36024257209566 |
+|     320      | 0.022398367524147034 | 70.79600691795349 |
++--------------+----------------------+-------------------+
+2023-09-16-17:17:43   [info]: Epoch 68/100
+2023-09-16-17:22:09   [info]: Calling: evaluate...
+2023-09-16-17:22:09   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:22:20   [info]: Evaluation finished!
+2023-09-16-17:22:20   [info]: Iterations completed: 68000 Results:
+ train loss: mean: 0.1247, var: 0.0001
+2023-09-16-17:22:20   [info]: Evaluation Results:
+
+2023-09-16-17:22:20   [info]: Average over all actions:
+2023-09-16-17:22:20   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005354061257094145 | 85.96484363079071 |
+|     120      | 0.00797700323164463  | 82.28873759508133 |
+|     160      | 0.010586378164589405 |  79.5170353518592 |
+|     200      |  0.0132085420191288  | 77.24674393733343 |
+|     240      | 0.01582869328558445  | 75.32280799415376 |
+|     280      | 0.018379593268036842 | 73.69585418038898 |
+|     320      | 0.020998070016503334 | 72.22211360931396 |
++--------------+----------------------+-------------------+
+2023-09-16-17:22:20   [info]: Epoch 69/100
+2023-09-16-17:26:46   [info]: Calling: evaluate...
+2023-09-16-17:26:46   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:26:57   [info]: Evaluation finished!
+2023-09-16-17:26:57   [info]: Iterations completed: 69000 Results:
+ train loss: mean: 0.1193, var: 0.0001
+2023-09-16-17:26:57   [info]: Evaluation Results:
+
+2023-09-16-17:26:57   [info]: Average over all actions:
+2023-09-16-17:26:57   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.00541050685569644  | 85.95996101697287 |
+|     120      | 0.008012678474187851 | 82.27105140686035 |
+|     160      | 0.010617459192872047 | 79.45855028099484 |
+|     200      | 0.01332463975995779  | 77.15917891926236 |
+|     240      | 0.01599477231502533  | 75.21972672806847 |
+|     280      | 0.018695717677474022 | 73.53884561194313 |
+|     320      | 0.02136443927884102  | 72.06618802415001 |
++--------------+----------------------+-------------------+
+2023-09-16-17:26:57   [info]: Epoch 70/100
+2023-09-16-17:31:21   [info]: Calling: evaluate...
+2023-09-16-17:31:21   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:31:33   [info]: Evaluation finished!
+2023-09-16-17:31:33   [info]: Iterations completed: 70000 Results:
+ train loss: mean: 0.1168, var: 0.0001
+2023-09-16-17:31:33   [info]: Evaluation Results:
+
+2023-09-16-17:31:33   [info]: Average over all actions:
+2023-09-16-17:31:33   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005346453282982111 | 86.15549074278938 |
+|     120      | 0.00791271310299635  | 82.53732605112923 |
+|     160      | 0.01042743306607008  | 79.79481319586435 |
+|     200      | 0.013034982606768608 | 77.53157615661621 |
+|     240      | 0.015651321038603783 | 75.61859753396776 |
+|     280      | 0.01819026656448841  | 74.04394563701418 |
+|     320      | 0.020769329741597176 | 72.59103755156198 |
++--------------+----------------------+-------------------+
+2023-09-16-17:31:33   [info]: Calling: save_checkpoint...
+2023-09-16-17:31:33   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_70.pth
+2023-09-16-17:31:33   [info]: Epoch 71/100
+2023-09-16-17:35:58   [info]: Calling: evaluate...
+2023-09-16-17:35:58   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:36:09   [info]: Evaluation finished!
+2023-09-16-17:36:09   [info]: Iterations completed: 71000 Results:
+ train loss: mean: 0.1160, var: 0.0001
+2023-09-16-17:36:09   [info]: Evaluation Results:
+
+2023-09-16-17:36:09   [info]: Average over all actions:
+2023-09-16-17:36:09   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005256765056401491 | 86.20323406325447 |
+|     120      | 0.00784206110984087  | 82.57193946176105 |
+|     160      | 0.010495049878954887 | 79.72363316350513 |
+|     200      | 0.013169233687222004 |  77.4445527129703 |
+|     240      | 0.015820885077118874 | 75.53027305338118 |
+|     280      | 0.01849045231938362  | 73.85829008287854 |
+|     320      | 0.02111685276031494  | 72.41992188824547 |
++--------------+----------------------+-------------------+
+2023-09-16-17:36:09   [info]: Epoch 72/100
+2023-09-16-17:40:35   [info]: Calling: evaluate...
+2023-09-16-17:40:35   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:40:46   [info]: Evaluation finished!
+2023-09-16-17:40:46   [info]: Iterations completed: 72000 Results:
+ train loss: mean: 0.1226, var: 0.0001
+2023-09-16-17:40:46   [info]: Evaluation Results:
+
+2023-09-16-17:40:46   [info]: Average over all actions:
+2023-09-16-17:40:46   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005622162949293852 | 85.25119423866272 |
+|     120      | 0.008368220180273056 |  81.5300562315517 |
+|     160      | 0.011146021075546741 | 78.60742062330246 |
+|     200      | 0.014048011042177677 |  76.2157118982739 |
+|     240      | 0.01688285544514656  | 74.23122790124681 |
+|     280      | 0.01980152539908886  | 72.45670557022095 |
+|     320      | 0.022768506780266762 | 70.80696605973773 |
++--------------+----------------------+-------------------+
+2023-09-16-17:40:46   [info]: Epoch 73/100
+2023-09-16-17:45:10   [info]: Calling: evaluate...
+2023-09-16-17:45:10   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:45:22   [info]: Evaluation finished!
+2023-09-16-17:45:22   [info]: Iterations completed: 73000 Results:
+ train loss: mean: 0.1305, var: 0.0001
+2023-09-16-17:45:22   [info]: Evaluation Results:
+
+2023-09-16-17:45:22   [info]: Average over all actions:
+2023-09-16-17:45:22   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005316870752722025 | 86.03689240084755 |
+|     120      | 0.00794939137995243  | 82.40245249536302 |
+|     160      | 0.010540694929659367 | 79.63216221994824 |
+|     200      | 0.013171154074370861 | 77.36924919817183 |
+|     240      | 0.01581897959113121  | 75.44965313540565 |
+|     280      | 0.018460456281900406 | 73.81239218844307 |
+|     320      | 0.021115506067872047 | 72.34027749962277 |
++--------------+----------------------+-------------------+
+2023-09-16-17:45:22   [info]: Epoch 74/100
+2023-09-16-17:49:47   [info]: Calling: evaluate...
+2023-09-16-17:49:47   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:49:58   [info]: Evaluation finished!
+2023-09-16-17:49:58   [info]: Iterations completed: 74000 Results:
+ train loss: mean: 0.1277, var: 0.0001
+2023-09-16-17:49:58   [info]: Evaluation Results:
+
+2023-09-16-17:49:58   [info]: Average over all actions:
+2023-09-16-17:49:58   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005620775278657675 | 85.79242560598585 |
+|     120      | 0.008360612206161022 | 82.16796914736429 |
+|     160      | 0.011143653653562069 | 79.37532530890572 |
+|     200      | 0.013946417719125748 | 77.08745648463568 |
+|     240      | 0.016726985573768616 | 75.15386276774936 |
+|     280      | 0.01956792362034321  | 73.45399293634627 |
+|     320      | 0.022401463240385056 | 71.92860311932034 |
++--------------+----------------------+-------------------+
+2023-09-16-17:49:58   [info]: Epoch 75/100
+2023-09-16-17:54:25   [info]: Calling: evaluate...
+2023-09-16-17:54:25   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:54:36   [info]: Evaluation finished!
+2023-09-16-17:54:36   [info]: Iterations completed: 75000 Results:
+ train loss: mean: 0.1308, var: 0.0001
+2023-09-16-17:54:36   [info]: Evaluation Results:
+
+2023-09-16-17:54:36   [info]: Average over all actions:
+2023-09-16-17:54:36   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0058209700509905815 | 85.25433937708536 |
+|     120      |  0.008640700951218605 | 81.50021731853485 |
+|     160      |  0.011508163996040821 | 78.46972644329071 |
+|     200      |  0.014393534511327744 | 75.99902401367822 |
+|     240      |  0.01730094477534294  | 73.95963536368477 |
+|     280      |  0.02019631862640381  | 72.17643178171582 |
+|     320      |  0.023061146959662437 | 70.62771336899864 |
++--------------+-----------------------+-------------------+
+2023-09-16-17:54:36   [info]: Calling: save_checkpoint...
+2023-09-16-17:54:36   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_75.pth
+2023-09-16-17:54:36   [info]: Epoch 76/100
+2023-09-16-17:59:00   [info]: Calling: evaluate...
+2023-09-16-17:59:00   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-17:59:12   [info]: Evaluation finished!
+2023-09-16-17:59:12   [info]: Iterations completed: 76000 Results:
+ train loss: mean: 0.1309, var: 0.0001
+2023-09-16-17:59:12   [info]: Evaluation Results:
+
+2023-09-16-17:59:12   [info]: Average over all actions:
+2023-09-16-17:59:12   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005481866654008627 | 85.65701014465756 |
+|     120      | 0.008225668221712112 | 82.00423237350252 |
+|     160      | 0.010951218195259571 | 79.21017689837349 |
+|     200      | 0.013708433136343956 | 76.88194513320923 |
+|     240      | 0.016502032056450844 | 74.90874628225961 |
+|     280      | 0.019275756552815437 | 73.21245587534375 |
+|     320      | 0.022052055224776268 | 71.70898367961249 |
++--------------+----------------------+-------------------+
+2023-09-16-17:59:12   [info]: Epoch 77/100
+2023-09-16-18:03:36   [info]: Calling: evaluate...
+2023-09-16-18:03:36   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:03:47   [info]: Evaluation finished!
+2023-09-16-18:03:47   [info]: Iterations completed: 77000 Results:
+ train loss: mean: 0.1347, var: 0.0001
+2023-09-16-18:03:47   [info]: Evaluation Results:
+
+2023-09-16-18:03:47   [info]: Average over all actions:
+2023-09-16-18:03:47   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006204430479556322 | 84.22862357563443 |
+|     120      | 0.009437603875994682 |  79.9745018283526 |
+|     160      | 0.012689013034105301 |  76.6397562291887 |
+|     200      | 0.016057228669524193 | 73.87434757418103 |
+|     240      | 0.019454557448625565 | 71.60015255212784 |
+|     280      | 0.02297985553741455  | 69.64637637138367 |
+|     320      | 0.026521911844611168 | 67.92903741200766 |
++--------------+----------------------+-------------------+
+2023-09-16-18:03:47   [info]: Epoch 78/100
+2023-09-16-18:08:13   [info]: Calling: evaluate...
+2023-09-16-18:08:13   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:08:24   [info]: Evaluation finished!
+2023-09-16-18:08:24   [info]: Iterations completed: 78000 Results:
+ train loss: mean: 0.1371, var: 0.0001
+2023-09-16-18:08:24   [info]: Evaluation Results:
+
+2023-09-16-18:08:24   [info]: Average over all actions:
+2023-09-16-18:08:24   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005594759713858366 | 85.65614256593916 |
+|     120      | 0.008302214555442333 | 81.93847603268094 |
+|     160      | 0.011136473156511784 |  79.0821404920684 |
+|     200      | 0.013926270417869091 | 76.77647570768991 |
+|     240      | 0.016726188361644745 | 74.83192268345091 |
+|     280      | 0.01955139823257923  |  73.1285810470581 |
+|     320      | 0.022402148693799973 | 71.60525255733066 |
++--------------+----------------------+-------------------+
+2023-09-16-18:08:24   [info]: Epoch 79/100
+2023-09-16-18:12:48   [info]: Calling: evaluate...
+2023-09-16-18:12:48   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:13:00   [info]: Evaluation finished!
+2023-09-16-18:13:00   [info]: Iterations completed: 79000 Results:
+ train loss: mean: 0.1272, var: 0.0001
+2023-09-16-18:13:00   [info]: Evaluation Results:
+
+2023-09-16-18:13:00   [info]: Average over all actions:
+2023-09-16-18:13:00   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005329770501703024 | 86.06879346900516 |
+|     120      | 0.007932445034384727 | 82.41851114564471 |
+|     160      | 0.010526442900300026 | 79.65418812301424 |
+|     200      | 0.013183661736547947 | 77.38867219951418 |
+|     240      | 0.015815917402505875 |  75.4762371381124 |
+|     280      | 0.01843869499862194  | 73.82237331734764 |
+|     320      | 0.02105206996202469  | 72.35861602756712 |
++--------------+----------------------+-------------------+
+2023-09-16-18:13:00   [info]: Epoch 80/100
+2023-09-16-18:17:25   [info]: Calling: evaluate...
+2023-09-16-18:17:25   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:17:36   [info]: Evaluation finished!
+2023-09-16-18:17:36   [info]: Iterations completed: 80000 Results:
+ train loss: mean: 0.1238, var: 0.0001
+2023-09-16-18:17:36   [info]: Evaluation Results:
+
+2023-09-16-18:17:36   [info]: Average over all actions:
+2023-09-16-18:17:36   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0053662993013858795 | 85.83105537626479 |
+|     120      |  0.00801989808678627  | 82.21647077136569 |
+|     160      |  0.010680608451366425 | 79.42675782574547 |
+|     200      |  0.013326271437108517 | 77.13639305697548 |
+|     240      |  0.015963224694132805 | 75.18489592605167 |
+|     280      |  0.018582051619887352 | 73.50184404187732 |
+|     320      |  0.021212229505181313 | 72.01399720377393 |
++--------------+-----------------------+-------------------+
+2023-09-16-18:17:36   [info]: Calling: save_checkpoint...
+2023-09-16-18:17:36   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_80.pth
+2023-09-16-18:17:36   [info]: Epoch 81/100
+2023-09-16-18:22:02   [info]: Calling: evaluate...
+2023-09-16-18:22:02   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:22:13   [info]: Evaluation finished!
+2023-09-16-18:22:13   [info]: Iterations completed: 81000 Results:
+ train loss: mean: 0.1251, var: 0.0001
+2023-09-16-18:22:13   [info]: Evaluation Results:
+
+2023-09-16-18:22:13   [info]: Average over all actions:
+2023-09-16-18:22:13   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005658927373588085 |  85.1919487118721 |
+|     120      | 0.008492513559758663 | 81.30490448739793 |
+|     160      | 0.011315250769257545 | 78.24869884385002 |
+|     200      | 0.014275078661739826 |  75.7084416018592 |
+|     240      | 0.017238005995750427 | 73.56445342302322 |
+|     280      | 0.02020152099430561  | 71.72450042433209 |
+|     320      | 0.023141879588365555 | 70.14322893487083 |
++--------------+----------------------+-------------------+
+2023-09-16-18:22:13   [info]: Epoch 82/100
+2023-09-16-18:26:37   [info]: Calling: evaluate...
+2023-09-16-18:26:37   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:26:48   [info]: Evaluation finished!
+2023-09-16-18:26:48   [info]: Iterations completed: 82000 Results:
+ train loss: mean: 0.1380, var: 0.0001
+2023-09-16-18:26:48   [info]: Evaluation Results:
+
+2023-09-16-18:26:48   [info]: Average over all actions:
+2023-09-16-18:26:48   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005982731003314257 | 84.81098065773645 |
+|     120      | 0.008889143355190754 | 80.96755594015121 |
+|     160      | 0.011857063509523869 | 77.89485570457246 |
+|     200      | 0.014943020418286324 | 75.42491323418088 |
+|     240      | 0.01805831864476204  | 73.35611979166666 |
+|     280      | 0.021245073527097702 | 71.52690887451172 |
+|     320      | 0.024347029626369476 | 69.91601569785011 |
++--------------+----------------------+-------------------+
+2023-09-16-18:26:48   [info]: Epoch 83/100
+2023-09-16-18:31:15   [info]: Calling: evaluate...
+2023-09-16-18:31:15   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:31:26   [info]: Evaluation finished!
+2023-09-16-18:31:26   [info]: Iterations completed: 83000 Results:
+ train loss: mean: 0.1380, var: 0.0001
+2023-09-16-18:31:26   [info]: Evaluation Results:
+
+2023-09-16-18:31:26   [info]: Average over all actions:
+2023-09-16-18:31:26   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006088580004870892 | 84.52083236641354 |
+|     120      | 0.009192682802677155 | 80.42947120136685 |
+|     160      | 0.01234007254242897  | 77.23535166846382 |
+|     200      | 0.015580861829221249 | 74.60937549670538 |
+|     240      | 0.018843304365873337 | 72.45062987009683 |
+|     280      | 0.02212574891746044  |  70.6421434879303 |
+|     320      | 0.02546219900250435  | 68.99012542433209 |
++--------------+----------------------+-------------------+
+2023-09-16-18:31:26   [info]: Epoch 84/100
+2023-09-16-18:35:51   [info]: Calling: evaluate...
+2023-09-16-18:35:51   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:36:02   [info]: Evaluation finished!
+2023-09-16-18:36:02   [info]: Iterations completed: 84000 Results:
+ train loss: mean: 0.1366, var: 0.0001
+2023-09-16-18:36:02   [info]: Evaluation Results:
+
+2023-09-16-18:36:02   [info]: Average over all actions:
+2023-09-16-18:36:02   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005361928138881922 | 85.86273888746896 |
+|     120      | 0.008073967881500721 |  82.2036681903733 |
+|     160      | 0.010778529569506645 | 79.36588492658403 |
+|     200      | 0.013503697700798512 | 77.05740018023384 |
+|     240      |  0.016267079859972   | 75.07628053426743 |
+|     280      | 0.019050633534789085 | 73.35796356201172 |
+|     320      | 0.021808480843901634 | 71.83572053909302 |
++--------------+----------------------+-------------------+
+2023-09-16-18:36:02   [info]: Epoch 85/100
+2023-09-16-18:40:26   [info]: Calling: evaluate...
+2023-09-16-18:40:26   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:40:37   [info]: Evaluation finished!
+2023-09-16-18:40:37   [info]: Iterations completed: 85000 Results:
+ train loss: mean: 0.1326, var: 0.0001
+2023-09-16-18:40:37   [info]: Evaluation Results:
+
+2023-09-16-18:40:37   [info]: Average over all actions:
+2023-09-16-18:40:37   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005729210563004017 | 85.23101160923639 |
+|     120      | 0.008520323783159256 | 81.50184435976875 |
+|     160      |  0.011314757168293   | 78.58821633789275 |
+|     200      | 0.01420885045081377  |  76.0795361465878 |
+|     240      |  0.0171552374958992  |  74.0043400062455 |
+|     280      | 0.020107490941882133 | 72.18956169154909 |
+|     320      | 0.023019470274448395 | 70.56879268752205 |
++--------------+----------------------+-------------------+
+2023-09-16-18:40:37   [info]: Calling: save_checkpoint...
+2023-09-16-18:40:37   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_85.pth
+2023-09-16-18:40:37   [info]: Epoch 86/100
+2023-09-16-18:45:01   [info]: Calling: evaluate...
+2023-09-16-18:45:01   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:45:13   [info]: Evaluation finished!
+2023-09-16-18:45:13   [info]: Iterations completed: 86000 Results:
+ train loss: mean: 0.1352, var: 0.0001
+2023-09-16-18:45:13   [info]: Evaluation Results:
+
+2023-09-16-18:45:13   [info]: Average over all actions:
+2023-09-16-18:45:13   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005932928528636694 | 84.95062920782301 |
+|     120      | 0.008881723508238792 | 81.08973602453867 |
+|     160      | 0.011858314275741577 |  78.0386295583513 |
+|     200      | 0.014867204241454601 | 75.53982155190575 |
+|     240      | 0.01788821630179882  | 73.45811542537477 |
+|     280      | 0.020919688045978546 | 71.64984825584624 |
+|     320      | 0.023992037400603294 | 70.03645781013701 |
++--------------+----------------------+-------------------+
+2023-09-16-18:45:13   [info]: Epoch 87/100
+2023-09-16-18:49:36   [info]: Calling: evaluate...
+2023-09-16-18:49:36   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:49:47   [info]: Evaluation finished!
+2023-09-16-18:49:47   [info]: Iterations completed: 87000 Results:
+ train loss: mean: 0.1356, var: 0.0001
+2023-09-16-18:49:47   [info]: Evaluation Results:
+
+2023-09-16-18:49:47   [info]: Average over all actions:
+2023-09-16-18:49:47   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005765975918620825 | 85.05240943696764 |
+|     120      | 0.008723950013518333 | 81.23046904802322 |
+|     160      | 0.011740782298147678 |  78.2477213276757 |
+|     200      | 0.01478877104818821  | 75.75542479753494 |
+|     240      | 0.017879106104373932 | 73.68782477246391 |
+|     280      | 0.020980315282940865 | 71.88878026273515 |
+|     320      | 0.02405954897403717  | 70.27365432845222 |
++--------------+----------------------+-------------------+
+2023-09-16-18:49:47   [info]: Epoch 88/100
+2023-09-16-18:54:12   [info]: Calling: evaluate...
+2023-09-16-18:54:12   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:54:23   [info]: Evaluation finished!
+2023-09-16-18:54:23   [info]: Iterations completed: 88000 Results:
+ train loss: mean: 0.1364, var: 0.0001
+2023-09-16-18:54:23   [info]: Evaluation Results:
+
+2023-09-16-18:54:23   [info]: Average over all actions:
+2023-09-16-18:54:23   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005879877135157585 |  85.054578880469  |
+|     120      | 0.008844655007123947 | 81.24685237805048 |
+|     160      | 0.011867986060678959 | 78.22710441218483 |
+|     200      | 0.014916053973138332 | 75.72482625643411 |
+|     240      | 0.01797407679259777  | 73.61078527238634 |
+|     280      | 0.02107294648885727  |  71.7868920829561 |
+|     320      | 0.024188660085201263 | 70.14409767256844 |
++--------------+----------------------+-------------------+
+2023-09-16-18:54:23   [info]: Epoch 89/100
+2023-09-16-18:58:49   [info]: Calling: evaluate...
+2023-09-16-18:58:49   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-18:59:00   [info]: Evaluation finished!
+2023-09-16-18:59:00   [info]: Iterations completed: 89000 Results:
+ train loss: mean: 0.1333, var: 0.0001
+2023-09-16-18:59:00   [info]: Evaluation Results:
+
+2023-09-16-18:59:00   [info]: Average over all actions:
+2023-09-16-18:59:00   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005718924570828676 | 85.41525602340698 |
+|     120      | 0.008555143140256405 | 81.73567669259178 |
+|     160      | 0.01140572689473629  | 78.86425852775574 |
+|     200      | 0.014290094375610352 | 76.47352433866925 |
+|     240      | 0.017198611050844193 | 74.45605430338118 |
+|     280      | 0.02012930065393448  | 72.72059520085654 |
+|     320      | 0.023092225193977356 | 71.15907188918855 |
++--------------+----------------------+-------------------+
+2023-09-16-18:59:00   [info]: Epoch 90/100
+2023-09-16-19:03:24   [info]: Calling: evaluate...
+2023-09-16-19:03:24   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:03:35   [info]: Evaluation finished!
+2023-09-16-19:03:35   [info]: Iterations completed: 90000 Results:
+ train loss: mean: 0.1325, var: 0.0001
+2023-09-16-19:03:35   [info]: Evaluation Results:
+
+2023-09-16-19:03:35   [info]: Average over all actions:
+2023-09-16-19:03:35   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005968419369310141 |  84.9015838570065 |
+|     120      | 0.008956282399594784 | 81.05664087666405 |
+|     160      | 0.011946060694754124 | 77.96961814165115 |
+|     200      | 0.01502276211977005  | 75.51844633287854 |
+|     240      | 0.01809532195329666  | 73.52897177139917 |
+|     280      | 0.02117333561182022  | 71.74153625965118 |
+|     320      | 0.02431556023657322  | 70.12065963612663 |
++--------------+----------------------+-------------------+
+2023-09-16-19:03:35   [info]: Calling: save_checkpoint...
+2023-09-16-19:03:35   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_90.pth
+2023-09-16-19:03:35   [info]: Epoch 91/100
+2023-09-16-19:07:59   [info]: Calling: evaluate...
+2023-09-16-19:07:59   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:08:11   [info]: Evaluation finished!
+2023-09-16-19:08:11   [info]: Iterations completed: 91000 Results:
+ train loss: mean: 0.1365, var: 0.0001
+2023-09-16-19:08:11   [info]: Evaluation Results:
+
+2023-09-16-19:08:11   [info]: Average over all actions:
+2023-09-16-19:08:11   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005915539339184761 | 84.82215735647414 |
+|     120      | 0.00894530862569809  | 80.90570800834232 |
+|     160      | 0.012031236663460732 | 77.86002573039796 |
+|     200      | 0.01515810377895832  |  75.3447261121538 |
+|     240      | 0.018314488232135773 | 73.24099424812529 |
+|     280      | 0.02149670571088791  |  71.3715276784367 |
+|     320      | 0.02470438927412033  | 69.74381473329332 |
++--------------+----------------------+-------------------+
+2023-09-16-19:08:11   [info]: Epoch 92/100
+2023-09-16-19:12:35   [info]: Calling: evaluate...
+2023-09-16-19:12:35   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:12:47   [info]: Evaluation finished!
+2023-09-16-19:12:47   [info]: Iterations completed: 92000 Results:
+ train loss: mean: 0.1393, var: 0.0001
+2023-09-16-19:12:47   [info]: Evaluation Results:
+
+2023-09-16-19:12:47   [info]: Average over all actions:
+2023-09-16-19:12:47   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0060237739235162735 | 84.92588930659824 |
+|     120      |  0.009052899666130543 |  80.9401038620207 |
+|     160      |  0.012178625911474228 | 77.91395435730615 |
+|     200      |  0.015339252538979053 | 75.38313700093163 |
+|     240      |  0.01848650723695755  | 73.31466956271065 |
+|     280      |  0.021687814965844154 | 71.52452220519385 |
+|     320      |  0.02489360049366951  | 69.88237814770805 |
++--------------+-----------------------+-------------------+
+2023-09-16-19:12:47   [info]: Epoch 93/100
+2023-09-16-19:17:12   [info]: Calling: evaluate...
+2023-09-16-19:17:12   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:17:23   [info]: Evaluation finished!
+2023-09-16-19:17:23   [info]: Iterations completed: 93000 Results:
+ train loss: mean: 0.1382, var: 0.0001
+2023-09-16-19:17:23   [info]: Evaluation Results:
+
+2023-09-16-19:17:23   [info]: Average over all actions:
+2023-09-16-19:17:23   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005917672533541918 | 85.00130226214728 |
+|     120      | 0.008950923569500446 |  81.0524077879058 |
+|     160      | 0.01200543437153101  | 77.99283829000261 |
+|     200      | 0.015122003853321075 | 75.50097720490562 |
+|     240      | 0.018318720161914825 |  73.3950737449858 |
+|     280      | 0.021524915471673012 | 71.56184911727905 |
+|     320      | 0.024755196645855904 | 69.94335916307237 |
++--------------+----------------------+-------------------+
+2023-09-16-19:17:23   [info]: Epoch 94/100
+2023-09-16-19:21:49   [info]: Calling: evaluate...
+2023-09-16-19:21:49   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:22:00   [info]: Evaluation finished!
+2023-09-16-19:22:00   [info]: Iterations completed: 94000 Results:
+ train loss: mean: 0.1387, var: 0.0001
+2023-09-16-19:22:00   [info]: Evaluation Results:
+
+2023-09-16-19:22:00   [info]: Average over all actions:
+2023-09-16-19:22:00   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005855528172105551 | 85.08062130875058 |
+|     120      | 0.008860300295054913 | 81.17795172664854 |
+|     160      | 0.011961046606302261 | 78.12608480453491 |
+|     200      | 0.015064609237015247 | 75.62044229772356 |
+|     240      | 0.018190868198871613 | 73.54351166221831 |
+|     280      | 0.021358810365200043 |  71.7497835556666 |
+|     320      |  0.024543521925807   | 70.14702724085915 |
++--------------+----------------------+-------------------+
+2023-09-16-19:22:00   [info]: Epoch 95/100
+2023-09-16-19:26:25   [info]: Calling: evaluate...
+2023-09-16-19:26:25   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:26:35   [info]: Evaluation finished!
+2023-09-16-19:26:35   [info]: Iterations completed: 95000 Results:
+ train loss: mean: 0.1370, var: 0.0001
+2023-09-16-19:26:35   [info]: Evaluation Results:
+
+2023-09-16-19:26:35   [info]: Average over all actions:
+2023-09-16-19:26:35   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.006012709345668554 | 84.98144530587726 |
+|     120      | 0.009030146524310112 |  81.0719390710195 |
+|     160      | 0.012004674412310123 | 78.10362411869896 |
+|     200      | 0.015052206814289093 | 75.60242977407243 |
+|     240      | 0.01821511797606945  |  73.5284287068579 |
+|     280      | 0.02134026773273945  |  71.7510849237442 |
+|     320      | 0.024500012397766113 | 70.13010018401675 |
++--------------+----------------------+-------------------+
+2023-09-16-19:26:35   [info]: Calling: save_checkpoint...
+2023-09-16-19:26:36   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_95.pth
+2023-09-16-19:26:36   [info]: Epoch 96/100
+2023-09-16-19:31:02   [info]: Calling: evaluate...
+2023-09-16-19:31:02   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:31:13   [info]: Evaluation finished!
+2023-09-16-19:31:13   [info]: Iterations completed: 96000 Results:
+ train loss: mean: 0.1367, var: 0.0001
+2023-09-16-19:31:13   [info]: Evaluation Results:
+
+2023-09-16-19:31:13   [info]: Average over all actions:
+2023-09-16-19:31:13   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005918302573263645 | 85.08083787229326 |
+|     120      | 0.008843932300806046 |  81.2060554822286 |
+|     160      | 0.011853767558932304 | 78.22623865471947 |
+|     200      | 0.01491370890289545  |  75.7112623916732 |
+|     240      | 0.018004683777689934 | 73.66916206147935 |
+|     280      | 0.02111194096505642  | 71.90331916014352 |
+|     320      | 0.02421283908188343  | 70.30143207973904 |
++--------------+----------------------+-------------------+
+2023-09-16-19:31:13   [info]: Epoch 97/100
+2023-09-16-19:35:40   [info]: Calling: evaluate...
+2023-09-16-19:35:40   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:35:51   [info]: Evaluation finished!
+2023-09-16-19:35:51   [info]: Iterations completed: 97000 Results:
+ train loss: mean: 0.1366, var: 0.0001
+2023-09-16-19:35:51   [info]: Evaluation Results:
+
+2023-09-16-19:35:51   [info]: Average over all actions:
+2023-09-16-19:35:51   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005841103382408619 | 85.14008257124159 |
+|     120      | 0.008773941546678543 | 81.26877115832436 |
+|     160      | 0.011789610609412193 | 78.26280461417305 |
+|     200      | 0.014865124598145485 | 75.75499183601804 |
+|     240      | 0.017911314964294434 | 73.71462715996635 |
+|     280      | 0.020949039608240128 | 71.96104559633467 |
+|     320      | 0.024026760831475258 | 70.36957475874159 |
++--------------+----------------------+-------------------+
+2023-09-16-19:35:51   [info]: Epoch 98/100
+2023-09-16-19:40:15   [info]: Calling: evaluate...
+2023-09-16-19:40:15   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:40:26   [info]: Evaluation finished!
+2023-09-16-19:40:26   [info]: Iterations completed: 98000 Results:
+ train loss: mean: 0.1362, var: 0.0001
+2023-09-16-19:40:26   [info]: Evaluation Results:
+
+2023-09-16-19:40:26   [info]: Average over all actions:
+2023-09-16-19:40:26   [info]: +--------------+----------------------+-------------------+
+| Pred. length |    positional_mse    |        auc        |
++--------------+----------------------+-------------------+
+|      80      | 0.005767320282757282 | 85.21234823597801 |
+|     120      | 0.008701298385858536 | 81.32204777664609 |
+|     160      | 0.011686818674206734 | 78.35373315546248 |
+|     200      | 0.014748617075383663 | 75.83669804864459 |
+|     240      |  0.0178076084703207  | 73.82432719071707 |
+|     280      | 0.02083907276391983  |  72.0635849568579 |
+|     320      | 0.02392701618373394  | 70.45171426402199 |
++--------------+----------------------+-------------------+
+2023-09-16-19:40:26   [info]: Epoch 99/100
+2023-09-16-19:44:52   [info]: Calling: evaluate...
+2023-09-16-19:44:52   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:45:03   [info]: Evaluation finished!
+2023-09-16-19:45:03   [info]: Iterations completed: 99000 Results:
+ train loss: mean: 0.1359, var: 0.0001
+2023-09-16-19:45:03   [info]: Evaluation Results:
+
+2023-09-16-19:45:03   [info]: Average over all actions:
+2023-09-16-19:45:03   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0058441669680178165 | 85.17458736896515 |
+|     120      |  0.008811293169856071 |  81.3074004318979 |
+|     160      |  0.011764292605221272 | 78.34635343816545 |
+|     200      |  0.014798340387642384 | 75.85969997776878 |
+|     240      |  0.017858512699604034 |  73.8256292210685 |
+|     280      |   0.0209830142557621  | 72.05186602142122 |
+|     320      |  0.02407209947705269  | 70.42089849710464 |
++--------------+-----------------------+-------------------+
+2023-09-16-19:45:03   [info]: Epoch 100/100
+2023-09-16-19:49:27   [info]: Calling: evaluate...
+2023-09-16-19:49:27   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-16-19:49:38   [info]: Evaluation finished!
+2023-09-16-19:49:38   [info]: Iterations completed: 100000 Results:
+ train loss: mean: 0.1363, var: 0.0001
+2023-09-16-19:49:38   [info]: Evaluation Results:
+
+2023-09-16-19:49:38   [info]: Average over all actions:
+2023-09-16-19:49:38   [info]: +--------------+-----------------------+-------------------+
+| Pred. length |     positional_mse    |        auc        |
++--------------+-----------------------+-------------------+
+|      80      | 0.0058290050365030766 | 85.20887593428293 |
+|     120      |  0.008809735998511314 | 81.34016924434238 |
+|     160      |   0.0117466626688838  | 78.38802105850644 |
+|     200      |  0.014764091931283474 | 75.90766052405039 |
+|     240      |  0.01778227649629116  | 73.86653588877785 |
+|     280      |  0.020837457850575447 | 72.11848994096121 |
+|     320      |  0.023897111415863037 |  70.5119358168708 |
++--------------+-----------------------+-------------------+
+2023-09-16-19:49:38   [info]: Calling: save_checkpoint...
+2023-09-16-19:49:38   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_100.pth
+2023-09-16-19:49:38   [info]: Calling: save_checkpoint...
+2023-09-16-19:49:38   [info]: Checkpoint was saved to: experiments/parameter_tuning/bs_64/checkpoints/checkpoint_epoch_final.pth
+2023-09-16-19:49:47   [info]: WandB logging finished
+
+2023-09-16-19:49:47   [info]: Training finished!
+2023-09-16-19:49:47   [info]: Calling: __init__...

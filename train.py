@@ -29,6 +29,8 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
     log_script_setup()
     # Initialize the model
     session.initialize_model()
+    if checkpoint_name is not None:
+        session.load_checkpoint(checkpoint_name)
     # Initialize the components of the optimization process (optimizer, scheduler, loss function)
     session.initialize_optimization()
     # Load the data
@@ -46,8 +48,8 @@ def run_training_00(experiment_name: str, run_name: str, checkpoint_name: str, l
 #####===== Run Information =====#####
 # These list of runs can be used to run multiple trainings sequentially.
 QUEUED = True # Activate the usage of the training queue
-EXPERIMENT_NAMES = ['representation_study']*7
-RUN_NAMES = ['6d_abs_1', '6d_geo_1', 'baseline_1', 'baseline_geo_1', 'position_abs_1', 'quat_abs_1', 'quat_geo_1']
+EXPERIMENT_NAMES = ['representation_study']*3
+RUN_NAMES = ['6d_geo_2', 'baseline_geo_2', 'quat_geo_2']
 
 #####===== Meta Information =====#####
 TRAINING_FUNCTIONS = {

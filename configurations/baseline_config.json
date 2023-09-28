@@ -62,6 +62,7 @@
         "seed_length": 75,
         "target_length": 1,
         "downsampling_factor": 2,
+        "normalize_orientation": true,
         "spacing": 0,
         "training_size": 1000,
         "validation_size": 1000,

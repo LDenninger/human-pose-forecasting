@@ -94,7 +94,6 @@ class STDWeightedPositionMSE(LossBase):
         self.reduction_func = self._reduce_sum_and_mean if reduction =='sum' else self._reduce_mean
     
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        import ipdb; ipdb.set_trace()
         # Compute the MSE loss per-joint
         loss = F.mse_loss(output, target, reduction='none')
         loss = torch.sum(loss, dim=-1) 
@@ -157,7 +156,6 @@ class LearningPositionMSE(LossBase):
 
     def forward(self, output: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         # Do not learn during warm-up steps
-        import ipdb; ipdb.set_trace()
         if self.device is None:
             self.device = output.device
             self.weights = nn.Parameter(self.weights.to(self.device))
@@ -196,18 +194,16 @@ class GeodesicLoss(LossBase):
             If rotation matrices are directly inputted, we assume they are flattened.
         """
         output, target = self._flatten_leading(output), self._flatten_leading(target)
-    
         output = self.conversion_func(output)
         target = self.conversion_func(target)
-        r = torch.matmul(output, target.transpose(-2,-1))
-        angles = matrix_to_axis_angle(r)
-        angles = torch.linalg.vector_norm(angles, dim=-1)
-        return self.reduction_func(angles)
+        R_diffs = output @ target.permute(0, 2, 1)
+        traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
+        dists = torch.acos(torch.clamp((traces - 1) / 2, -1 + torch.finfo(torch.float32).eps, 1 -torch.finfo(torch.float32).eps))
+        return self.reduction_func(dists)
     
 class EulerLoss(LossBase):
     """
         Module to compute a loss on euler angles using an absolute difference between two rotation.
-        import ipdb; ipdb.set_trace()
 
         Implementation according to: https://towardsdatascience.com/better-rotation-representations-for-accurate-pose-estimation-e890a7e1317f
     """

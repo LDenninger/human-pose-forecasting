@@ -1,0 +1,61 @@
+2023-09-19-10:48:08   [info]: Initialized trainer for run: augmentation_study/test
+2023-09-19-10:48:08   [info]: Using device: cpu
+2023-09-19-10:48:08   [info]: No training queue defined.
+2023-09-19-10:48:08   [info]: Calling: initialize_model...
+2023-09-19-10:48:08   [warn]: Cannot watch model without WandB
+2023-09-19-10:48:08   [info]: Initialized model
+2023-09-19-10:48:08   [info]: Calling: initialize_optimization...
+2023-09-19-10:48:08   [info]: Initialized optimizer
+2023-09-19-10:48:08   [info]: Calling: load_train_data...
+2023-09-19-10:48:12   [info]: Loaded training data: Length: 12313, Batched length: 384, Iterations per epoch: 1000
+2023-09-19-10:48:12   [info]: Calling: initialize_evaluation...
+2023-09-19-10:48:12   [info]: Load the evaluation data for each action
+2023-09-19-10:48:21   [info]: Initialized an evaluation for joint distances with 2
+2023-09-19-10:48:21   [info]: Calling: train...
+2023-09-19-10:48:21   [info]: Calling: training_loop...
+2023-09-19-10:48:21   [info]: Start training for run augmentation_study/test
+2023-09-19-10:48:21   [info]: Calling: evaluate...
+2023-09-19-10:48:21   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-19-10:48:23   [info]: Evaluation finished!
+2023-09-19-10:48:23   [info]: Iterations completed: 0 Results:
+ 
+2023-09-19-10:48:23   [info]: Evaluation Results:
+
+2023-09-19-10:48:23   [info]: Average over all actions:
+2023-09-19-10:48:23   [info]: +--------------+---------------------+--------------------+
+| Pred. length |    positional_mse   |        auc         |
++--------------+---------------------+--------------------+
+|      80      | 0.10115084052085876 | 46.45182291666667  |
+|     120      | 0.15185236930847168 |     37.3046875     |
+|     160      | 0.20246607065200806 | 31.66232638888889  |
+|     200      |  0.2531139552593231 | 26.085069444444443 |
+|     240      | 0.30380281805992126 | 23.75217013888889  |
+|     280      |  0.3545130491256714 | 21.56032986111111  |
+|     320      |  0.4052504301071167 | 20.45355902777778  |
++--------------+---------------------+--------------------+
+2023-09-19-10:48:23   [info]: Epoch 1/100
+2023-09-19-10:50:57   [error]: Traceback (most recent call last):
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
+    return func(*args, **kwargs)
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/Session.py", line 263, in training_loop
+    self.train_epoch_auto_regressive()
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/Session.py", line 338, in train_epoch_auto_regressive
+    target_data = self.data_augmentor(target_data)
+  File "/home/luis/anaconda3/envs/vision_lab/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1194, in _call_impl
+    return forward_call(*input, **kwargs)
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/data_utils/DataAugmentor.py", line 70, in forward
+    return self.train_pipeline(x) if is_train else self.eval_pipeline(x)
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/data_utils/DataAugmentor.py", line 97, in <lambda>
+    return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/data_utils/DataAugmentor.py", line 97, in <lambda>
+    return lambda x: reduce(lambda acc, f: f(acc), funcs, x)
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/data_utils/DataAugmentor.py", line 136, in _joint_noise
+    bs = x.shape[0]
+  File "/home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/src/data_utils/DataAugmentor.py", line 136, in _joint_noise
+    bs = x.shape[0]
+  File "/home/luis/anaconda3/envs/vision_lab/lib/python3.9/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/home/luis/anaconda3/envs/vision_lab/lib/python3.9/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit
+

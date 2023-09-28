@@ -10,7 +10,7 @@ wandb/*
 .vscode/launch.json
 .vscode/settings.json
 
-*.txt
+#*.txt
 *.pdf
 *.pth
 *.pt

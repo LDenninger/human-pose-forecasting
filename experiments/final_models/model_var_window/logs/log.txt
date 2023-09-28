@@ -1,0 +1,39 @@
+2023-09-26-16:09:57   [info]: Initialized trainer for run: final_models/model_var_window
+2023-09-26-16:09:57   [info]: Using device: cuda
+2023-09-26-16:09:57   [info]: No evaluation queue defined.
+2023-09-26-16:09:57   [info]: Calling: initialize_model...
+2023-09-26-16:09:57   [warn]: Cannot watch model without WandB
+2023-09-26-16:09:57   [info]: Initialized model
+2023-09-26-16:09:57   [info]: Calling: load_checkpoint...
+2023-09-26-16:09:57   [error]: Checkpoint could not been load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_var_window/checkpoints/checkpoint_epoch_75.pth
+2023-09-26-16:09:57   [error]: Exception: Error(s) in loading state_dict for PosePredictor:
+	Unexpected key(s) in state_dict: "positionalEncoding.positional_encoding". 
+2023-09-26-16:09:57   [info]: Calling: initialize_evaluation...
+2023-09-26-16:09:57   [info]: Load the evaluation data for each action
+2023-09-26-16:10:00   [info]: Initialized an evaluation for joint distances with 1000
+2023-09-26-16:10:00   [info]: Calling: evaluate...
+2023-09-26-16:10:00   [info]: Calling: evaluate...
+2023-09-26-16:10:00   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-26-16:11:36   [info]: Evaluation finished!
+2023-09-26-16:11:36   [info]: Iterations completed: 0 Results:
+ 
+2023-09-26-16:11:36   [info]: Evaluation Results:
+
+2023-09-26-16:11:36   [info]: Average over all actions:
+2023-09-26-16:11:36   [info]: +--------------+----------------------+--------------------+
+| Pred. length |    positional_mse    |        auc         |
++--------------+----------------------+--------------------+
+|      80      | 0.004302402026951313 | 87.80649469958412  |
+|     120      | 0.00725038954988122  | 83.08631380399069  |
+|     160      | 0.011207864619791508 | 78.46623543235991  |
+|     200      | 0.01602899096906185  | 74.48003242413202  |
+|     240      | 0.021338649094104767 | 71.34744243489372  |
+|     280      | 0.027342842891812325 | 68.58071833848953  |
+|     320      | 0.034520961344242096 |  65.7705169585016  |
+|     360      | 0.043123092502355576 | 62.859676943884956 |
+|     400      | 0.05299723148345947  | 59.99117179049386  |
+|     440      |  0.0633339062333107  | 57.28068898121516  |
+|     480      | 0.07349423319101334  | 54.90507450368669  |
+|     520      | 0.08353179693222046  | 52.767080234156715 |
+|     560      | 0.09378109127283096  | 50.794062515099846 |
++--------------+----------------------+--------------------+

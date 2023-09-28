@@ -1,0 +1,56 @@
+2023-09-27-09:10:10   [info]: WandB initialized
+project_name: HumanPoseForecasting, entity: None, group: None, job_type: None, resume: None, mode: online
+2023-09-27-09:10:10   [config]:
+  training_scheme: single_step
+  random_seed: 42
+  batch_size: 32
+  num_epochs: 100
+  num_train_iterations: 1000
+  num_eval_iterations: 200
+  seq_length: 10
+  checkpoint_frequency: 5
+  model: {'type': 'st_transformer', 'num_blocks': 8, 'input_dropout': 0.1, 'embedding_dim': 64, 'positional_encoding': {'type': 'sin'}, 'transformer': {'type': 'parallel', 'spatial_heads': 4, 'temporal_heads': 4, 'spatial_dropout': 0.1, 'temporal_dropout': 0.1, 'ff_dimension': 128, 'ff_dropout': 0.1, 'input_dropout': 0.1}}
+  optimizer: {'type': 'Adam', 'learning_rate': 0.001, 'betas': [0.9, 0.98], 'epsilon': 1e-08}
+  loss: {'type': 'position_mse', 'reduction': 'mean'}
+  lr_scheduler: {'type': 'cosine', 'max_iterations': 100000, 'warmup': 2000, 'min_learning_rate': 0.0, 'update_frequency': 1000, 'base_lr': 0.0003}
+  skeleton: {'type': 's16', 'num_joints': 16}
+  joint_representation: {'type': 'pos', 'absolute': True, 'joint_dim': 3}
+  evaluation: {'metrics': ['positional_mse', 'auc'], 'distribution_metrics': [], 'frequency': 1, 'exhaustive_evaluation': True, 'timesteps': [80, 120, 160, 200, 240, 280, 320]}
+  dataset: {'name': 'h36m', 'seed_length': 10, 'target_length': 1, 'downsampling_factor': 2, 'normalize_orientation': False, 'spacing': 5, 'training_size': 1000, 'validation_size': 1000, 'test_size': 1000, 'reverse_prob': 0.5}
+  data_augmentation: {'normalize': True, 'reverse_prob': 0.0, 'snp_noise_prob': 0.0, 'snp_noise_portion': [0.05, 0.4], 'joint_cutout_prob': 0.0, 'joint_cutout_portion': [1, 4], 'timestep_cutout_prob': 0.0, 'timestep_cutout_portion': [1, 4], 'gaussian_noise_prob': 0.0, 'gaussian_noise_std': 0.005}2023-09-27-09:10:11   [info]: Initialized trainer for run: training_schemes/baseline_training
+2023-09-27-09:10:11   [info]: Using device: cuda
+2023-09-27-09:10:11   [info]: Training Queue:training_schemes/baseline_training
+ transformer_study/vanilla
+2023-09-27-09:10:11   [info]: Calling: initialize_model...
+2023-09-27-09:10:11   [info]: Initialized model
+2023-09-27-09:10:11   [info]: Calling: initialize_optimization...
+2023-09-27-09:10:11   [info]: Initialized optimizer
+2023-09-27-09:10:11   [info]: Calling: load_train_data...
+2023-09-27-09:10:21   [info]: Loaded training data: Length: 77714, Batched length: 2428, Iterations per epoch: 1000
+2023-09-27-09:10:21   [info]: Calling: initialize_evaluation...
+2023-09-27-09:10:21   [info]: Load the evaluation data for each action
+2023-09-27-09:10:24   [info]: Initialized an evaluation for joint distances with 200
+2023-09-27-09:10:24   [info]: Calling: train...
+2023-09-27-09:10:24   [info]: Calling: training_loop...
+2023-09-27-09:10:24   [info]: Start training for run training_schemes/baseline_training
+2023-09-27-09:10:24   [info]: Calling: evaluate...
+2023-09-27-09:10:24   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-27-09:10:37   [info]: Evaluation finished!
+2023-09-27-09:10:37   [info]: Iterations completed: 0 Results:
+ 
+2023-09-27-09:10:37   [info]: Evaluation Results:
+
+2023-09-27-09:10:37   [info]: Average over all actions:
+2023-09-27-09:10:37   [info]: +--------------+---------------------+--------------------+
+| Pred. length |    positional_mse   |        auc         |
++--------------+---------------------+--------------------+
+|      80      | 0.06250379979610443 | 54.359049432807495 |
+|     120      | 0.09360123425722122 | 47.10926603939798  |
+|     160      | 0.12460654973983765 | 40.55805156628291  |
+|     200      | 0.15555118024349213 | 35.271484115057525 |
+|     240      | 0.18642227351665497 | 31.90711819463306  |
+|     280      | 0.21723534166812897 | 28.488715406921173 |
+|     320      |  0.2479860633611679 | 25.970919657912518 |
++--------------+---------------------+--------------------+
+2023-09-27-09:10:37   [info]: Epoch 1/100
+2023-09-27-09:10:37   [info]: Calling: train_epoch_single_step...
