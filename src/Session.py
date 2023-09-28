@@ -39,9 +39,7 @@ class Session:
             run_name=self.run_name,
             log_internal=log_process_internal,
         )
-        # Load mean and var of data
-        self.norm_mean = torch.load(f'configurations/mean.pt')
-        self.norm_var = torch.load(f'configurations/var.pt')
+
         
 
         self.metric_tracker = MetricTracker()
@@ -55,6 +53,16 @@ class Session:
                 project_name='HumanPoseForecasting',
                 config=self.config
             )
+        # Load mean and var of data
+        if self.config['dataset']['normalize_orientation']:
+            self.norm_mean = torch.load(f'configurations/mean_norm.pt')
+            self.norm_var = torch.load(f'configurations/var_norm.pt')
+        elif self.config['joint_representation']['absolute']:
+            self.norm_mean = torch.load(f'configurations/mean.pt')
+            self.norm_var = torch.load(f'configurations/var.pt')
+        else:
+            self.norm_mean = torch.load(f'configurations/mean_global.pt')
+            self.norm_var = torch.load(f'configurations/var_global.pt')
         self.variable_window = self.config['variable_window'] if 'variable_window' in self.config.keys() else False
         # Modules
         self.model = None

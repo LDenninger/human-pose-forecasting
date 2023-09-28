@@ -1,12 +1,12 @@
 {
-    "training_scheme": "single_step",
+    "training_scheme": "auto_regressive",
     "random_seed": 42,
     "batch_size": 32,
-    "num_epochs": 20,
+    "num_epochs": 100,
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
-    "seq_length": 75,
-    "checkpoint_frequency": 1,
+    "seq_length": 10,
+    "checkpoint_frequency": 5,
     "model": {
         "type": "st_transformer",
         "num_blocks": 8,
@@ -36,11 +36,16 @@
         "epsilon": 1e-08
     },
     "loss": {
-        "type": "mse"
+        "type": "geodesic",
+        "reduction": "mean"
     },
     "lr_scheduler": {
-        "type": "baseline",
-        "warmup": 100000
+        "type": "cosine",
+        "max_iterations": 100000,
+        "warmup": 2000,
+        "min_learning_rate": 0.0,
+        "update_frequency": 1000,
+        "base_lr": 3e-04
     },
     "skeleton": {
         "type": "s26",
@@ -48,33 +53,49 @@
     },
     "joint_representation": {
         "type": "mat",
+        "absolute": true,
         "joint_dim": 9
     },
     "evaluation": {
-        "metrics": ["geodesic_distance", "positional_mse", "euler_angle", "auc"],
-        "distribution_metrics": ["ps_entropy", "ps_kld", "npss"],
+        "metrics": ["geodesic_distance", "positional_mse", "euler_error", "auc"],
+        "distribution_metrics": [],
         "frequency": 1,
         "exhaustive_evaluation": true,
-        "timesteps": [100,200,300,400]
+        "timesteps": [80,120,160,200,240,280,320]
     },
     "dataset": {
         "name": "h36m",
-        "seed_length": 75,
-        "target_length": 1,
+        "seed_length": 10,
+        "target_length": 10,
         "downsampling_factor": 2,
-        "normalize_orientation": true,
-        "spacing": 0,
+        "spacing": 5,
         "training_size": 1000,
+        "normalize_orientation": false,
         "validation_size": 1000,
         "test_size": 1000,
         "reverse_prob": 0.5
     },
     "data_augmentation": {
-        "normalize": true,
-        "reverse_prob": 0.5,
+        "normalize": false,
+        "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
+        "snp_noise_portion": [
+            0.05,
+            0.4
+        ],
         "joint_cutout_prob": 0.0,
-        "timestep_cutout_prob": 0.0   
+        "joint_cutout_portion": [
+            1,
+            4
+        ],
+        "timestep_cutout_prob": 0.0,
+        "timestep_cutout_portion": [
+            1,
+            4
+        ],
+        "gaussian_noise_prob": 0.0,
+        "gaussian_noise_std": 0.005
     }
+
 
 }

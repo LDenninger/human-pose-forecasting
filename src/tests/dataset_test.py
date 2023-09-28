@@ -68,7 +68,7 @@ def test_data_augmentation():
 
     ##== Augmentation Parameters ==##
     params = {
-        "normalize": True,
+        "normalize": False,
         "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
         "snp_noise_portion": [
@@ -112,17 +112,17 @@ def test_data_augmentation():
             import ipdb; ipdb.set_trace()
             print('nan encountered')
 
-        #seq = data_augmentor(seq.unsqueeze(0)).squeeze()
-        #animate_pose_matplotlib(
-        #        positions = (seq.numpy(), seq.numpy()),
-        #        colors = ('g', 'g'),
-        #        titles = ("test_1", "test_2"),
-        #        fig_title = "Visualization Test",
-        #        parents = SH_SKELETON_PARENTS,
-        #        change_color_after_frame=(None, None),
-        #        color_after_change='r',
-        #        overlay=True,
-        #        show_axis=True,
-        #        fps=25,
-        #        
-        #    )
+        seq = data_augmentor(seq.unsqueeze(0)).squeeze()
+        animate_pose_matplotlib(
+                positions = (seq.numpy(), seq.numpy()),
+                colors = ('g', 'g'),
+                titles = ("test_1", "test_2"),
+                fig_title = "Visualization Test",
+                parents = SH_SKELETON_PARENTS,
+                change_color_after_frame=(None, None),
+                color_after_change='r',
+                overlay=True,
+                show_axis=True,
+                fps=25,
+                
+            )

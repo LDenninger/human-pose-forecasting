@@ -1,0 +1,12 @@
+2023-09-22-12:30:43   [info]: Initialized trainer for run: best_model/model_nonorm
+2023-09-22-12:30:43   [info]: Using device: cpu
+2023-09-22-12:30:43   [info]: No training queue defined.
+2023-09-22-12:30:43   [info]: Calling: initialize_model...
+2023-09-22-12:30:43   [warn]: Cannot watch model without WandB
+2023-09-22-12:30:43   [info]: Initialized model
+2023-09-22-12:30:43   [info]: Calling: load_checkpoint...
+2023-09-22-12:30:43   [info]: Model checkpoint was load from: /home/luis/files_university/master/semester_2/lab_vision/human-pose-forecasting/experiments/best_model/model_nonorm/checkpoints/checkpoint_epoch_75.pth
+2023-09-22-12:30:43   [info]: Calling: initialize_visualization...
+2023-09-22-12:30:43   [info]: Load the evaluation data for each action
+2023-09-22-12:30:48   [warn]: Goal prediction timesteps: 1000 not reachable using timesteps: 1023
+2023-09-22-12:30:48   [info]: Start visualization on the AIS dataset

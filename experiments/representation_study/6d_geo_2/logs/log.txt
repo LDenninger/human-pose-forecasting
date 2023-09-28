@@ -1,0 +1,12 @@
+2023-09-27-13:26:41   [info]: Initialized trainer for run: representation_study/6d_geo_1
+2023-09-27-13:26:41   [info]: Using device: cuda
+2023-09-27-13:26:41   [info]: No training queue defined.
+2023-09-27-13:26:41   [info]: Calling: initialize_model...
+2023-09-27-13:26:41   [warn]: Cannot watch model without WandB
+2023-09-27-13:26:41   [info]: Initialized model
+2023-09-27-13:26:41   [info]: Calling: load_checkpoint...
+2023-09-27-13:26:41   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_geo_1/checkpoints/checkpoint_epoch_80.pth
+2023-09-27-13:26:41   [info]: Calling: initialize_visualization...
+2023-09-27-13:26:41   [info]: Load the evaluation data for each action
+2023-09-27-13:26:45   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-27-13:26:50   [info]: Evaluation finished!

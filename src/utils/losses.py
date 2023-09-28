@@ -198,10 +198,10 @@ class GeodesicLoss(LossBase):
     
         output = self.conversion_func(output)
         target = self.conversion_func(target)
-        r = torch.matmul(output, target.transpose(-2,-1))
-        angles = matrix_to_axis_angle(r)
-        angles = torch.linalg.vector_norm(angles, dim=-1)
-        return self.reduction_func(angles)
+        R_diffs = input @ target.permute(0, 2, 1)
+        traces = R_diffs.diagonal(dim1=-2, dim2=-1).sum(-1)
+        dists = torch.acos(torch.clamp((traces - 1) / 2, -1 + self.eps, 1 - self.eps))
+        return self.reduction_func(dists)
     
 class EulerLoss(LossBase):
     """
