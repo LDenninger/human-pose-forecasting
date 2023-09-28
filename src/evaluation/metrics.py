@@ -1,7 +1,7 @@
 """
 Metrics for quantitative evaluation of the results ported to PyTorch and adapted.
 Following https://github.com/eth-ait/motion-transformer/blob/master/metrics/motion_metrics.py.
-@Author: Leon Herbrik
+@Author: Leon Herbrik, Luis Denninger
 """
 
 import numpy as np

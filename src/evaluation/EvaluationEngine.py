@@ -264,6 +264,11 @@ class EvaluationEngine:
                 actions (Optional[List[str]]): List of the actions to include in the dataset
                 split_actions (Optional[bool]): Whether to split the actions into different datasets
                 representation (Optional[Literal["axis", "mat", "quat", "6d", "pos", None]]): Which joint representation to use
+                absolute_positions (Optional[bool]): Whether to use absolute positions
+                skeleton_representation (Optional[Literal['s26','s21','s16']]): Which skeleton representation to use
+                batch_size (Optional[int]): The batch size
+                normalize (Optional[bool]): Whether to normalize the joints
+                normalize_orientation (Optional[bool]): Whether to normalize the joint orientations
 
 
         """

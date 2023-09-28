@@ -93,11 +93,23 @@ class AttentionBase(nn.Module):
 
 
 class TemporalAttention(AttentionBase):
+    """
+        The temporal attention module according to: https://arxiv.org/pdf/2004.08692.pdf
+    """
     def __init__(self,
                  num_emb: int,
                   num_tokens: int,
                    token_dim: int,
                     num_heads: int) -> None:
+        """
+            Initialize the temporal attention.
+
+            Arguments:
+                num_emb (int): The number of embeddings to separately compute the temporal attention for.
+                num_tokens (int): The number of tokens in the input, i.e. number of joints.
+                token_dim (int): The dimensionality of the token embeddings.
+                num_heads (int): The number of attention heads.
+        """
 
         super().__init__(num_tokens, token_dim, num_heads)
         self.num_emb = num_emb
@@ -116,16 +128,18 @@ class TemporalAttention(AttentionBase):
                 x [batch_size, seq_len, num_joints, emb_dim]
         """
         x = x.permute(0, 2, 1, 3) # [batch_size, num_joints, seq_len, emb_dim]
+        # Compute the query, key, and value embeddings
         Q = self.multi_head_linear_embedding(x, self.W_query) # [batch_size, num_joints, num_tokens, token_dim]
         K = self.multi_head_linear_embedding(x, self.W_key)
         V = self.multi_head_linear_embedding(x, self.W_value)
-        
+        # Apply scaled dot product attention
         out = self.scaled_dot_product_attention(Q, K, V)
+        # Concatenate the attention heads
         out = torch.transpose(out, -3, -2)
         out = torch.flatten(out, start_dim=-2, end_dim=-1)
+        # Compute linear embedding
         out = self.linear_embedding(out, self.W_output) 
         out = out.permute(0, 2, 1, 3) 
-
         return out
     
     
@@ -146,14 +160,29 @@ class TemporalAttention(AttentionBase):
         return out
 
     def set_mask(self) -> None:
+        """
+            Set the attention mask in the log space (Look-ahead matrix).
+        """
         self.mask = -torch.triu(torch.ones(self.num_tokens, self.num_tokens), diagonal=1) * 1e9
 
 class SpatialAttention(AttentionBase):
+    """
+        Spatial attention module according to: https://arxiv.org/pdf/2004.08692.
+    """
     def __init__(self,
                  num_emb: int,
                   num_tokens: int,
                    token_dim: int,
                     num_heads: int) -> None:
+        """
+            Initialize the spatial attention module.
+
+            Arguments:
+                num_emb (int): The number of embeddings to separately compute the spatial attention for.
+                num_tokens (int): The number of tokens in the input, i.e. number of timesteps.
+                token_dim (int): The dimensionality of the token embeddings.
+                num_heads (int): The number of attention heads.
+        """
         super().__init__(num_tokens, token_dim, num_heads)
         self.num_emb = num_emb
         self.register_parameter('W_query', nn.Parameter(torch.Tensor(num_emb, token_dim, token_dim)))
@@ -207,11 +236,22 @@ class SpatialAttention(AttentionBase):
         return out
 
 class VanillaAttention(AttentionBase):
+    """
+        Vanilla attention module according to: https://arxiv.org/pdf/1706.03762.pdf    
+    """
 
     def __init__(self,
                 num_tokens: int,
                 token_dim: int,
                     num_heads: int) -> None:
+        """
+            Initialize the vanilla attention.
+
+            Arguments:
+                num_tokens (int): The number of tokens in the input, i.e. number of timesteps.
+                token_dim (int): The dimensionality of the token embeddings.
+                num_heads (int): The number of attention heads.
+        """
         super().__init__(num_tokens, token_dim, num_heads)
         self.register_parameter('W_query', nn.Parameter(torch.Tensor(token_dim, token_dim)))
         self.register_parameter('W_key', nn.Parameter(torch.Tensor(token_dim, token_dim)))

@@ -1,3 +1,9 @@
+"""
+    Visualization functions for the evluation.
+
+    Author: Leon Herbrik
+"""
+
 import time
 from typing import List, Tuple
 import math

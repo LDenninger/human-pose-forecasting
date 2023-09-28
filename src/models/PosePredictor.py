@@ -37,7 +37,7 @@ def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
 
 class PosePredictor(nn.Module):
     """
-        This is a base for a pose predictor.
+        Predictor module which encapsule the complete model and attention layers.
     
     """
 
@@ -53,6 +53,20 @@ class PosePredictor(nn.Module):
                              incl_abs_position: Optional[bool] = False,
 
                     ) -> None:
+        """
+            Initialize the pose predictor.
+
+            Arguments:
+                positional_encoding_config (dict): Configuration for the positional encoding applied to the input.\
+                transformer_config (dict): Configuration for the attention layers.
+                num_joints (int): Number of joints.
+                seq_len (int): Sequence length.
+                num_blocks (int): Number of attention blocks.
+                emb_dim (int): Embedding dimension.
+                joint_dim (int): Dimension of the joint representation.
+                input_dropout (float): Dropout rate applied to the input.
+                incl_abs_position (bool): Whether to include the absolute position in the input.
+        """
         
         super(PosePredictor, self).__init__()
         # Build the model 
