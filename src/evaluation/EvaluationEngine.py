@@ -761,6 +761,7 @@ class EvaluationEngine:
         # Get parents for drawing
         parent_ids = self._get_skeleton_parents()
         # Create visualizations
+        self.vis2d_figures = []
         for i in range(num):
             comparison_img = compare_sequences_plotly(
                 sequence_names=["ground truth", "prediction"],
@@ -782,6 +783,7 @@ class EvaluationEngine:
                 os.makedirs(save_to)
             # Store image in that directory
             pil_image = Image.fromarray(comparison_img)
+            self.vis2d_figures.append(pil_image)
             pil_image.save(os.path.join(save_to, f"sequence_{i:0>4}.png"))
             # Image.fromarray(comparison_img).show()
     
