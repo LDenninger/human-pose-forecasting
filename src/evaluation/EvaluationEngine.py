@@ -467,8 +467,8 @@ class EvaluationEngine:
                 self.evaluation_loop_distance(action, model, data_loader)
             if self.long_predictions_active:
                 self.evaluation_loop_distribution(action, model, data_loader)
-            if self.split_actions:
-                self._compute_overall_means()
+        if self.split_actions:
+            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
