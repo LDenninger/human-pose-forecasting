@@ -136,6 +136,8 @@ class EvaluationEngine:
                                            prediction_timesteps: List[int],
                                            variable_window: bool = False,
                                            distr_pred_sec: int = 15,
+                                           config: Optional[Dict] = None,
+                                           dataset: str = 'h36m',
                                            ):
         """
             Initialize the evaluation for long predictions using distribution metrics
@@ -147,13 +149,16 @@ class EvaluationEngine:
         """
         # Load distribution metrics of dataset
         self.skeleton_model = skeleton_model
+        NORMALIZE_ORIENTATION = config['dataset']['normalize_orientation']
+        ABSOLUTE_POSITION = config['joint_representation']['absolute']
         try:
-            entropy = torch.load(f'configurations/distribution_values/entropy_{self.skeleton_model}.pt')
-            kld = torch.load(f'configurations/distribution_values/kld_{self.skeleton_model}.pt')
-            test_ps = torch.load(f'configurations/distribution_values/test_ps_{self.skeleton_model}.pt')
+            entropy = torch.load(f'configurations/distribution_values/entropy_{self.skeleton_model}_{dataset}_norm_{NORMALIZE_ORIENTATION}_abs_{ABSOLUTE_POSITION}.pt')
+            kld = torch.load(f'configurations/distribution_values/kld_{self.skeleton_model}_{dataset}_norm_{NORMALIZE_ORIENTATION}_abs_{ABSOLUTE_POSITION}.pt')
+            test_ps = torch.load(f'configurations/distribution_values/test_ps_{self.skeleton_model}_{dataset}_norm_{NORMALIZE_ORIENTATION}_abs_{ABSOLUTE_POSITION}.pt')
         except IOError as e:
             print_(f"Could not load distribution metrics from disk: {e}", "error")
             return
+        print(f"Loaded distribution metrics from disk for skeleton model: {self.skeleton_model}, dataset: {dataset}, normalize orientation: {NORMALIZE_ORIENTATION} and absolute position: {ABSOLUTE_POSITION}")
         # Store them in dictionary
         self.distribution_values = {
             'entropy': entropy,
@@ -579,11 +584,6 @@ class EvaluationEngine:
         """
         A single evaluation loop for an action.
 
-        TODO: 
-                - Calculate entropy for each predicted frame wrt the frames predicted beforehand.
-                - Create 1-second bins from the entire predicted sequence and calculate the 
-                  symmetric KL-divergence between the bins and randomly sampled 1-second sequences 
-                  from the test dataset.
         """
 
         model.eval()

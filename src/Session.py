@@ -147,7 +147,9 @@ class Session:
                 metric_names=self.config['evaluation']['distribution_metrics'] if distribution_metrics is None else distribution_metrics,
                 distr_pred_sec=distr_pred_sec,
                 skeleton_model=self.config['skeleton']['type'],
-                variable_window=self.variable_window
+                variable_window=self.variable_window,
+                config=self.config,
+                dataset=dataset
             )
             self.num_eval_iterations = self.config['num_eval_iterations'] if num_iterations is None else num_iterations
             print_(f"Initialized an evaluation for long predictions with {self.evaluation_engine.num_iterations['long_predictions']}")
