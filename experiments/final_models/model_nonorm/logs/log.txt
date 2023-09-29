@@ -1,37 +1,13 @@
-2023-09-26-17:26:59   [info]: Initialized trainer for run: final_models/model_nonorm
-2023-09-26-17:26:59   [info]: Using device: cuda
-2023-09-26-17:26:59   [info]: No evaluation queue defined.
-2023-09-26-17:26:59   [info]: Calling: initialize_model...
-2023-09-26-17:26:59   [warn]: Cannot watch model without WandB
-2023-09-26-17:26:59   [info]: Initialized model
-2023-09-26-17:26:59   [info]: Calling: load_checkpoint...
-2023-09-26-17:26:59   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_nonorm/checkpoints/checkpoint_epoch_90.pth
-2023-09-26-17:26:59   [info]: Calling: initialize_evaluation...
-2023-09-26-17:26:59   [info]: Load the evaluation data for each action
-2023-09-26-17:27:02   [info]: Initialized an evaluation for joint distances with 1000
-2023-09-26-17:27:02   [info]: Calling: evaluate...
-2023-09-26-17:27:02   [info]: Calling: evaluate...
-2023-09-26-17:27:02   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-26-17:28:40   [info]: Evaluation finished!
-2023-09-26-17:28:40   [info]: Iterations completed: 0 Results:
- 
-2023-09-26-17:28:40   [info]: Evaluation Results:
-
-2023-09-26-17:28:40   [info]: Average over all actions:
-2023-09-26-17:28:40   [info]: +--------------+----------------------+-------------------+
-| Pred. length |    positional_mse    |        auc        |
-+--------------+----------------------+-------------------+
-|      80      | 0.004618708975613117 | 87.34551866849264 |
-|     120      | 0.006848111283034086 | 83.86114570829604 |
-|     160      | 0.009144707582890987 | 81.04969494872623 |
-|     200      | 0.011516564525663853 | 78.72553202841017 |
-|     240      | 0.013908077031373978 | 76.80004388093948 |
-|     280      | 0.016307557001709938 |  75.1563674873776 |
-|     320      | 0.018721573054790497 | 73.72782015138202 |
-|     360      | 0.02111120894551277  |  72.4560977684127 |
-|     400      | 0.02346334606409073  | 71.30928701824612 |
-|     440      | 0.025803089141845703 | 70.27487936947081 |
-|     480      | 0.028072254732251167 | 69.33685458368726 |
-|     520      | 0.03037717379629612  | 68.43583997752931 |
-|     560      | 0.03265528753399849  | 67.59243922101128 |
-+--------------+----------------------+-------------------+
+2023-09-28-21:58:33   [info]: Initialized trainer for run: final_models/model_nonorm
+2023-09-28-21:58:33   [info]: Using device: cuda
+2023-09-28-21:58:33   [info]: Calling: initialize_model...
+2023-09-28-21:58:33   [warn]: Cannot watch model without WandB
+2023-09-28-21:58:33   [info]: Initialized model
+2023-09-28-21:58:33   [info]: Calling: load_checkpoint...
+2023-09-28-21:58:33   [error]: Checkpoint could not been load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/final_models/model_nonorm/checkpoints/checkpoint_epoch_80.pth
+2023-09-28-21:58:33   [error]: Exception: Error(s) in loading state_dict for PosePredictor:
+	Missing key(s) in state_dict: "positionalEncoding.positional_encoding". 
+2023-09-28-21:58:33   [info]: Calling: initialize_visualization...
+2023-09-28-21:58:33   [info]: Load the evaluation data for each action
+2023-09-28-21:58:40   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-28-22:01:51   [info]: Evaluation finished!
