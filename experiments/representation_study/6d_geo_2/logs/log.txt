@@ -1,11 +1,12 @@
-2023-09-29-14:28:18   [info]: Initialized trainer for run: representation_study/6d_geo_2
-2023-09-29-14:28:18   [info]: Using device: cuda
-2023-09-29-14:28:18   [info]: No training queue defined.
-2023-09-29-14:28:18   [info]: Calling: initialize_model...
-2023-09-29-14:28:18   [warn]: Cannot watch model without WandB
-2023-09-29-14:28:18   [info]: Initialized model
-2023-09-29-14:28:18   [info]: Calling: load_checkpoint...
-2023-09-29-14:28:18   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_geo_2/checkpoints/checkpoint_epoch_90.pth
-2023-09-29-14:28:18   [info]: Calling: initialize_visualization...
-2023-09-29-14:28:18   [info]: Load the evaluation data for each action
-2023-09-29-14:28:23   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-29-14:31:26   [info]: Initialized trainer for run: representation_study/6d_geo_2
+2023-09-29-14:31:26   [info]: Using device: cuda
+2023-09-29-14:31:26   [info]: No training queue defined.
+2023-09-29-14:31:26   [info]: Calling: initialize_model...
+2023-09-29-14:31:27   [warn]: Cannot watch model without WandB
+2023-09-29-14:31:27   [info]: Initialized model
+2023-09-29-14:31:27   [info]: Calling: load_checkpoint...
+2023-09-29-14:31:27   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_geo_2/checkpoints/checkpoint_epoch_90.pth
+2023-09-29-14:31:27   [info]: Calling: initialize_visualization...
+2023-09-29-14:31:27   [info]: Load the evaluation data for each action
+2023-09-29-14:31:32   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-29-14:31:38   [info]: Evaluation finished!

@@ -182,9 +182,9 @@ def compare_sequences_plotly(
     # Remove axes and background and ticks
     fig.update_scenes(
         dict(
-            xaxis=dict(showbackground=True, showticklabels=True, visible=True),
-            yaxis=dict(showbackground=True, showticklabels=True, visible=True),
-            zaxis=dict(showbackground=True, showticklabels=True, visible=True),
+            xaxis=dict(showbackground=False, showticklabels=False, visible=False),
+            yaxis=dict(showbackground=False, showticklabels=False, visible=False),
+            zaxis=dict(showbackground=False, showticklabels=False, visible=False),
             aspectmode="manual",
             aspectratio=dict(x=0.375, y=0.25, z=1.875),
         )
