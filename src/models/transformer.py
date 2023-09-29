@@ -15,9 +15,10 @@ from .attention import TemporalAttention, SpatialAttention, VanillaAttention
 from .utils import PointWiseLinear
 
 def getTransformerBlock(transformer_config: Dict[str, Any],
-                    num_joints: int, 
-                     emb_dim: int,
-                      seq_len: int) -> torch.nn.Module:
+                        num_joints: int, 
+                         emb_dim: int,
+                          seq_len: int,
+                           return_attention: Optional[bool] = False) -> torch.nn.Module:
     if transformer_config['type'] in ['parallel', 'seq_st', 'seq_ts']:
         if transformer_config['type'] == 'parallel':
             transformer = SpatioTemporalTransformer
@@ -35,6 +36,7 @@ def getTransformerBlock(transformer_config: Dict[str, Any],
                         temporal_dropout=transformer_config['temporal_dropout'],
                         spatial_dropout=transformer_config['spatial_dropout'],
                         ff_dropout=transformer_config['ff_dropout'],
+                        full_return=return_attention
         )
     elif transformer_config['type'] =='vanilla':
         return VanillaTransformer(
@@ -44,6 +46,7 @@ def getTransformerBlock(transformer_config: Dict[str, Any],
                         heads = transformer_config['heads'],
                         attention_dropout=transformer_config['attention_dropout'],
                         ff_dropout=transformer_config['ff_dropout'],
+                        full_return=return_attention
     )
     else:
         raise NotImplementedError(f'Transformer type not implemented: {type}')
@@ -89,10 +92,14 @@ class VanillaTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
+        if self.full_return:
+            x = x[0]
         shape = x.shape
         x = torch.flatten(x, start_dim=-2, end_dim=-1)
         # Compute spatial and temporal attention separately and update input
-        attentionOut = self.vanillaAttention(x) 
+        attentionOut = self.vanillaAttention(x)
+        if self.full_return:
+            attn_return = attentionOut.detach().cpu()
         if self.attentionDropout is not None:
             attentionOut = self.attentionDropout(attentionOut)
         # Add spatial and temporal attention
@@ -104,7 +111,7 @@ class VanillaTransformer(nn.Module):
         ffOut = self.layerNorm(ffOut + attnOut)
 
         if self.full_return:
-            return ffOut, attentionOut
+            return ffOut, attn_return
         
         ffOut = torch.reshape(ffOut, shape)
         return ffOut
@@ -187,11 +194,17 @@ class SpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
+        if self.full_return:
+            x = x[0]
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
+        if self.full_return:
+            spatial_attn_return = spatialAttentionOut.detach().cpu()
         if self.spatialDropout is not None:
             spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
         temporalAttentionOut = self.temporalAttention(x)
+        if self.full_return:
+            temporal_attn_return = temporalAttentionOut.detach().cpu()
         if self.temporalDropout is not None:
             temporalAttentionOut = self.temporalDropout(temporalAttentionOut)
         # Add spatial and temporal attention
@@ -204,7 +217,7 @@ class SpatioTemporalTransformer(nn.Module):
         ffOut = self.layerNorm(ffOut + attnOut)
 
         if self.full_return:
-            return ffOut, temporalAttentionOut, spatialAttentionOut
+            return ffOut, temporal_attn_return, spatial_attn_return
         
         return ffOut
         
@@ -287,12 +300,17 @@ class SeqSpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-
+        if self.full_return:
+            x = x[0]
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
+        if self.full_return:
+            spatial_attn_return = spatialAttentionOut.detach().cpu()
         if self.spatialDropout is not None:
             spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
         spatialOut = self.spatialPointWiseFF(spatialAttentionOut)
+        if self.full_return:
+            temporal_attn_return = temporalAttentionOut.detach().cpu()
         if self.ffDropout is not None:
             spatialOut = self.ffDropout(spatialOut)
         spatialOut = self.layerNorm(spatialOut + x)
@@ -306,7 +324,8 @@ class SeqSpatioTemporalTransformer(nn.Module):
         temporalOut = self.layerNorm(temporalOut + spatialOut)
         
         if self.full_return:
-            return temporalOut, temporalAttentionOut, spatialAttentionOut
+
+            return temporalOut, temporal_attn_return, spatial_attn_return
         
         return temporalOut
     
@@ -390,9 +409,12 @@ class SeqTemporalSpatialTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-
+        if self.full_return:
+            x = x[0]
         # Compute spatial and temporal attention separately and update input
         temporalAttentionOut = self.temporalAttention(x)
+        if self.full_return:
+            temporal_attn_return = temporalAttentionOut.detach().cpu()
         if self.temporalDropout is not None:
             temporalAttentionOut = self.temporalDropout(temporalAttentionOut)
         temporalOut = self.temporalPointWiseFF(temporalAttentionOut)
@@ -401,6 +423,8 @@ class SeqTemporalSpatialTransformer(nn.Module):
         temporalOut = self.layerNorm(temporalOut + x)
 
         spatialAttentionOut = self.spatialAttention(temporalOut) # shape: [batch_size, num_joints, seq_len, emb_dim]
+        if self.full_return:
+            spatial_attn_return = spatialAttentionOut.detach().cpu()
         if self.spatialDropout is not None:
             spatialAttentionOut = self.spatialDropout(spatialAttentionOut)
         spatialOut = self.spatialPointWiseFF(spatialAttentionOut)
@@ -409,7 +433,7 @@ class SeqTemporalSpatialTransformer(nn.Module):
         spatialOut = self.layerNorm(spatialOut + temporalOut)
         
         if self.full_return:
-            return spatialOut, temporalAttentionOut, spatialAttentionOut
+            return spatialOut, temporal_attn_return, spatial_attn_return
         
         return spatialOut
     

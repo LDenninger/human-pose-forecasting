@@ -102,6 +102,7 @@ def main():
     parser.add_argument('--vis2d', action='store_true', default=False, help='2D visualization')
     parser.add_argument('--num', type=int, default=1, help='Number of sequences to visualize')
     parser.add_argument("--vis3d", action='store_true', default=False, help='3D visualization')
+    parser.add_argument("--visAttn", action='store_true', default=False, help='3D visualization')
     parser.add_argument('--length', type=int, default=None, help='Length of the sequence to be visualized')
     parser.add_argument('--interactive', action='store_true', default=False, help='Interactive visualization')
     parser.add_argument('--overlay', action='store_true', default=False, help='Overlay visualization of different skeletons')
@@ -167,6 +168,8 @@ def main():
             visualization_type.append('3d')
         if args.vis2d:
             visualization_type.append('2d')
+        if args.visAttn:
+            visualization_type.append('attn')
         run_visualization(
             experiment_name=exp_name,
             run_name=run_name,

@@ -16,10 +16,12 @@ from ..data_utils import (
     convert_baseline_representation,
     expmap2rotmat,
     axis_angle_to_matrix,
+    SH_SKELETON_STRUCTURE,
+    SH_SKELETON_PARENTS,
     h36m_forward_kinematics,
     normalize_sequence_orientation
 )
-from ..visualization import visualize_skeleton, compare_skeleton, animate_pose_matplotlib
+from ..visualization import visualize_skeleton, compare_skeleton, animate_pose_matplotlib, visualize_attention, visualize_single_pose
 from ..evaluation import (
     compare_sequences_plotly
 )
@@ -104,3 +106,32 @@ def test_baseline_visualization():
                 fps=25,
                 
             )
+
+def test_attention_visualization():
+    dataset = H36MDataset(
+        seed_length=10,
+        target_length=10,
+        down_sampling_factor=2,
+        rot_representation = 'pos',
+        stacked_hourglass=True,
+        sequence_spacing=5,
+        return_label=False,
+        raw_data=False,
+        normalize_orientation=False,
+        is_train=True,
+        debug=True)
+    
+    seq = dataset[0][:4]
+    np.random.seed(24)
+    spatial_attention = np.random.rand(4,10,10)
+    temporal_attention = np.random.rand(4,10,10)
+    skeleton_parents = SH_SKELETON_PARENTS
+    fig = visualize_single_pose(seq[0], skeleton_parents )
+    fig.savefig('debug/test_single_pose.png')
+    fig = visualize_attention(temporal_attention=temporal_attention, 
+                              poses=seq, 
+                              spatial_attention=spatial_attention, 
+                              skeleton_parents=skeleton_parents,
+                              timesteps=[80,120,160,200])
+    import ipdb; ipdb.set_trace()
+    fig.savefig('debug/test_attn_2.png')

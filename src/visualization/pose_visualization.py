@@ -73,6 +73,40 @@ JOINT_COLOR_MAP = {
     "rWristEnd": "#FA8072",
 }
 
+def visualize_single_pose(position_data, skeleton_parents, ax=None, return_img=False):
+    if ax is None:
+        fig = plt.figure(figsize=(18, 18))
+        ax = fig.add_subplot(111, projection="3d")
+        return_fig = True
+    else:
+        return_fig = False
+
+    joint_positions = position_data
+
+    for id, par_id in enumerate(skeleton_parents):
+        if id == 0:
+            continue
+        start_pos = joint_positions[id].numpy() 
+        end_pos = joint_positions[par_id].numpy()
+        ax.plot(
+            [start_pos[0], end_pos[0]],
+            [start_pos[2], end_pos[2]],
+            [start_pos[1], end_pos[1]],
+            c="g",
+        )
+    ax.set_aspect('equal', adjustable='box')
+    if return_img:
+        ax.axis("off")
+        canvas = fig.canvas
+        canvas.draw()
+        width, height = fig.get_size_inches() * fig.get_dpi()
+        image_array = np.frombuffer(canvas.tostring_rgb(), dtype='uint8')
+        image_array = image_array.reshape(int(height), int(width), 3)
+        return image_array
+    if return_fig:
+        return fig
+    else:
+        return ax
 
 def visualize_skeleton(position_data, skeleton_structure, title_text=""):
     def update(frame):
