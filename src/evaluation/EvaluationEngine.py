@@ -272,6 +272,11 @@ class EvaluationEngine:
                 actions (Optional[List[str]]): List of the actions to include in the dataset
                 split_actions (Optional[bool]): Whether to split the actions into different datasets
                 representation (Optional[Literal["axis", "mat", "quat", "6d", "pos", None]]): Which joint representation to use
+                absolute_positions (Optional[bool]): Whether to use absolute positions
+                skeleton_representation (Optional[Literal['s26','s21','s16']]): Which skeleton representation to use
+                batch_size (Optional[int]): The batch size
+                normalize (Optional[bool]): Whether to normalize the joints
+                normalize_orientation (Optional[bool]): Whether to normalize the joint orientations
 
 
         """
@@ -462,8 +467,8 @@ class EvaluationEngine:
                 self.evaluation_loop_distance(action, model, data_loader)
             if self.long_predictions_active:
                 self.evaluation_loop_distribution(action, model, data_loader)
-            if self.split_actions:
-                self._compute_overall_means()
+        if self.split_actions:
+            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -535,6 +540,7 @@ class EvaluationEngine:
                 reduction="mean",
                 metrics=self.distance_metrics,
                 representation=self.representation,
+                s16_mask=True if self.skeleton_representation=="s26" else False,
             ))
 
     @torch.no_grad()
@@ -667,8 +673,6 @@ class EvaluationEngine:
                 self.visualization_2d_loop(model, action, num_visualizations, data_loader)
             if self.visualization_3d_active:
                 self.visualization_3d_loop(model, action, num_visualizations, data_loader)
-        if self.split_actions:
-            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -755,6 +759,7 @@ class EvaluationEngine:
         # Get parents for drawing
         parent_ids = self._get_skeleton_parents()
         # Create visualizations
+        self.vis2d_figures = []
         for i in range(num):
             comparison_img = compare_sequences_plotly(
                 sequence_names=["ground truth", "prediction"],
@@ -776,6 +781,7 @@ class EvaluationEngine:
                 os.makedirs(save_to)
             # Store image in that directory
             pil_image = Image.fromarray(comparison_img)
+            self.vis2d_figures.append(pil_image)
             pil_image.save(os.path.join(save_to, f"sequence_{i:0>4}.png"))
             # Image.fromarray(comparison_img).show()
     
@@ -847,7 +853,8 @@ class EvaluationEngine:
         logger = LOGGER
         adjust_dim = [0,1,2]
         seed_data = seed_data[...,adjust_dim]
-
+        # Detach seed_data
+        seed_data = seed_data.detach().cpu()
         for i in range(num):
             cur_pred = predictions[i,...,adjust_dim].numpy()
             cur_pred = np.concatenate([seed_data[i].numpy(), cur_pred], axis=0)
@@ -881,7 +888,7 @@ class EvaluationEngine:
         """
         Compute the mean over the metrics logged for several iterations
         """
-        for eval_type in self.evaluation_results.keys:
+        for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0 or sub_type not in self.evaluation_results[eval_type].keys():
                 continue
             for pred_length in self.evaluation_results[eval_type][sub_type].keys():
@@ -894,7 +901,7 @@ class EvaluationEngine:
         """
         Compute the mean over all actions.
         """
-        for eval_type in self.evaluation_results.keys:
+        for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0:
                 continue
             for pred_length in self.evaluation_results[eval_type]["overall"].keys():

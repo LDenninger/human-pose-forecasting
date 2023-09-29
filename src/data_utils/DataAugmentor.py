@@ -30,7 +30,7 @@ def get_data_augmentor(config: dict) -> nn.Module:
 
 class DataAugmentor(nn.Module):
     """
-        Data augmentation module that is used to augment and/or normalize the data.
+        Data augmentation module that is used to augment and process the data.
     """
 
     def __init__(self, 
@@ -50,6 +50,14 @@ class DataAugmentor(nn.Module):
                 normalize (bool, optional): Whether to normalize the data. Defaul: False.
                     For this option the data augmentor needs to be passed the mean and variance for the training dataset.
                 reverse_prob (bool, optional): Whether to reverse the provided batch. Default: False.
+                snp_noise_prob (float, optional): Probability of adding SNP noise to the input. Default: 0.0.
+                snp_portion (Tuple[float, float], optional): Proportion of the input to add SNP noise in percentage. Default: (0.0,0.0).
+                joint_cutout_prob (float, optional): Probability of adding cuting out joints of a sequence. Default: 0.0.
+                num_joint_cutout (Tuple[int, int], optional): Minimum and maximum of joints to cut out. Default: (0,0).
+                timestep_cutout_prob (int, optional): Probability of cutting out single timesteps. Default: 0.0.
+                num_timestep_cutout (Tuple[int, int], optional): Minimum and maximum of timesteps to cut out. Default: (0,0).
+                gaussian_noise_prob (float, optional): Probability of adding gaussian noise to the input. Default: 0.0.
+                gaussian_noise_std (float, optional): Standard deviation of the gaussian noise. Default: 0.0.
 
         """
         super().__init__()
@@ -134,8 +142,10 @@ class DataAugmentor(nn.Module):
     def _joint_noise(self, x: torch.Tensor) -> torch.Tensor:
         """
             Single joints across all time steps are cut out and set to zero.
+
         """
         bs = x.shape[0]
+        # batches to apply joint cutout to
         batch_mask = torch.rand(bs, device=x.device) < self.joint_cutout_prob
         joints_to_cut = torch.randint(self.num_joint_cutout[0], self.num_joint_cutout[1], size=(bs,), device=x.device)
         for i, num in enumerate(joints_to_cut):
@@ -184,25 +194,31 @@ class DataAugmentor(nn.Module):
         return x
     def __init_pipeline(self):
         """
-            Initialize the data augmentation pipeline according to the parameters provided at initialization.
+            Initialize the data augmentation pipeline according to the parameters provided at initialization separately for training and test inputs.
 
         """
         train_pipeline = []
         eval_pipeline = []
+        # Reverse sequences
         if self.reverse_prob > 0:
             train_pipeline.append(self._reverse)
+        # Gaussian noise
         if self.gaussian_noise_prob > 0:
             train_pipeline.append(self._gaussian_noise)
+        # Normalization
         if self.normalize:
             train_pipeline.append(self._normalize)
             eval_pipeline.append(self._normalize)
+        # Salt'n'Pepper noise
         if self.snp_noise_prob > 0:
             train_pipeline.append(self._snp_noise)
+        # Joint cutout
         if self.joint_cutout_prob > 0:
             train_pipeline.append(self._joint_noise)
+        # Timestep cutout
         if self.timestep_cutout_prob > 0:
             train_pipeline.append(self._timestep_noise)
-        
+        # If not augmentation is defined, add blank processing function
         if len(train_pipeline) == 0:
             train_pipeline.append(self._blank_processing)
         if len(eval_pipeline) == 0:

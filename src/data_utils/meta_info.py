@@ -14,8 +14,9 @@ import numpy as np
 
     Skeleton names:
         s26: Describes the skeleton with 26 active joints used in the H3.6M dataset
+        s21: Describes the H36M dataset with the positionally redundant joints removed
         s19: Describes the skeleton with 19 active joints used in the VisionLab3DPose dataset
-        
+        s16: Describes the skeleton reduced to the important joints
 """
 
 #####===== H36M General Information =====#####
@@ -206,6 +207,8 @@ H36M_REDUCED_SKELETON_STRUCTURE = {
     24: ('rThumb', 'rWrist'),
     25: ('rWristEnd', 'rWrist')
 }
+
+
 
 H36M_SKELETON_PARENTS = [-1, 0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 12, 10, 14, 15, 16, 17, 17, 10, 20, 21, 22, 23, 23]
 
@@ -449,3 +452,4 @@ SH_SKELETON_STRUCTURE = {
 }
 
 SH_SKELETON_PARENTS = [-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 8, 10, 11, 8, 13, 14]
+SH_MASK_FROM_H36M = [0,1,2,3,5,6,7,10,11,13,15,16,17,21,22,23]

@@ -103,6 +103,11 @@ def parse_h36m_to_s26(seq: torch.Tensor, conversion_func: Optional[callable] = N
     return seq_repr
 
 def parse_ais3dposes_to_s16(seq: torch.Tensor, absolute: Optional[bool] = False) -> torch.Tensor:
+    """
+        Parse the AIS dataset to the 16 joint skeleton model.
+        The belly joint is set to the middle between the thorax and the hip.
+        The head is the middle between the left and right ear.
+    """
     seq_repr = torch.FloatTensor(seq.shape[0],16,3)
     seq_repr[...,0,:] = seq[...,8,:]
     seq_repr[...,1,:] = seq[...,9,:]

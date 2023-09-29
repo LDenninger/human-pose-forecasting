@@ -21,11 +21,15 @@ def getDataset(config: dict, joint_representation: str,
                 skeleton_model: str, is_train: Optional[bool] =True, 
                     debug: Optional[bool] = False, absolute_position: Optional[bool] =False, **kwargs) -> torch.utils.data.Dataset:
     """
-        Load a dataset using a run config.
+        Load a dataset using a run config. Only used for the H36M dataset.
 
         Arguments:
             config (dict): The configuration dictionary of the dataset.
             joint_representation (str): The representation of the joints.
+            skeleton_model (str): The representation of the skeleton.
+            is_train (Optional[bool]): Whether to load the training split or test split. Default: True.
+            debug (Optional[bool]): Whether to load the debug split. Default: False.
+            absolute_position (Optional[bool]): Whether to load the absolute position data. Default: False.
 
     """
     if config["name"] == 'h36m':
@@ -93,8 +97,6 @@ class H36MDatasetBase(Dataset):
             Compute the valid start indices for sequences.
             The valid indices are computed w.r.t. the sequence spacing, seed and target length, such that a sampled sequence is not overlapping different actions/persons etc.
             This is later used for easy indexing of the data in a flattened tensor.
-
-
         """
 
         highest_ind= 0
@@ -178,6 +180,8 @@ class H36MDataset(H36MDatasetBase):
                 absolute_position (bool, optional): Whether to use the absolute positions. This is only possible for position representations. Default: False.
                 return_label (bool, optional): Whether to return the action or not. Default: False.
                 is_train (bool, optional): Whether to load the training or test data. Default: True.
+                raw_data (bool, optional): Whether to load the raw data or load the processed data in a skeleton format. Default: False.
+                debug (bool, optional): Whether to load the debug split only consisting of a single person. Default: False.
         """
         super().__init__(seed_length, target_length, actions, raw_data=True, is_train=is_train, debug=debug)
         ##== Meta Information ==##
@@ -246,7 +250,9 @@ class AISDataset(Dataset):
                 seed_length (int): The length of the seed sequence.
                 target_length (int): The length of the target sequence.
                 sequence_spacing (int): The number of frames between two independent sequences.
+                normalize_orientation (bool, optional): Whether to normalize the sequence orientation. Default: True.
                 absolute_position (bool, optional): Whether to use the absolute positions. This is only possible for position representations. Default: False.
+                smooth (bool, optional): Whether to smooth the sequence using exponential moving average smoothing. Default: True.
         """
         self.seed_length = seed_length
         self.target_length = target_length
@@ -264,6 +270,7 @@ class AISDataset(Dataset):
     def _load_data(self):
         """
             Load the raw data and sample it into sequences according to the sequence spacing, seed and target length.
+            The data is further processed according to the parameters provided at initialization.
         """
         full_data = []
         # Load the raw data
