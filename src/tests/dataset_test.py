@@ -99,7 +99,7 @@ def test_data_augmentation():
         sequence_spacing=0,
         return_label=False,
         is_train=True,
-        debug=False
+        debug=True
     )
 
     data_augmentor = get_data_augmentor(params)

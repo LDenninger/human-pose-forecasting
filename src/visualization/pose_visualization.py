@@ -268,7 +268,6 @@ def get_line_data(
     @param parent_ids: The parent ids of the skeleton structure.
 
     """
-    import ipdb; ipdb.set_trace()
     
     x, y, z, text = [], [], [], []
     # Extract joint positions

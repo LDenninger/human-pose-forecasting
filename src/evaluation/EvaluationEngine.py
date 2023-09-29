@@ -727,39 +727,29 @@ class EvaluationEngine:
         # Load data
         data = data.to(self.device)
         # Set input for the model
-        cur_input = self.data_augmentor(data[:, : self.seed_length])
+        cur_input = self.data_augmentor(data[:, : self.seed_length], is_train=False)
         # Predict future frames in an auto-regressive manner
-        import ipdb; ipdb.set_trace()
         for i in range(1, max(self.target_frames['visualization_2d']) + 1):
             # Compute the output
             output = model(cur_input)
             # Check if we want to compute metrics for this timestep
             if i in self.target_frames['visualization_2d']:
                 # Compute the implemented metrics
-                import ipdb; ipdb.set_trace()
                 if self.normalize:
                     pred = self.data_augmentor.reverse_normalization(
                         output[:, -1].detach().cpu()
                     )
                 else:
                     pred = output[:, -1].detach().cpu()
-                parent_ids = self._get_skeleton_parents()
-                logger = LOGGER
-                fig = visualize_single_pose(
-                        position_data=pred.squeeze(),
-                        skeleton_parents=parent_ids,
-                    )
-                fig.savefig(os.path.join(logger.get_path('visualization'), 'test_1'))
+
                 predictions.append(pred)
                 targets.append(data[:, self.seed_length + i - 1].detach().cpu())
             # Update model input for auto-regressive prediction
             if not self.variable_window:
-                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+                cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
             else:
                 cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
         # Create visualizations
-        logger = LOGGER
-        
         predictions = torch.stack(predictions)  # [seq_len, batch_size, num_joints, joint_dim]
         predictions = torch.transpose(predictions, 0, 1)  # [batch_size, seq_len, num_joints, joint_dim]
         # Get as many batches as specified in self.visualizations_per_batch
@@ -795,17 +785,13 @@ class EvaluationEngine:
         skeleton_structure = self._get_skeleton_model()
         # Get parents for drawing
         parent_ids = self._get_skeleton_parents()
+        logger = LOGGER
         # Create visualizations
         self.vis2d_figures = []
         for i in range(num):
-            fig = visualize_single_pose(
-                position_data=targets[i,0],
-                skeleton_parents=parent_ids,
-            )
-            fig.savefig(os.path.join(logger.get_path('visualization'), 'test_1'))
             comparison_img = compare_sequences_plotly(
                 sequence_names=["ground truth", "prediction"],
-                sequences=[targets[i], predictions[i]],
+                sequences=[targets[i,...,[1,2,0]], predictions[i,...,[1,2,0]]],
                 time_steps_ms=time_steps_ms,
                 skeleton_structure=skeleton_structure,
                 parent_ids=parent_ids,
