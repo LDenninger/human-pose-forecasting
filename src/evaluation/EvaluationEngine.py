@@ -51,7 +51,7 @@ from .visualization import(
     compare_sequences_plotly,
 )
 
-from ..visualization import compare_skeleton, animate_pose_matplotlib, visualize_attention
+from ..visualization import compare_skeleton, animate_pose_matplotlib, visualize_attention, visualize_single_pose
 
 METRICS_IMPLEMENTED = {
     "geodesic_distance": geodesic_distance,
@@ -323,6 +323,7 @@ class EvaluationEngine:
         print_(f"Load the evaluation data for each action")
 
         ##== Load Action dataset ==##
+
         if dataset == 'h36m':
             self.h36m_evaluation = True
             self.step_size = (H36M_STEP_SIZE_MS * down_sampling_factor)
@@ -728,18 +729,27 @@ class EvaluationEngine:
         # Set input for the model
         cur_input = self.data_augmentor(data[:, : self.seed_length])
         # Predict future frames in an auto-regressive manner
+        import ipdb; ipdb.set_trace()
         for i in range(1, max(self.target_frames['visualization_2d']) + 1):
             # Compute the output
             output = model(cur_input)
             # Check if we want to compute metrics for this timestep
             if i in self.target_frames['visualization_2d']:
                 # Compute the implemented metrics
+                import ipdb; ipdb.set_trace()
                 if self.normalize:
                     pred = self.data_augmentor.reverse_normalization(
                         output[:, -1].detach().cpu()
                     )
                 else:
                     pred = output[:, -1].detach().cpu()
+                parent_ids = self._get_skeleton_parents()
+                logger = LOGGER
+                fig = visualize_single_pose(
+                        position_data=pred.squeeze(),
+                        skeleton_parents=parent_ids,
+                    )
+                fig.savefig(os.path.join(logger.get_path('visualization'), 'test_1'))
                 predictions.append(pred)
                 targets.append(data[:, self.seed_length + i - 1].detach().cpu())
             # Update model input for auto-regressive prediction
@@ -789,6 +799,11 @@ class EvaluationEngine:
         # Create visualizations
         self.vis2d_figures = []
         for i in range(num):
+            fig = visualize_single_pose(
+                position_data=targets[i,0],
+                skeleton_parents=parent_ids,
+            )
+            fig.savefig(os.path.join(logger.get_path('visualization'), 'test_1'))
             comparison_img = compare_sequences_plotly(
                 sequence_names=["ground truth", "prediction"],
                 sequences=[targets[i], predictions[i]],

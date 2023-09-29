@@ -271,7 +271,7 @@ def create_skeleton_subplot_plotly(
     @param show_joints: Whether to show the joints in the plot.
 
     """
-    #import ipdb; ipdb.set_trace()
+    import ipdb; ipdb.set_trace()
     # Extract joint positions
     joint_positions = position_data.numpy()
 

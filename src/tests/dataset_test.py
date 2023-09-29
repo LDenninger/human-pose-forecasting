@@ -68,7 +68,7 @@ def test_data_augmentation():
 
     ##== Augmentation Parameters ==##
     params = {
-        "normalize": False,
+        "normalize": True,
         "reverse_prob": 0.0,
         "snp_noise_prob": 0.0,
         "snp_noise_portion": [
@@ -103,16 +103,44 @@ def test_data_augmentation():
     )
 
     data_augmentor = get_data_augmentor(params)
-    mean, var = dataset.get_mean_variance()
-    data_augmentor.set_mean_var(mean, var)
+    norm_mean = torch.load(f'configurations/mean_norm.pt')
+    norm_var = torch.load(f'configurations/var_norm.pt')
+    data_augmentor.set_mean_var(norm_mean, norm_var)
     progress_bar = tqdm(enumerate(dataset), total=len(dataset))
     for i, seq in progress_bar:
-        seq = data_augmentor(seq.unsqueeze(0)).squeeze()
         if torch.isnan(seq).any():
             import ipdb; ipdb.set_trace()
             print('nan encountered')
-
+        import ipdb; ipdb.set_trace()
+        animate_pose_matplotlib(
+                positions = (seq.numpy(), seq.numpy()),
+                colors = ('g', 'g'),
+                titles = ("test_1", "test_2"),
+                fig_title = "Visualization Test",
+                parents = SH_SKELETON_PARENTS,
+                change_color_after_frame=(None, None),
+                color_after_change='r',
+                overlay=True,
+                show_axis=True,
+                fps=25,
+                
+            )
         seq = data_augmentor(seq.unsqueeze(0)).squeeze()
+        
+        animate_pose_matplotlib(
+                positions = (seq.numpy(), seq.numpy()),
+                colors = ('g', 'g'),
+                titles = ("test_1", "test_2"),
+                fig_title = "Visualization Test",
+                parents = SH_SKELETON_PARENTS,
+                change_color_after_frame=(None, None),
+                color_after_change='r',
+                overlay=True,
+                show_axis=True,
+                fps=25,
+                
+            )
+        seq = data_augmentor.reverse_normalization(seq)
         animate_pose_matplotlib(
                 positions = (seq.numpy(), seq.numpy()),
                 colors = ('g', 'g'),
