@@ -1,0 +1,13 @@
+2023-09-29-20:22:42   [info]: Initialized trainer for run: final_models/model_final_2
+2023-09-29-20:22:42   [info]: Using device: cuda
+2023-09-29-20:22:42   [info]: No training queue defined.
+2023-09-29-20:22:42   [info]: Calling: initialize_model...
+2023-09-29-20:22:42   [warn]: Cannot watch model without WandB
+2023-09-29-20:22:42   [info]: Initialized model
+2023-09-29-20:22:42   [info]: Calling: load_checkpoint...
+2023-09-29-20:22:42   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_final_2/checkpoints/checkpoint_epoch_110.pth
+2023-09-29-20:22:42   [info]: Calling: initialize_visualization...
+2023-09-29-20:22:42   [info]: Load the evaluation data for each action
+2023-09-29-20:22:46   [warn]: Goal prediction timesteps: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 1700, 2000] not reachable using timesteps: [66, 132, 231, 330, 429, 528, 627, 726, 825, 924, 1023, 1221, 1518, 1716, 2013]
+2023-09-29-20:22:46   [info]: Start visualization on the AIS dataset
+2023-09-29-20:24:45   [info]: Evaluation finished!

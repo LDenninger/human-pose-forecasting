@@ -701,6 +701,8 @@ class EvaluationEngine:
                 self.visualization_2d_loop(model, action, num_visualizations, data_loader)
             if self.visualization_3d_active:
                 self.visualization_3d_loop(model, action, num_visualizations, data_loader)
+            if self.visualization_attn_active:
+                self.visualize_attention_loop(model, action, num_visualizations, data_loader)
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -760,17 +762,17 @@ class EvaluationEngine:
         # seed_data is of shape [batch_size, seq_len, num_joints, joint_dim]
         # seed_data should be added in seq_len dimension in front of the rest of the data
         seed_data = data[:, : self.seed_length].detach().cpu()
-        
         predictions = torch.cat((seed_data, predictions), 1)
-        targets = torch.cat((seed_data, targets), 1)
+        targets = torch.cat((seed_data[:,::2], targets), 1)
 
         # Create millisecond timesteps backward for the seed data
         seed_timesteps = [i * -40 for i in range(self.seed_length)]
         seed_timesteps.reverse()
+        seed_timesteps = seed_timesteps[::2]
         # Insert seed timestepsbefore the prediction timesteps
         seed_timesteps.extend(self.prediction_timesteps['visualization_2d'])
         # Add constant to each timestep to make them positive
-        seed_timesteps = [i + 40 * (self.seed_length -1) for i in seed_timesteps]
+        #seed_timesteps = [i + 40 * (self.seed_length -1) for i in seed_timesteps]
         time_steps_ms = seed_timesteps
 
         # Get joint positions from forward kinematics for visualization
@@ -790,12 +792,12 @@ class EvaluationEngine:
         self.vis2d_figures = []
         for i in range(num):
             comparison_img = compare_sequences_plotly(
-                sequence_names=["ground truth", "prediction"],
+                sequence_names=["Ground Truth", "Prediction"],
                 sequences=[targets[i,...,[1,2,0]], predictions[i,...,[1,2,0]]],
                 time_steps_ms=time_steps_ms,
                 skeleton_structure=skeleton_structure,
                 parent_ids=parent_ids,
-                prediction_positions=[None, self.seed_length]
+                prediction_positions=[None, int(self.seed_length/2)]
             )
             # Log comparison image
             if logger is not None:
@@ -920,12 +922,15 @@ class EvaluationEngine:
             Produce a visualization of the attention weights.
         """
         def _save_attn(output, num_block):
+            import ipdb; ipdb.set_trace()
+
             if self.vanilla_attention:
                 attn_weights[num_block]["temporal"].append(output[1].detach().cpu().numpy())
             else:
                 attn_weights[num_block]["temporal"].append(output[1].detach().cpu().numpy())
                 attn_weights[num_block]["spatial"].append(output[2].detach().cpu().numpy())
         def _attn_hook_1(module, input, output):
+            import ipdb; ipdb.set_trace()
             _save_attn(output, 1)
         def _attn_hook_2(module, input, output):
             _save_attn(output, 2)
@@ -944,19 +949,19 @@ class EvaluationEngine:
         data_loader = DataLoader(dataset, batch_size=num, shuffle=True)
 
         attn_weights = {
-            "1": {
+            1: {
                 "spatial": [],
                 "temporal": []
             },
-            "2": {
+            2: {
                 "spatial": [],
                 "temporal": []
             },
-            "4": {
+            4: {
                 "spatial": [],
                 "temporal": []
             },
-            "8": {
+            8: {
                 "spatial": [],
                 "temporal": []
             }
@@ -970,10 +975,10 @@ class EvaluationEngine:
         # Set input for the model
         cur_input = self.data_augmentor(data[:, : self.seed_length])
         # Register the forward hooks on the model to retrieve the attention outputs
-        model.attnBlocks[1].register_forward_hook(_attn_hook_1)
-        model.attnBlocks[2].register_forward_hook(_attn_hook_2)
-        model.attnBlocks[4].register_forward_hook(_attn_hook_4)
-        model.attnBlocks[8].register_forward_hook(_attn_hook_8)
+        model.attnBlocks[0].register_forward_hook(_attn_hook_1)
+        model.attnBlocks[1].register_forward_hook(_attn_hook_2)
+        model.attnBlocks[3].register_forward_hook(_attn_hook_4)
+        model.attnBlocks[7].register_forward_hook(_attn_hook_8)
         # Predict the future steps and save attention weights
         for i in range(1, max(self.target_frames['visualization_attn']) + 1):
             # Compute the output
@@ -997,8 +1002,8 @@ class EvaluationEngine:
         save_dir = logger.get_path('visualization')
         parents = self._get_skeleton_parents()
         for i in range(num):
-            attn_temporal = attn_weights["1"]["temporal"]
-            attn_spatial = attn_weights["1"]["spatial"]
+            attn_temporal = attn_weights[1]["temporal"]
+            attn_spatial = attn_weights[1]["spatial"]
             fig = visualize_attention(
                 temporal_attention=attn_temporal,
                 spatial_attention=attn_spatial,
