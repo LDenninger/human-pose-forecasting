@@ -31,7 +31,8 @@ from ..visualization import (
     JOINT_COLORS,
     JOINT_COLOR_MAP,
     create_skeleton_subplot,
-    create_skeleton_subplot_plotly,
+    get_line_data,
+    get_joint_data,
 )
 
 def compare_sequences_plotly(
@@ -47,7 +48,9 @@ def compare_sequences_plotly(
     font_size: int = 24,
     colors: Tuple[str, str] = ("green", "red"),
     show_joints: bool = False,
+    show_joint_labels: bool = False,
     size: int = 500,
+    
 ):
     """
     Visualize comparison of predicted sequence and ground truth sequence in 3D plotly.
@@ -91,6 +94,7 @@ def compare_sequences_plotly(
     # Make fontsize and linewidth scale with size
     font_size = int(24 / 500 * size)
     line_width = int(4 / 500 * size)
+    marker_size = int(5 / 500 * size)
 
     # Flatten time_steps_ms if it is not None
     if time_steps_ms is not None:
@@ -105,7 +109,7 @@ def compare_sequences_plotly(
         specs=[[{"type": "scatter3d"} for i in range(ncols)] for j in range(nrows)],
         vertical_spacing=0,
         horizontal_spacing=0,
-        subplot_titles=time_steps_ms,
+        subplot_titles=time_steps_ms
     )
 
     # Create y positions as mean points between each row
@@ -120,23 +124,37 @@ def compare_sequences_plotly(
             joint_positions = sequence[j]
             # Get color based on prediction_position
             color = colors[0] if j < prediction_position else colors[1]
-            # Fill subplot with skeleton and additional information
-            subplot = create_skeleton_subplot_plotly(
+            if show_joints:
+                x, y, z, text = get_joint_data(joint_positions, skeleton_structure)
+                fig.add_trace(
+                    go.Scatter3d(
+                        x=x,
+                        y=y,
+                        z=z,
+                        text=text,
+                        mode="markers+text" if show_joint_labels else "markers",
+                        marker=dict(size=marker_size, color=color),
+                    ),
+                    row=i + 1,
+                    col=j + 1,
+                )
+            x, y, z, text = get_line_data(
+                joint_positions,
+                parent_ids
+            )
+            fig.add_trace(
                 go.Scatter3d(
-                    x=[],
-                    y=[],
-                    z=[],
+                    x=x,
+                    y=y,
+                    z=z,
+                    text=text,
                     mode="lines",
                     line=dict(width=line_width, color=color),
+                    marker=dict()
                 ),
-                joint_positions,
-                skeleton_structure,
-                parent_ids,
-                show_joints=show_joints,
+                row=i + 1,
+                col=j + 1,
             )
-
-            # Add newly created subplot to figure
-            fig.add_trace(subplot, row=i + 1, col=j + 1)
 
         # Calculate the y-coordinate for the annotation to position it correctly
         y_coord = y_positions[len(y_positions) - i - 1] + 100 / figsize[1]

@@ -1,18 +1,38 @@
-2023-09-25-08:41:31   [info]: Initialized trainer for run: final_models/model_global
-2023-09-25-08:41:31   [info]: Using device: cpu
-2023-09-25-08:41:31   [info]: No training queue defined.
-2023-09-25-08:41:31   [info]: Calling: initialize_model...
-2023-09-25-08:41:31   [warn]: Cannot watch model without WandB
-2023-09-25-08:41:31   [info]: Initialized model
-2023-09-25-08:41:31   [info]: Calling: initialize_optimization...
-2023-09-25-08:41:31   [info]: Initialized optimizer
-2023-09-25-08:41:31   [info]: Calling: load_train_data...
-2023-09-25-08:41:35   [info]: Loaded training data: Length: 12313, Batched length: 384, Iterations per epoch: 1000
-2023-09-25-08:41:35   [info]: Calling: initialize_evaluation...
-2023-09-25-08:41:35   [info]: Load the evaluation data for each action
-2023-09-25-08:41:44   [info]: Initialized an evaluation for joint distances with 200
-2023-09-25-08:41:44   [info]: Calling: train...
-2023-09-25-08:41:44   [info]: Calling: training_loop...
-2023-09-25-08:41:44   [info]: Start training for run final_models/model_global
-2023-09-25-08:41:44   [info]: Calling: evaluate...
-2023-09-25-08:41:44   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-29-16:22:41   [info]: Initialized trainer for run: final_models/model_global_2
+2023-09-29-16:22:41   [info]: Using device: cuda
+2023-09-29-16:22:41   [info]: No evaluation queue defined.
+2023-09-29-16:22:41   [info]: Calling: initialize_model...
+2023-09-29-16:22:41   [warn]: Cannot watch model without WandB
+2023-09-29-16:22:41   [info]: Initialized model
+2023-09-29-16:22:41   [info]: Calling: load_checkpoint...
+2023-09-29-16:22:41   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_global_2/checkpoints/checkpoint_epoch_110.pth
+2023-09-29-16:22:41   [info]: Calling: initialize_evaluation...
+2023-09-29-16:22:41   [info]: Load the evaluation data for each action
+2023-09-29-16:22:44   [warn]: Goal prediction timesteps: [80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560] not reachable using timesteps: [99, 132, 165, 231, 264, 297, 330, 363, 429, 462, 495, 528, 561]
+2023-09-29-16:22:44   [info]: Initialized an evaluation for joint distances with 1000
+2023-09-29-16:22:44   [info]: Calling: evaluate...
+2023-09-29-16:22:44   [info]: Calling: evaluate...
+2023-09-29-16:22:44   [info]: Start evaluation on AIS dataset
+2023-09-29-16:23:05   [info]: Evaluation finished!
+2023-09-29-16:23:05   [info]: Iterations completed: 0 Results:
+ 
+2023-09-29-16:23:05   [info]: Evaluation Results:
+
+2023-09-29-16:23:05   [info]: Average over all actions:
+2023-09-29-16:23:05   [info]: +--------------+---------------------+--------------------+
+| Pred. length |    positional_mse   |        auc         |
++--------------+---------------------+--------------------+
+|      99      | 0.47979986667633057 | 30.167588084845598 |
+|     132      |  0.5094676613807678 | 24.38025572046172  |
+|     165      |  0.5391905903816223 | 19.489175796075465 |
+|     231      |  0.5987569689750671 | 12.656781915979487 |
+|     264      |  0.6283052563667297 | 10.280110259837885 |
+|     297      |  0.6577110886573792 | 8.391794368678045  |
+|     330      |  0.6870926022529602 | 6.968803058811722  |
+|     363      |  0.7164954543113708 | 5.885505339756492  |
+|     429      |  0.7747347950935364 | 4.3181334355419185 |
+|     462      |  0.8036128282546997 | 3.776484495433073  |
+|     495      |  0.8324068784713745 | 3.3192789866006933 |
+|     528      |  0.8612397909164429 | 2.929539862897299  |
+|     561      |  0.8899292945861816 | 2.601509352259907  |
++--------------+---------------------+--------------------+

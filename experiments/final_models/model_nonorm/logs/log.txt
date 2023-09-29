@@ -1,3 +1,18 @@
+<<<<<<< HEAD
+2023-09-29-12:36:02   [info]: Initialized trainer for run: final_models/model_nonorm
+2023-09-29-12:36:02   [info]: Using device: cuda
+2023-09-29-12:36:02   [info]: No training queue defined.
+2023-09-29-12:36:02   [info]: Calling: initialize_model...
+2023-09-29-12:36:02   [warn]: Cannot watch model without WandB
+2023-09-29-12:36:02   [info]: Initialized model
+2023-09-29-12:36:02   [info]: Calling: load_checkpoint...
+2023-09-29-12:36:02   [error]: Checkpoint could not been load from: /home/user/denninge/human-pose-forecasting/experiments/final_models/model_nonorm/checkpoints/checkpoint_epoch_110.pth
+2023-09-29-12:36:02   [error]: Exception: [Errno 2] No such file or directory: '/home/user/denninge/human-pose-forecasting/experiments/final_models/model_nonorm/checkpoints/checkpoint_epoch_110.pth'
+2023-09-29-12:36:02   [info]: Calling: initialize_visualization...
+2023-09-29-12:36:02   [info]: Load the evaluation data for each action
+2023-09-29-12:36:06   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-29-12:36:19   [info]: Evaluation finished!
+=======
 2023-09-28-21:58:33   [info]: Initialized trainer for run: final_models/model_nonorm
 2023-09-28-21:58:33   [info]: Using device: cuda
 2023-09-28-21:58:33   [info]: Calling: initialize_model...
@@ -11,3 +26,4 @@
 2023-09-28-21:58:33   [info]: Load the evaluation data for each action
 2023-09-28-21:58:40   [info]: Start visualization on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
 2023-09-28-22:01:51   [info]: Evaluation finished!
+>>>>>>> 160fe6fb7e7b4bda5d193cd272ecc30a9d00cd6e
