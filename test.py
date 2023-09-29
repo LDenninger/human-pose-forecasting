@@ -50,6 +50,9 @@ def parse_arguments():
         "--vis_augm", action="store_true", default=False, help="Visualize the data augmentation"
     )
     parser.add_argument(
+        "--vis_attn", action="store_true", default=False, help="Test the attention visualization"
+    )
+    parser.add_argument(
         "--model", action="store_true", default=False, help="Test the Skeleton32 model"
     )
     parser.add_argument(
@@ -94,6 +97,8 @@ def main():
         test_processing_functions()
     if args.var_loss:
         test_varianceMSE()
+    if args.vis_attn:
+        test_attention_visualization()
     if args.penc:
         test_pose_encoding_decoding()
     if args.metrics:

@@ -182,7 +182,13 @@ class Session:
                 variable_window=self.variable_window
             )
             self.visualize_model = True
-
+        if 'attn' in visualization_type:
+            self.evaluation_engine.initialize_visualization_attention(
+                prediction_timesteps=prediction_timesteps,
+                variable_window=self.variable_window,
+                vanille=True if self.config['model']['transformer']['type']=='vanilla' else False
+            )
+            self.visualize_model = True
 
     @log_function
     def initialize_model(self):

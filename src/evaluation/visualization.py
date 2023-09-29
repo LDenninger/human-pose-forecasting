@@ -41,12 +41,12 @@ def compare_sequences_plotly(
     skeleton_structure: dict,
     parent_ids: List[int],
     prediction_positions: List[int] = None,
-    title_text: str = "",
+    title_text: str = "Time (ms)",
     save_path: str = None,
     line_width: int = 4,
     font_size: int = 24,
-    colors: Tuple[str, str] = ("green", "blue"),
-    show_joints: bool = True,
+    colors: Tuple[str, str] = ("green", "red"),
+    show_joints: bool = False,
     size: int = 500,
 ):
     """
@@ -171,6 +171,13 @@ def compare_sequences_plotly(
             aspectmode="manual",
             aspectratio=dict(x=0.375, y=0.25, z=1.875),
         )
+    )   
+
+    # Set figure title to title_text
+    fig.update_layout(
+        title_text=title_text,
+        title_x=0.5,
+        title_font_size=font_size,
     )
 
     # Update font size

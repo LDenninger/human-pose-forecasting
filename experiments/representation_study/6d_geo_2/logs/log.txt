@@ -1,58 +1,37 @@
-2023-09-28-09:40:18   [info]: Initialized trainer for run: representation_study/6d_geo_2
-2023-09-28-09:40:18   [info]: Using device: cuda
-2023-09-28-09:40:18   [info]: Training Queue:representation_study/6d_geo_2
- representation_study/baseline_geo_2
- representation_study/quat_geo_2
-2023-09-28-09:40:18   [info]: Calling: initialize_model...
-2023-09-28-09:40:18   [warn]: Cannot watch model without WandB
-2023-09-28-09:40:18   [info]: Initialized model
-2023-09-28-09:40:18   [info]: Calling: initialize_optimization...
-2023-09-28-09:40:18   [info]: Initialized optimizer
-2023-09-28-09:40:18   [info]: Calling: load_train_data...
-2023-09-28-09:40:19   [info]: Loaded training data: Length: 12313, Batched length: 384, Iterations per epoch: 1000
-2023-09-28-09:40:19   [info]: Calling: initialize_evaluation...
-2023-09-28-09:40:19   [info]: Load the evaluation data for each action
-2023-09-28-09:40:22   [info]: Initialized an evaluation for joint distances with 200
-2023-09-28-09:40:22   [info]: Calling: train...
-2023-09-28-09:40:22   [info]: Calling: training_loop...
-2023-09-28-09:40:22   [info]: Start training for run representation_study/6d_geo_2
-2023-09-28-09:40:22   [info]: Calling: evaluate...
-2023-09-28-09:40:22   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-28-09:40:35   [info]: Evaluation finished!
-2023-09-28-09:40:35   [info]: Iterations completed: 0 Results:
+2023-09-29-11:10:35   [info]: Initialized trainer for run: representation_study/6d_geo_2
+2023-09-29-11:10:35   [info]: Using device: cuda
+2023-09-29-11:10:35   [info]: No evaluation queue defined.
+2023-09-29-11:10:35   [info]: Calling: initialize_model...
+2023-09-29-11:10:35   [warn]: Cannot watch model without WandB
+2023-09-29-11:10:35   [info]: Initialized model
+2023-09-29-11:10:35   [info]: Calling: load_checkpoint...
+2023-09-29-11:10:36   [info]: Model checkpoint was load from: /home/l/Documents/VisionLabProject/human-pose-forecasting/experiments/representation_study/6d_geo_2/checkpoints/checkpoint_epoch_90.pth
+2023-09-29-11:10:36   [info]: Calling: initialize_evaluation...
+2023-09-29-11:10:36   [info]: Load the evaluation data for each action
+2023-09-29-11:10:40   [info]: Initialized an evaluation for joint distances with 2000
+2023-09-29-11:10:40   [info]: Calling: evaluate...
+2023-09-29-11:10:40   [info]: Calling: evaluate...
+2023-09-29-11:10:40   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-29-11:13:23   [info]: Evaluation finished!
+2023-09-29-11:13:23   [info]: Iterations completed: 0 Results:
  
-2023-09-28-09:40:35   [info]: Evaluation Results:
+2023-09-29-11:13:23   [info]: Evaluation Results:
 
-2023-09-28-09:40:35   [info]: Average over all actions:
-2023-09-28-09:40:35   [info]: +--------------+--------------------+--------------------+--------------------+--------------------+
-| Pred. length | geodesic_distance  |   positional_mse   |    euler_error     |        auc         |
-+--------------+--------------------+--------------------+--------------------+--------------------+
-|      80      | 0.953313946723938  | 1.208070158958435  | 0.9653096795082092 | 16.92187554306454  |
-|     120      | 1.496962308883667  | 1.6282756328582764 | 1.5532113313674927 | 16.13060931364695  |
-|     160      | 1.7920728921890259 | 1.8619534969329834 | 1.9467798471450806 | 15.962807668579948 |
-|     200      | 1.9758071899414062 | 1.9946390390396118 | 2.085550308227539  | 16.010149816672005 |
-|     240      | 2.0848896503448486 | 2.0846235752105713 | 2.2477505207061768 | 16.037594113085003 |
-|     280      | 2.155771493911743  | 2.137848138809204  | 2.404843330383301  | 16.014957593546974 |
-|     320      | 2.191649913787842  | 2.175485372543335  | 2.506040334701538  | 15.991587274604374 |
-+--------------+--------------------+--------------------+--------------------+--------------------+
-2023-09-28-09:40:35   [info]: Epoch 1/100
-2023-09-28-09:41:17   [error]: Traceback (most recent call last):
-  File "/home/user/denninge/human-pose-forecasting/src/utils/logging.py", line 39, in try_call_log
-    return func(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 292, in training_loop
-    self.train_epoch_auto_regressive()
-  File "/home/user/denninge/human-pose-forecasting/src/Session.py", line 396, in train_epoch_auto_regressive
-    loss = self.loss(predictions, target_data)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/denninge/anaconda3/envs/hpf/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
-    return forward_call(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/denninge/anaconda3/envs/hpf/lib/python3.11/bdb.py", line 94, in trace_dispatch
-    return self.dispatch_return(frame, arg)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/user/denninge/anaconda3/envs/hpf/lib/python3.11/bdb.py", line 156, in dispatch_return
-    if self.quitting: raise BdbQuit
-                      ^^^^^^^^^^^^^
-bdb.BdbQuit
-
+2023-09-29-11:13:23   [info]: Average over all actions:
+2023-09-29-11:13:23   [info]: +--------------+-----------------------+-------------------+----------------------+
+| Pred. length |     positional_mse    |        auc        |  geodesic_distance   |
++--------------+-----------------------+-------------------+----------------------+
+|      80      | 0.0051058330573141575 |  86.4117980003357 | 0.014264524914324284 |
+|     120      |  0.007539639249444008 | 82.83901512622833 | 0.020506132394075394 |
+|     160      |  0.009996123611927032 | 80.06510966353946 | 0.026584485545754433 |
+|     200      |  0.012483878992497921 | 77.81995750135846 | 0.032598987221717834 |
+|     240      |  0.014974680729210377 |  75.967927939362  | 0.03846006467938423  |
+|     280      |  0.017459632828831673 | 74.39070559210248 | 0.04415211081504822  |
+|     320      |  0.019943492487072945 | 73.00196886062622 | 0.04953678697347641  |
+|     360      |  0.022381994873285294 | 71.78332954645157 | 0.054732080549001694 |
+|     400      |  0.024762406945228577 | 70.69214681784311 | 0.059672579169273376 |
+|     440      |  0.027120253071188927 | 69.69301617807812 |  0.0645257905125618  |
+|     480      |  0.029420919716358185 | 68.77404501040778 | 0.06929177790880203  |
+|     520      |  0.031686630100011826 | 67.91381008095212 | 0.07389064878225327  |
+|     560      |  0.033891260623931885 |  67.1144488785002 | 0.07845161110162735  |
++--------------+-----------------------+-------------------+----------------------+

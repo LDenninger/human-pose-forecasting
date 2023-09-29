@@ -18,7 +18,7 @@ from ..utils import (
     correct_rotation_matrix,
     get_conv_from_axis_angle
 )
-from ..data_utils import h36m_forward_kinematics
+from ..data_utils import h36m_forward_kinematics, SH_MASK_FROM_H36M
 
 #####===== General Evaluation Constants =====#####
 ACC_THRESHOLDS = [0.001, 0.005, 0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3]
@@ -133,21 +133,26 @@ def evaluate_distance_metrics(
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
-        if metric == "auc":
+        if metric in ["auc","positional_mse"]:
             # Compute the joint positions using forward kinematics
             if representation != "pos":
                 prediction_positions, _ = h36m_forward_kinematics(predictions, 'mat')
                 target_positions, _ = h36m_forward_kinematics(targets, 'mat')
                 prediction_positions /= 1000
                 target_positions /= 1000
+                if s16_mask:
+                    prediction_positions = prediction_positions[...,SH_MASK_FROM_H36M,:]
+                    target_positions = target_positions[...,SH_MASK_FROM_H36M,:]
             else:
                 prediction_positions = predictions
                 target_positions = targets
             # Scale to meters for evaluation
 
-            results[metric] = accuracy_under_curve(
-                prediction_positions, target_positions
+            results[metric] = METRICS_IMPLEMENTED[metric](
+                prediction_positions, target_positions, reduction=reduction
             )
+            if torch.is_tensor(results[metric]):
+                results[metric] = results[metric].item()
         else:
             results[metric] = METRICS_IMPLEMENTED[metric](
                 predictions, targets, reduction=reduction
@@ -292,6 +297,7 @@ def accuracy_under_curve(
     predictions: torch.tensor,
     targets: torch.tensor,
     thresholds: List[float] = ACC_THRESHOLDS,
+    reduction: Optional[str] = None,
 ) -> torch.tensor:
     """
     Area und the Curve metric to measure the accuracy at different thresholds.

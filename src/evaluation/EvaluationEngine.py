@@ -14,6 +14,7 @@ from prettytable import PrettyTable
 from typing import Optional, Dict, Any, List, Union, Literal
 from PIL import Image
 from matplotlib import pyplot as plt
+from pathlib import Path as P
 
 from ..utils import print_, log_function, LOGGER
 from ..data_utils import (
@@ -50,7 +51,7 @@ from .visualization import(
     compare_sequences_plotly,
 )
 
-from ..visualization import compare_skeleton, animate_pose_matplotlib
+from ..visualization import compare_skeleton, animate_pose_matplotlib, visualize_attention
 
 METRICS_IMPLEMENTED = {
     "geodesic_distance": geodesic_distance,
@@ -90,26 +91,30 @@ class EvaluationEngine:
         self.visualization_3d_active = False
         self.long_predictions_active = False
         self.distance_metric_active = False
+        self.visualization_attn_active = False
         self.data_loaded = False
 
         self.prediction_timesteps = {
             "visualization_2d": None,
             "visualization_3d": None,
             "long_predictions": None,
-            "distance_metric": None
+            "distance_metric": None,
+            "visualization_attn": None
         }
         self.target_frames = {
             "visualization_2d": None,
             "visualization_3d": None,
             "long_predictions": None,
-            "distance_metric": None
+            "distance_metric": None,
+            "visualization_attn": None
         }
 
         self.num_iterations = {
             "visualization_2d": None,
             "visualization_3d": None,
             "long_predictions": None,
-            "distance_metric": None
+            "distance_metric": None,
+            "visualization_attn": None
         }
         self.step_sizes = {
             "h36m": None,
@@ -207,6 +212,7 @@ class EvaluationEngine:
 
             Arguments:
                 prediction_timesteps (List[int]): List of the prediction timesteps to include in the visualization.
+                variable_window (Optional[bool]): Whether to visualize the model uses a variable temporal window.
         """
         target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
         prediction_steps_real = (target_frames * self.step_size).tolist()
@@ -241,6 +247,27 @@ class EvaluationEngine:
         self.interactive_visualization = interactive
         self.overlay_visualization = overlay 
         self.variable_window = variable_window
+    
+    def initialize_visualization_attention(self,
+                                    prediction_timesteps: List[int],
+                                    vanilla: Optional[bool] = False,
+                                    variable_window: bool = False):
+        """
+            Initialize the visualization of the attention weights. This requires the model being initialized to give a full return.
+
+            Arguments:
+                prediction_timesteps (List[int]): List of the prediction timesteps to include in the visualization.
+                variable_window (Optional[bool]): Whether to visualize the model uses a variable temporal window.
+        """
+        target_frames =  np.ceil(np.array(prediction_timesteps) / self.step_size).astype(int)
+        prediction_steps_real = (target_frames * self.step_size).tolist()
+        if prediction_steps_real != prediction_timesteps:
+            print_(f"Goal prediction timesteps: {prediction_timesteps} not reachable using timesteps: {prediction_steps_real}","warn")
+        self.target_frames['visualization_attn'] = target_frames.tolist()
+        self.prediction_timesteps['visualization_attn'] = prediction_steps_real
+        self.variable_window = variable_window
+        self.visualization_attn_active = True
+        self.vanilla_attention = vanilla
 
 
     def load_data(self,
@@ -467,8 +494,8 @@ class EvaluationEngine:
                 self.evaluation_loop_distance(action, model, data_loader)
             if self.long_predictions_active:
                 self.evaluation_loop_distribution(action, model, data_loader)
-            if self.split_actions:
-                self._compute_overall_means()
+        if self.split_actions:
+            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -540,6 +567,7 @@ class EvaluationEngine:
                 reduction="mean",
                 metrics=self.distance_metrics,
                 representation=self.representation,
+                s16_mask=True if self.skeleton_representation=="s26" else False,
             ))
 
     @torch.no_grad()
@@ -672,8 +700,6 @@ class EvaluationEngine:
                 self.visualization_2d_loop(model, action, num_visualizations, data_loader)
             if self.visualization_3d_active:
                 self.visualization_3d_loop(model, action, num_visualizations, data_loader)
-        if self.split_actions:
-            self._compute_overall_means()
         self.evaluation_finished = True
         print_(f"Evaluation finished!")
 
@@ -761,6 +787,7 @@ class EvaluationEngine:
         import ipdb; ipdb.set_trace()
         parent_ids = self._get_skeleton_parents()
         # Create visualizations
+        self.vis2d_figures = []
         for i in range(num):
             comparison_img = compare_sequences_plotly(
                 sequence_names=["ground truth", "prediction"],
@@ -782,6 +809,7 @@ class EvaluationEngine:
                 os.makedirs(save_to)
             # Store image in that directory
             pil_image = Image.fromarray(comparison_img)
+            self.vis2d_figures.append(pil_image)
             pil_image.save(os.path.join(save_to, f"sequence_{i:0>4}.png"))
             # Image.fromarray(comparison_img).show()
     
@@ -790,8 +818,7 @@ class EvaluationEngine:
         model: torch.nn.Module,
         action: str,
         num: int,
-        data_loader: torch.utils.data.DataLoader,
-    ):
+        data_loader: torch.utils.data.DataLoader):
         if num == 0:
             return
         model.eval()
@@ -853,7 +880,8 @@ class EvaluationEngine:
         logger = LOGGER
         adjust_dim = [0,1,2]
         seed_data = seed_data[...,adjust_dim]
-
+        # Detach seed_data
+        seed_data = seed_data.detach().cpu()
         for i in range(num):
             cur_pred = predictions[i,...,adjust_dim].numpy()
             cur_pred = np.concatenate([seed_data[i].numpy(), cur_pred], axis=0)
@@ -882,12 +910,111 @@ class EvaluationEngine:
                 constant_limits=True
             )
 
+    def visualize_attention_loop(
+        self,
+        model: torch.nn.Module,
+        action: str,
+        num: int,
+        data_loader: torch.utils.data.DataLoader):
+        """
+            Produce a visualization of the attention weights.
+        """
+        def _save_attn(output, num_block):
+            if self.vanilla_attention:
+                attn_weights[num_block]["temporal"].append(output[1].detach().cpu().numpy())
+            else:
+                attn_weights[num_block]["temporal"].append(output[1].detach().cpu().numpy())
+                attn_weights[num_block]["spatial"].append(output[2].detach().cpu().numpy())
+        def _attn_hook_1(module, input, output):
+            _save_attn(output, 1)
+        def _attn_hook_2(module, input, output):
+            _save_attn(output, 2)
+        def _attn_hook_4(module, input, output):
+            _save_attn(output, 4)
+        def _attn_hook_8(module, input, output):
+            _save_attn(output, 8)
+
+        if num == 0:
+            return
+
+        model.eval()
+        import ipdb; ipdb.set_trace()
+        # Initialize progress bar
+        dataset = self.datasets[action]
+        data_loader = DataLoader(dataset, batch_size=num, shuffle=True)
+
+        attn_weights = {
+            "1": {
+                "spatial": [],
+                "temporal": []
+            },
+            "2": {
+                "spatial": [],
+                "temporal": []
+            },
+            "4": {
+                "spatial": [],
+                "temporal": []
+            },
+            "8": {
+                "spatial": [],
+                "temporal": []
+            }
+        }
+
+
+        data = next(iter(data_loader))
+        # data = data.reshape([1, *data.shape])
+        # Load data
+        data = data.to(self.device)
+        # Set input for the model
+        cur_input = self.data_augmentor(data[:, : self.seed_length])
+        # Register the forward hooks on the model to retrieve the attention outputs
+        model.attnBlocks[1].register_forward_hook(_attn_hook_1)
+        model.attnBlocks[2].register_forward_hook(_attn_hook_2)
+        model.attnBlocks[4].register_forward_hook(_attn_hook_4)
+        model.attnBlocks[8].register_forward_hook(_attn_hook_8)
+        # Predict the future steps and save attention weights
+        for i in range(1, max(self.target_frames['visualization_attn']) + 1):
+            # Compute the output
+            output = model(cur_input)
+            # Check if we want to compute metrics for this timestep
+            if i in self.target_frames['visualization_attn']:
+                # Compute the implemented metrics
+                if self.normalize:
+                    pred = self.data_augmentor.reverse_normalization(
+                        output[:, -1].detach().cpu()
+                    )
+                else:
+                    pred = output[:, -1].detach().cpu()
+            # Update model input for auto-regressive prediction
+            if not self.variable_window:
+                    cur_input = torch.concatenate([cur_input[:,1:], output[:, -1].unsqueeze(1)], dim=1)
+            else:
+                cur_input = torch.concatenate([cur_input, output[:, -1].unsqueeze(1)], dim=1)
+
+        logger = LOGGER
+        save_dir = logger.get_path('visualization')
+        parents = self._get_skeleton_parents()
+        for i in range(num):
+            attn_temporal = attn_weights["1"]["temporal"]
+            attn_spatial = attn_weights["1"]["spatial"]
+            fig = visualize_attention(
+                temporal_attention=attn_temporal,
+                spatial_attention=attn_spatial,
+                skeleton_parents=parents,
+                timesteps=self.prediction_timesteps['visualization_attn']
+            )
+            fname = P(save_dir) / f"attn_vis_{i}"
+            fig.savefig(fname)
+            
+
     #####===== Utility Functions =====#####
     def _reduce_action_metrics(self, sub_type: str) -> None:
         """
         Compute the mean over the metrics logged for several iterations
         """
-        for eval_type in self.evaluation_results.keys:
+        for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0 or sub_type not in self.evaluation_results[eval_type].keys():
                 continue
             for pred_length in self.evaluation_results[eval_type][sub_type].keys():
@@ -900,7 +1027,7 @@ class EvaluationEngine:
         """
         Compute the mean over all actions.
         """
-        for eval_type in self.evaluation_results.keys:
+        for eval_type in self.evaluation_results.keys():
             if len(self.evaluation_results[eval_type])==0:
                 continue
             for pred_length in self.evaluation_results[eval_type]["overall"].keys():
