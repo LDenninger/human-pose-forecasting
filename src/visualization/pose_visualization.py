@@ -237,12 +237,13 @@ def create_skeleton_subplot_plotly(
     @param show_joints: Whether to show the joints in the plot.
 
     """
+    #import ipdb; ipdb.set_trace()
     # Extract joint positions
     joint_positions = position_data.numpy()
 
     if show_joints:
         # Create scatter plot for each joint within the subplot
-        for joint_position in joint_positions():
+        for joint_position in joint_positions:
             subplot.x += joint_position[0]
             subplot.y += joint_position[2]
             subplot.z += joint_position[1]

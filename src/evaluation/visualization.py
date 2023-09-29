@@ -46,7 +46,7 @@ def compare_sequences_plotly(
     line_width: int = 4,
     font_size: int = 24,
     colors: Tuple[str, str] = ("green", "blue"),
-    show_joints: bool = False,
+    show_joints: bool = True,
     size: int = 500,
 ):
     """
@@ -121,6 +121,7 @@ def compare_sequences_plotly(
             # Get color based on prediction_position
             color = colors[0] if j < prediction_position else colors[1]
             # Fill subplot with skeleton and additional information
+            #import ipdb; ipdb.set_trace()
             subplot = create_skeleton_subplot_plotly(
                 go.Scatter3d(
                     x=[],
@@ -164,9 +165,9 @@ def compare_sequences_plotly(
     # Remove axes and background and ticks
     fig.update_scenes(
         dict(
-            xaxis=dict(showbackground=False, showticklabels=False, visible=False),
-            yaxis=dict(showbackground=False, showticklabels=False, visible=False),
-            zaxis=dict(showbackground=False, showticklabels=False, visible=False),
+            xaxis=dict(showbackground=True, showticklabels=True, visible=True),
+            yaxis=dict(showbackground=True, showticklabels=True, visible=True),
+            zaxis=dict(showbackground=True, showticklabels=True, visible=True),
             aspectmode="manual",
             aspectratio=dict(x=0.375, y=0.25, z=1.875),
         )
