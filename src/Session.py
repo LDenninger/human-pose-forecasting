@@ -434,7 +434,7 @@ class Session:
             Function loads the data to the GPU and splits it into the seed and target sequence.
         """
         seed_data = data[:, :self.config['dataset']['seed_length']]
-        target_data = data[:, self.config['dataset']['target_length']:]
+        target_data = data[:, self.config['dataset']['seed_length']:]
         return seed_data.to(self.device), target_data.to(self.device)
     
     def _print_epoch_results(self) -> None:
