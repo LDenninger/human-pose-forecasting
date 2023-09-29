@@ -133,7 +133,7 @@ def evaluate_distance_metrics(
     for metric in metrics:
         if metric not in METRICS_IMPLEMENTED.keys():
             print_(f"Metric {metric} not implemented.")
-        if metric == "auc":
+        if metric in ["auc","positional_mse"]:
             # Compute the joint positions using forward kinematics
             if representation != "pos":
                 prediction_positions, _ = h36m_forward_kinematics(predictions, 'mat')
@@ -148,9 +148,11 @@ def evaluate_distance_metrics(
                 target_positions = targets
             # Scale to meters for evaluation
 
-            results[metric] = accuracy_under_curve(
-                prediction_positions, target_positions
+            results[metric] = METRICS_IMPLEMENTED[metric](
+                prediction_positions, target_positions, reduction=reduction
             )
+            if torch.is_tensor(results[metric]):
+                results[metric] = results[metric].item()
         else:
             results[metric] = METRICS_IMPLEMENTED[metric](
                 predictions, targets, reduction=reduction
@@ -295,6 +297,7 @@ def accuracy_under_curve(
     predictions: torch.tensor,
     targets: torch.tensor,
     thresholds: List[float] = ACC_THRESHOLDS,
+    reduction: Optional[str] = None,
 ) -> torch.tensor:
     """
     Area und the Curve metric to measure the accuracy at different thresholds.

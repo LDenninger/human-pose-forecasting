@@ -1,37 +1,39 @@
-2023-09-29-08:36:23   [info]: Initialized trainer for run: representation_study/6d_geo_2
-2023-09-29-08:36:23   [info]: Using device: cuda
-2023-09-29-08:36:23   [info]: No evaluation queue defined.
-2023-09-29-08:36:23   [info]: Calling: initialize_model...
-2023-09-29-08:36:23   [warn]: Cannot watch model without WandB
-2023-09-29-08:36:23   [info]: Initialized model
-2023-09-29-08:36:23   [info]: Calling: load_checkpoint...
-2023-09-29-08:36:23   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/representation_study/6d_geo_2/checkpoints/checkpoint_epoch_90.pth
-2023-09-29-08:36:23   [info]: Calling: initialize_evaluation...
-2023-09-29-08:36:23   [info]: Load the evaluation data for each action
-2023-09-29-08:36:26   [info]: Initialized an evaluation for joint distances with 1000
-2023-09-29-08:36:26   [info]: Calling: evaluate...
-2023-09-29-08:36:26   [info]: Calling: evaluate...
-2023-09-29-08:36:26   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-29-08:38:06   [info]: Evaluation finished!
-2023-09-29-08:38:06   [info]: Iterations completed: 0 Results:
+2023-09-29-08:40:10   [info]: Initialized trainer for run: representation_study/6d_geo_2
+2023-09-29-08:40:10   [info]: Using device: cuda
+2023-09-29-08:40:10   [info]: No evaluation queue defined.
+2023-09-29-08:40:10   [info]: Calling: initialize_model...
+2023-09-29-08:40:10   [warn]: Cannot watch model without WandB
+2023-09-29-08:40:10   [info]: Initialized model
+2023-09-29-08:40:10   [info]: Calling: load_checkpoint...
+2023-09-29-08:40:10   [error]: Checkpoint could not been load from: /home/user/denninge/human-pose-forecasting/experiments/representation_study/6d_geo_2/checkpoints/checkpoint_epoch_90.pth
+2023-09-29-08:40:10   [error]: Exception: Error(s) in loading state_dict for PosePredictor:
+	Missing key(s) in state_dict: "positionalEncoding.positional_encoding". 
+2023-09-29-08:40:10   [info]: Calling: initialize_evaluation...
+2023-09-29-08:40:10   [info]: Load the evaluation data for each action
+2023-09-29-08:40:13   [info]: Initialized an evaluation for joint distances with 1000
+2023-09-29-08:40:13   [info]: Calling: evaluate...
+2023-09-29-08:40:13   [info]: Calling: evaluate...
+2023-09-29-08:40:13   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-29-08:41:49   [info]: Evaluation finished!
+2023-09-29-08:41:49   [info]: Iterations completed: 0 Results:
  
-2023-09-29-08:38:06   [info]: Evaluation Results:
+2023-09-29-08:41:49   [info]: Evaluation Results:
 
-2023-09-29-08:38:06   [info]: Average over all actions:
-2023-09-29-08:38:06   [info]: +--------------+----------------------+--------------------+----------------------+
-| Pred. length |    positional_mse    |        auc         |  geodesic_distance   |
-+--------------+----------------------+--------------------+----------------------+
-|      80      | 0.020066844299435616 |  84.8045120636622  | 0.014264524914324284 |
-|     120      | 0.02882019616663456  | 80.95086697075102  | 0.020506132394075394 |
-|     160      |  0.037375558167696   | 77.97922574811511  | 0.026584485545754433 |
-|     200      |  0.045804213732481   |  75.5766663286421  | 0.032598987221717834 |
-|     240      | 0.054021019488573074 | 73.58697288566165  | 0.03846006467938423  |
-|     280      | 0.06199459359049797  | 71.88518775833977  | 0.04415211081504822  |
-|     320      | 0.06953877210617065  | 70.38743760850694  | 0.04953678697347641  |
-|     360      | 0.07676298171281815  | 69.06112333138785  | 0.054732080549001694 |
-|     400      | 0.08364532142877579  | 67.86837064557605  | 0.059672579169273376 |
-|     440      | 0.09034503251314163  | 66.77297121948666  |  0.0645257905125618  |
-|     480      | 0.09691645205020905  | 65.76437867350049  | 0.06929177790880203  |
-|     520      | 0.10330933332443237  | 64.81257180372873  | 0.07389064878225327  |
-|     560      |  0.1095665916800499  | 63.919187419944336 | 0.07845161110162735  |
-+--------------+----------------------+--------------------+----------------------+
+2023-09-29-08:41:49   [info]: Average over all actions:
+2023-09-29-08:41:49   [info]: +--------------+----------------------+-------------------+----------------------+
+| Pred. length |    positional_mse    |        auc        |  geodesic_distance   |
++--------------+----------------------+-------------------+----------------------+
+|      80      | 0.020066844299435616 | 86.41182316674126 | 0.014264524914324284 |
+|     120      | 0.02882019616663456  | 82.83901512622833 | 0.020506132394075394 |
+|     160      |  0.037375558167696   | 80.06510966353946 | 0.026584485545754433 |
+|     200      |  0.045804213732481   | 77.81995750135846 | 0.032598987221717834 |
+|     240      | 0.054021019488573074 |  75.967927939362  | 0.03846006467938423  |
+|     280      | 0.06199459359049797  | 74.39070559210248 | 0.04415211081504822  |
+|     320      | 0.06953877210617065  |  73.0019685294893 | 0.04953678697347641  |
+|     360      | 0.07676298171281815  | 71.78330404890907 | 0.054732080549001694 |
+|     400      | 0.08364532142877579  | 70.69212132030063 | 0.059672579169273376 |
+|     440      | 0.09034503251314163  | 69.69304200675752 |  0.0645257905125618  |
+|     480      | 0.09691645205020905  | 68.77404501040778 | 0.06929177790880203  |
+|     520      | 0.10330933332443237  | 67.91375908586714 | 0.07389064878225327  |
+|     560      |  0.1095665916800499  | 67.11442338095772 | 0.07845161110162735  |
++--------------+----------------------+-------------------+----------------------+
