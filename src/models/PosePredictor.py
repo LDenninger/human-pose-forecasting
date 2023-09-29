@@ -54,7 +54,8 @@ class PosePredictor(nn.Module):
                             input_dropout: float = 0.0,
                              incl_abs_position: Optional[bool] = False,
                               variable_window: Optional[bool] = False,
-                                device: str = 'cpu'
+                                device: str = 'cpu',
+                                 return_attn: Optional[bool] = False
 
                     ) -> None:
         """
@@ -99,6 +100,7 @@ class PosePredictor(nn.Module):
         self.emb_dim = emb_dim
         self.joint_dim = joint_dim
         self.incl_abs_position = incl_abs_position
+        self.return_attn = False
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
