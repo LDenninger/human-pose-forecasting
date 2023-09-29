@@ -258,29 +258,21 @@ def create_skeleton_subplot(
     ax.view_init(elev=0, azim=-90)
 
 
-def create_skeleton_subplot_plotly(
-    subplot, position_data, skeleton_structure, parent_ids, show_joints=False
+def get_line_data(
+    position_data, parent_ids
 ):
     """
-    Add data creating a skeleton to a subplot.
+    Generate data for creating lines for the a skeleton plot.
 
-    @param subplot: The subplot to add the data to.
     @param position_data: The data to add to the subplot.
-    @param skeleton_structure: The skeleton structure to use for the data.
     @param parent_ids: The parent ids of the skeleton structure.
-    @param show_joints: Whether to show the joints in the plot.
 
     """
     import ipdb; ipdb.set_trace()
+    
+    x, y, z, text = [], [], [], []
     # Extract joint positions
     joint_positions = position_data.numpy()
-
-    if show_joints:
-        # Create scatter plot for each joint within the subplot
-        for joint_position in joint_positions:
-            subplot.x += joint_position[0]
-            subplot.y += joint_position[2]
-            subplot.z += joint_position[1]
 
     # Define lines connecting joints within the subplot
     for idx, joint_position in enumerate(joint_positions):
@@ -288,23 +280,26 @@ def create_skeleton_subplot_plotly(
             continue
         # Draw line from current position to parent position
         parent_position = joint_positions[parent_ids[idx]]
-        subplot.x += (joint_position[0], parent_position[0], None)
-        subplot.y += (joint_position[2], parent_position[2], None)
-        subplot.z += (joint_position[1], parent_position[1], None)
+        y.extend([joint_position[2], parent_position[2], None])
+        z.extend([joint_position[1], parent_position[1], None])
+        x.extend([joint_position[0], parent_position[0], None])
+        # if show_joint_labels:
+        #     subplot.text += ("", "", "")
+    # Return the data
+    return x, y, z, text
 
-    # # Define lines connecting joints within the subplot
-    # for id, (cur_frame, par_frame) in skeleton_structure.items():
-    #     if cur_frame == "hip":
-    #         continue
-    #     start_pos = joint_positions[cur_frame]
-    #     end_pos = joint_positions[par_frame]
-    #     subplot.x += (start_pos[0], end_pos[0], None)
-    #     subplot.y += (start_pos[2], end_pos[2], None)
-    #     subplot.z += (start_pos[1], end_pos[1], None)
-
-
-    # Return the subplot
-    return subplot
+def get_joint_data(position_data, skeleton_structure):
+    x, y, z, text = [], [], [], []
+    # Extract joint positions
+    joint_positions = position_data.numpy()
+ 
+    # Create scatter plot for each joint within the subplot
+    for i, joint_position in enumerate(joint_positions):
+        x.append(joint_position[0])
+        y.append(joint_position[2])
+        z.append(joint_position[1])
+        text.append(skeleton_structure[i][0])
+    return x, y, z, text
 
 
 def animate_pose_matplotlib(positions, colors, titles, fig_title, parents, change_color_after_frame=None,
