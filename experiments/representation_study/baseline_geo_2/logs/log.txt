@@ -1,37 +1,14 @@
-2023-09-26-11:57:20   [info]: Initialized trainer for run: representation_study/baseline_geo_1
-2023-09-26-11:57:20   [info]: Using device: cuda
-2023-09-26-11:57:20   [info]: No evaluation queue defined.
-2023-09-26-11:57:20   [info]: Calling: initialize_model...
-2023-09-26-11:57:20   [warn]: Cannot watch model without WandB
-2023-09-26-11:57:20   [info]: Initialized model
-2023-09-26-11:57:20   [info]: Calling: load_checkpoint...
-2023-09-26-11:57:20   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/representation_study/baseline_geo_1/checkpoints/checkpoint_epoch_15.pth
-2023-09-26-11:57:20   [info]: Calling: initialize_evaluation...
-2023-09-26-11:57:20   [info]: Load the evaluation data for each action
-2023-09-26-11:57:23   [info]: Initialized an evaluation for joint distances with 2000
-2023-09-26-11:57:23   [info]: Calling: evaluate...
-2023-09-26-11:57:23   [info]: Calling: evaluate...
-2023-09-26-11:57:23   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-26-12:01:15   [info]: Evaluation finished!
-2023-09-26-12:01:15   [info]: Iterations completed: 0 Results:
- 
-2023-09-26-12:01:15   [info]: Evaluation Results:
-
-2023-09-26-12:01:15   [info]: Average over all actions:
-2023-09-26-12:01:15   [info]: +--------------+---------------------+--------------------+---------------------+----------------------+
-| Pred. length |    positional_mse   |        auc         |     euler_error     |  geodesic_distance   |
-+--------------+---------------------+--------------------+---------------------+----------------------+
-|      80      | 0.02793261595070362 | 80.06858030954996  | 0.03163968026638031 | 0.019832465797662735 |
-|     120      |  0.0732378140091896 | 73.42036780383852  | 0.06521927565336227 | 0.03804570063948631  |
-|     160      | 0.34729525446891785 | 57.172763016488815 | 0.33109840750694275 | 0.06461556255817413  |
-|     200      |  0.6277257204055786 | 40.578386353121864 |  0.576413631439209  | 0.09957609325647354  |
-|     240      |  0.8507061004638672 | 30.276330974366928 |  0.7650574445724487 | 0.14033085107803345  |
-|     280      |  0.9767008423805237 | 25.186182227399613 |  0.9460150599479675 | 0.17294298112392426  |
-|     320      |  1.1156065464019775 | 22.724263535605537 |  1.1721831560134888 | 0.21080246567726135  |
-|     360      |  1.2733573913574219 | 21.014360421233707 |  1.347254991531372  |  0.2643188536167145  |
-|     400      |  1.3724480867385864 | 20.009653435813057 |  1.492867350578308  | 0.30499136447906494  |
-|     440      |  1.4850184917449951 | 19.92361711131202  |  1.617205262184143  | 0.31708866357803345  |
-|     480      |  1.525685429573059  | 20.424449609385597 |  1.6475858688354492 |  0.3275604844093323  |
-|     520      |  1.477503776550293  | 21.213943594031864 |  1.641196370124817  | 0.39673271775245667  |
-|     560      |  1.4460813999176025 | 21.844169994195305 |  1.6644493341445923 |  0.4699850380420685  |
-+--------------+---------------------+--------------------+---------------------+----------------------+
+2023-09-29-08:38:38   [info]: Initialized trainer for run: representation_study/baseline_geo_2
+2023-09-29-08:38:38   [info]: Using device: cuda
+2023-09-29-08:38:38   [info]: No evaluation queue defined.
+2023-09-29-08:38:38   [info]: Calling: initialize_model...
+2023-09-29-08:38:38   [warn]: Cannot watch model without WandB
+2023-09-29-08:38:38   [info]: Initialized model
+2023-09-29-08:38:38   [info]: Calling: load_checkpoint...
+2023-09-29-08:38:38   [info]: Model checkpoint was load from: /home/user/denninge/human-pose-forecasting/experiments/representation_study/baseline_geo_2/checkpoints/checkpoint_epoch_90.pth
+2023-09-29-08:38:38   [info]: Calling: initialize_evaluation...
+2023-09-29-08:38:38   [info]: Load the evaluation data for each action
+2023-09-29-08:38:41   [info]: Initialized an evaluation for joint distances with 1000
+2023-09-29-08:38:41   [info]: Calling: evaluate...
+2023-09-29-08:38:41   [info]: Calling: evaluate...
+2023-09-29-08:38:41   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
