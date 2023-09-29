@@ -259,16 +259,13 @@ def create_skeleton_subplot(
 
 
 def get_line_data(
-    position_data, skeleton_structure, parent_ids, show_joints=False, show_joint_labels=False
+    position_data, parent_ids
 ):
     """
-    Add data creating a skeleton to a subplot.
+    Generate data for creating lines for the a skeleton plot.
 
-    @param subplot: The subplot to add the data to.
     @param position_data: The data to add to the subplot.
-    @param skeleton_structure: The skeleton structure to use for the data.
     @param parent_ids: The parent ids of the skeleton structure.
-    @param show_joints: Whether to show the joints in the plot.
 
     """
     
