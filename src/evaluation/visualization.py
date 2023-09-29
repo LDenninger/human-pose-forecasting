@@ -140,10 +140,7 @@ def compare_sequences_plotly(
                 )
             x, y, z, text = get_line_data(
                 joint_positions,
-                skeleton_structure,
-                parent_ids,
-                show_joints=show_joints,
-                show_joint_labels=show_joint_labels,
+                parent_ids
             )
             fig.add_trace(
                 go.Scatter3d(
@@ -158,25 +155,6 @@ def compare_sequences_plotly(
                 row=i + 1,
                 col=j + 1,
             )
-            # # Fill subplot with skeleton and additional information
-            # subplot = create_skeleton_subplot_plotly(
-            #     go.Scatter3d(
-            #         x=[],
-            #         y=[],
-            #         z=[],
-            #         mode="lines+markers+text" if show_joints else "lines+text",
-            #         line=dict(width=line_width, color=color),
-            #         marker=dict()
-            #     ),
-            #     joint_positions,
-            #     skeleton_structure,
-            #     parent_ids,
-            #     show_joints=show_joints,
-            #     show_joint_labels=show_joint_labels,
-            # )
-
-            # # Add newly created subplot to figure
-            # fig.add_trace(subplot, row=i + 1, col=j + 1)
 
         # Calculate the y-coordinate for the annotation to position it correctly
         y_coord = y_positions[len(y_positions) - i - 1] + 100 / figsize[1]

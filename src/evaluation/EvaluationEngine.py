@@ -784,7 +784,6 @@ class EvaluationEngine:
         # Get the skeleton model for the visualization
         skeleton_structure = self._get_skeleton_model()
         # Get parents for drawing
-        import ipdb; ipdb.set_trace()
         parent_ids = self._get_skeleton_parents()
         # Create visualizations
         self.vis2d_figures = []
