@@ -46,6 +46,14 @@ def getDataset(config: dict, joint_representation: str,
             is_train=is_train,
             debug=debug
         )
+    elif config["name"] == 'ais':
+        return AISDataset(
+            seed_length=config["seed_length"],
+            target_length=config["target_length"],
+            sequence_spacing=config["spacing"],
+            normalize_orientation=config["normalize_orientation"],
+            absolute_position=absolute_position,
+        )
     else:
         raise NotImplementedError(f'Dataset {config["name"]} is not implemented.')
     

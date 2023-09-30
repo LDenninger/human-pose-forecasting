@@ -88,10 +88,10 @@ def run_distribution_evaluation(experiment_name: str,
     # Evaluate the model
     session.evaluate()
     # Save the evaluation results
-    file_name = f'eval_results_distribution_{checkpoint_name}.txt'
-    session.evaluation_engine.print(file_name)
+    # file_name = f'eval_results_distribution_{checkpoint_name}.txt'
+    # session.evaluation_engine.print(file_name)
     # Save evaluation results as json file
-    json_file_name = P(f'eval_results_distribution_{checkpoint_name}.json')
+    json_file_name = P(f'eval_results_distribution_{checkpoint_name}_{dataset}_{distr_pred_sec}.json')
     save_path = session.logger.get_path('log') / json_file_name
     with open(save_path, 'w') as f:
         json.dump(session.evaluation_engine.evaluation_results['long_predictions'], f)

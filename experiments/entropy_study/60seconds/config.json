@@ -1,8 +1,8 @@
 {
     "training_scheme": "auto_regressive",
-    "random_seed": 42,
+    "random_seed": 34,
     "batch_size": 32,
-    "num_epochs": 80,
+    "num_epochs": 120,
     "num_train_iterations": 1000,
     "num_eval_iterations": 200,
     "seq_length": 10,
@@ -41,15 +41,15 @@
     },
     "lr_scheduler": {
         "type": "cosine",
-        "max_iterations": 80000,
-        "warmup": 2000,
+        "max_iterations": 120000,
+        "warmup": 3000,
         "min_learning_rate": 0.0,
-        "update_frequency": 1,
+        "update_frequency": 1000,
         "base_lr": 3e-04
     },
     "skeleton": {
-        "type": "s21",
-        "num_joints": 21
+        "type": "s16",
+        "num_joints": 16
     },
     "joint_representation": {
         "type": "pos",
@@ -68,11 +68,12 @@
         "seed_length": 20,
         "target_length": 5,
         "downsampling_factor": 2,
-        "spacing": 0,
+        "normalize_orientation": false,
+        "spacing": 1,
         "training_size": 1000,
         "validation_size": 1000,
         "test_size": 1000,
-        "reverse_prob": 0.0
+        "reverse_prob": 0
     },
     "data_augmentation": {
         "normalize": true,
@@ -92,7 +93,7 @@
             1,
             4
         ],
-        "gaussian_noise_prob": 0.5,
+        "gaussian_noise_prob": 0.0,
         "gaussian_noise_std": 0.005
     }
 

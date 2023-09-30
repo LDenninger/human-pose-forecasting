@@ -12,16 +12,23 @@ if __name__ == "__main__":
     
     SKELETON_MODEL = "s16"
     N_TOTAL_SAMPLES = 20000
-    
+    ABSOLUTE_POSITION = False
+    NORMALIZE_ORIENTATION = True
+    DATASET = "h36m"
+
     # Get basepath
     basepath = os.getcwd()
 
     # Load base config file
     config = json.load(open(basepath + "/experiments/entropy_study/60seconds/config.json", "r"))
 
+    # Set orienation normalization
+    config["dataset"]["normalize_orientation"] = NORMALIZE_ORIENTATION
+    config["dataset"]["name"] = DATASET
+
     # Get dataset
-    train_set = getDataset(config = config["dataset"], joint_representation = "pos", skeleton_model = SKELETON_MODEL, is_train = True, debug = False)
-    test_set = getDataset(config = config["dataset"], joint_representation = "pos", skeleton_model = SKELETON_MODEL, is_train = False, debug = False)
+    train_set = getDataset(config = config["dataset"], absolute_position=ABSOLUTE_POSITION, joint_representation = "pos", skeleton_model = SKELETON_MODEL, is_train = True, debug = False)
+    test_set = getDataset(config = config["dataset"], absolute_position=ABSOLUTE_POSITION, joint_representation = "pos", skeleton_model = SKELETON_MODEL, is_train = False, debug = False)
 
     # Create DataLoader
     train = DataLoader(
@@ -75,48 +82,8 @@ if __name__ == "__main__":
     if not os.path.exists(basepath + "/configurations/distribution_values"):
         os.makedirs(basepath + "/configurations/distribution_values")
 
-    torch.save(kld, basepath + f"/configurations/distribution_values/kld_{SKELETON_MODEL}.pt")
-    torch.save(entropy, basepath + f"/configurations/distribution_values/entropy_{SKELETON_MODEL}.pt")
-    torch.save(test_ps, basepath + f"/configurations/distribution_values/test_ps_{SKELETON_MODEL}.pt")
+    torch.save(kld, basepath + f"/configurations/distribution_values/kld_{SKELETON_MODEL}_{DATASET}_norm_{NORMALIZE_ORIENTATION}_abs_{ABSOLUTE_POSITION}.pt")
+    torch.save(entropy, basepath + f"/configurations/distribution_values/entropy_{SKELETON_MODEL}_{DATASET}_norm_{NORMALIZE_ORIENTATION}_abs_{ABSOLUTE_POSITION}.pt")
+    torch.save(test_ps, basepath + f"/configurations/distribution_values/test_ps_{SKELETON_MODEL}_{DATASET}_norm_{NORMALIZE_ORIENTATION}_abs_{ABSOLUTE_POSITION}.pt")
     print(entropy)
     print(kld)
-    
-    
-    # Iterate over DataLoader and calculate the average entropy of the test dataset
-    # entropy = 0
-    # print("Calculating entropy of training dataset...")
-    # for i, batch in tqdm(enumerate(test), total=len(test)):
-    #     # Use joint position as representation to make models operating on different representations comparable
-    #     if representation != 'pos':
-    #         batch, _ = h36m_forward_kinematics(batch, representation)
-    #     # Calculate power spectrum of batch
-    #     ps = power_spectrum(batch) # (n_joints, seq_len, feature_size)
-    #     # Calculate entropy of power spectrum
-    #     ps_ent = ps_entropy(ps) # (feature_size,)
-    #     # Calculate average entropy of power spectrum
-    #     avg = torch.mean(ps_ent)
-    #     entropy += avg
-    # entropy /= len(test)
-    # # Save entropy as torch tensor
-
-    # # Calculate symmetric kl-divergence between training and test dataset
-    # kld = 0
-    # print("Calculating symmetric KL-divergence between training and test dataset...")
-    # for i, (train_batch, test_batch) in tqdm(enumerate(zip(train, test)), total=min(len(train), len(test))):
-    #     # Use joint position as representation to make models operating on different representations comparable
-    #     if representation != 'pos':
-    #         train_batch, _ = h36m_forward_kinematics(train_batch, representation)
-    #         test_batch, _ = h36m_forward_kinematics(test_batch, representation)
-    #     # Calculate power spectrum of batch
-    #     train_ps = power_spectrum(train_batch)
-    #     test_ps = power_spectrum(test_batch)
-    #     # Calculate kl-divergence in both directions
-    #     kl1 = ps_kld(train_ps, test_ps)
-    #     kl2 = ps_kld(test_ps, train_ps)
-    #     # Calculate average kl-divergence
-    #     kl1 = torch.mean(kl1)
-    #     kl2 = torch.mean(kl2)
-    #     # Calculate symmetric kl-divergence
-    #     kld += kl1 + kl2
-    # kld /= 2 * (i + 1)
-    # Save kld as torch tensor
