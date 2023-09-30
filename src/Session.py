@@ -188,17 +188,17 @@ class Session:
             self.evaluation_engine.initialize_visualization_attention(
                 prediction_timesteps=prediction_timesteps,
                 variable_window=self.variable_window,
-                vanille=True if self.config['model']['transformer']['type']=='vanilla' else False
+                vanilla=True if self.config['model']['transformer']['type']=='vanilla' else False
             )
             self.visualize_model = True
 
     @log_function
-    def initialize_model(self):
+    def initialize_model(self, return_attn: Optional[bool] = False):
         """
             Initialize the PosePredictor model using the loaded config.
 
         """
-        self.model = getModel(self.config, self.device)
+        self.model = getModel(self.config, self.device, return_attn)
         self.logger.watch_model(self.model)
         print_(f"Initialized model")
 
@@ -436,7 +436,7 @@ class Session:
             Function loads the data to the GPU and splits it into the seed and target sequence.
         """
         seed_data = data[:, :self.config['dataset']['seed_length']]
-        target_data = data[:, self.config['dataset']['target_length']:]
+        target_data = data[:, self.config['dataset']['seed_length']:]
         return seed_data.to(self.device), target_data.to(self.device)
     
     def _print_epoch_results(self) -> None:

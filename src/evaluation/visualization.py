@@ -92,7 +92,7 @@ def compare_sequences_plotly(
     )
 
     # Make fontsize and linewidth scale with size
-    font_size = int(24 / 500 * size)
+    font_size = int(50 / 500 * size)
     line_width = int(4 / 500 * size)
     marker_size = int(5 / 500 * size)
 
@@ -192,9 +192,11 @@ def compare_sequences_plotly(
 
     # Set figure title to title_text
     fig.update_layout(
+        font_family="Arial Black",
         title_text=title_text,
         title_x=0.5,
         title_font_size=font_size,
+        title_font_family="Arial Black"
     )
 
     # Update font size

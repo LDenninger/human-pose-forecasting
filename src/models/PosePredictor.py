@@ -14,7 +14,7 @@ from .positional_encoding import PositionalEncodingSinusoidal
 from .utils import PointWiseLinear
 
 
-def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
+def getModel(config: Dict[str, Any], device: str = 'cpu', return_attn: Optional[bool]=False) -> nn.Module:
     """
         Construct and return a model given the run configuration.
     """
@@ -29,6 +29,7 @@ def getModel(config: Dict[str, Any], device: str = 'cpu') -> nn.Module:
             joint_dim=config['joint_representation']['joint_dim'],
             input_dropout=config['model']['input_dropout'],
             variable_window=config['variable_window'] if 'variable_window' in config.keys() else False,
+            return_attn=return_attn,
             device=device
         ).to(device)
         return model
@@ -88,7 +89,7 @@ class PosePredictor(nn.Module):
         self.positionalEncoding = self._resolve_positional_encoding(positional_encoding_config, emb_dim, seq_len)
         self.inputDropout = nn.Dropout(p=input_dropout)
         # Attention blocks
-        self.attnBlocks = [getTransformerBlock(transformer_config, num_joints, emb_dim, seq_len) for _ in range(num_blocks)]
+        self.attnBlocks = [getTransformerBlock(transformer_config, num_joints, emb_dim, seq_len, return_attention=return_attn) for _ in range(num_blocks)]
         self.attnBlocks = nn.Sequential(*self.attnBlocks)
         # Final decoding layer to retrieve the original joint representation
         self.joint_decoder = PointWiseLinear(emb_dim, joint_dim, num_joints)
@@ -100,7 +101,7 @@ class PosePredictor(nn.Module):
         self.emb_dim = emb_dim
         self.joint_dim = joint_dim
         self.incl_abs_position = incl_abs_position
-        self.return_attn = False
+        self.return_attn = return_attn
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
