@@ -23,6 +23,7 @@ wandb/*
 !entropy.pt
 !kld.pt
 !test_ps.pt
+!*/distribution_values/*
 
 /distr_visualizations/
 *eval_results*.json
