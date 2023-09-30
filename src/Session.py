@@ -107,7 +107,7 @@ class Session:
         if not self.visualize_model:
             print_('Visualization was not properly initialized!', 'error')
             return
-        self.evaluation_engine.visualize(self.model, num_visualization, self.data_augmentor)
+        self.evaluation_engine.visualize(self.model, num_visualization, self.data_augmentor, action)
 
     ###=== Initialization Functions ===###
 
