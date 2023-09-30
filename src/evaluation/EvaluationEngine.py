@@ -16,6 +16,9 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from pathlib import Path as P
 from IPython.display import HTML, display, clear_output
+import matplotlib
+matplotlib.rcParams['animation.embed_limit'] = 2**64
+
 
 from ..utils import print_, log_function, LOGGER
 from ..data_utils import (
@@ -925,7 +928,7 @@ class EvaluationEngine:
                 color_after_change='r',
                 overlay=self.overlay_visualization,
                 notebook=self.notebook_visualization,
-                fps=5,
+                fps=10,
                 show_axis=True,
                 constant_limits=True
             )
