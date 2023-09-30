@@ -135,3 +135,22 @@ def test_attention_visualization():
                               timesteps=[80,120,160,200])
     import ipdb; ipdb.set_trace()
     fig.savefig('debug/test_attn_2.png')
+
+
+def test_plotly_visualization():
+    dataset = H36MDataset(
+        seed_length=10,
+        target_length=10,
+        down_sampling_factor=2,
+        rot_representation = 'pos',
+        stacked_hourglass=True,
+        sequence_spacing=5,
+        return_label=False,
+        raw_data=False,
+        normalize_orientation=False,
+        is_train=True,
+        debug=True)
+    
+    seq = dataset[0]
+
+    

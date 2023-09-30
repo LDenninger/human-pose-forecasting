@@ -92,7 +92,7 @@ class VanillaTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        if self.full_return:
+        if self.full_return and not torch.is_tensor(x):
             x = x[0]
         shape = x.shape
         x = torch.flatten(x, start_dim=-2, end_dim=-1)
@@ -194,7 +194,7 @@ class SpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        if self.full_return:
+        if self.full_return and not torch.is_tensor(x):
             x = x[0]
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
@@ -300,7 +300,7 @@ class SeqSpatioTemporalTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        if self.full_return:
+        if self.full_return and not torch.is_tensor(x):
             x = x[0]
         # Compute spatial and temporal attention separately and update input
         spatialAttentionOut = self.spatialAttention(x) # shape: [batch_size, num_joints, seq_len, emb_dim]
@@ -409,7 +409,7 @@ class SeqTemporalSpatialTransformer(nn.Module):
             Inputs:
                 x: input tensor, shape: [batch_size, seq_len, num_joints, emb_dim]
         """
-        if self.full_return:
+        if self.full_return and not torch.is_tensor(x):
             x = x[0]
         # Compute spatial and temporal attention separately and update input
         temporalAttentionOut = self.temporalAttention(x)

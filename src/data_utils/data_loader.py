@@ -299,6 +299,14 @@ class AISDataset(Dataset):
                 if sid+self.target_length+self.seed_length <= max_ind:
                     full_data.append(data[sid:sid+self.target_length+self.seed_length])
         return full_data
+    
+    def get_mean_variance(self):
+        """
+            Computes the mean and variance over the data for normalization.
+        """
+        mean = torch.mean(torch.flatten(torch.stack(self.data, dim=0), start_dim=0,end_dim=1)) + torch.finfo(torch.float32).eps
+        var = torch.var(torch.flatten(torch.stack(self.data, dim=0), start_dim=0,end_dim=1)) + torch.finfo(torch.float32).eps
+        return mean, var
 
     def __len__(self):
         return self.len

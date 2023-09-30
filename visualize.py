@@ -23,7 +23,9 @@ from src.utils import set_random_seed
 QUEUED = False # Activate the usage of the training queue
 EXPERIMENT_NAMES = ['repr_loss_study']*7
 RUN_NAMES = ['6d_abs_1', '6d_geo_1', '6d_matMSE_1', 'mat_geo_1', 'quat_geo_1', 'quat_matMSE_1', 'quat_quatLoss_1']
-PREDICTION_TIMESTEPS = None
+#PREDICTION_TIMESTEPS = [500, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000]
+#PREDICTION_TIMESTEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1500, 1700, 2000]
+PREDICTION_TIMESTEPS = [80, 200, 400, 600]
 
 #####===== Meta Information =====#####
 
@@ -69,7 +71,7 @@ def run_visualization(experiment_name: str,
     # Log some information
     log_script_setup()
     # Initialize the model
-    session.initialize_model()
+    session.initialize_model(return_attn=True if 'attn' in visualization_type else False)
     session.load_checkpoint(checkpoint_name)
     # Initialize the evaluation
     if pred_length is None:
