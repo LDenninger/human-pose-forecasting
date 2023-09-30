@@ -696,7 +696,8 @@ class EvaluationEngine:
                   model: torch.nn.Module, 
                   num_visualizations: int = 1, 
                   data_augmentor: DataAugmentor = None,
-                  action: Optional[str] = None) -> None:
+                  action: Optional[str] = None,
+                  permute_dimension: List[int] = [0,1,2]) -> None:
         model.eval()
         if self.h36m_evaluation:
             print_(f"Start visualization on H3.6M dataset using actions: {self.actions}")
@@ -711,7 +712,7 @@ class EvaluationEngine:
                 if self.visualization_2d_active:
                     self.visualization_2d_loop(model, action, num_visualizations, data_loader)
                 if self.visualization_3d_active:
-                    self.visualization_3d_loop(model, action, num_visualizations, data_loader)
+                    self.visualization_3d_loop(model, action, num_visualizations, data_loader, permute_dimension)
         else:
             dataset = self.datasets[action]
             data_loader = torch.utils.data.DataLoader(
@@ -720,7 +721,7 @@ class EvaluationEngine:
             if self.visualization_2d_active:
                 self.visualization_2d_loop(model, action, num_visualizations, data_loader)
             if self.visualization_3d_active:
-                self.visualization_3d_loop(model, action, num_visualizations, data_loader)
+                self.visualization_3d_loop(model, action, num_visualizations, data_loader, permute_dimension)
             if self.visualization_attn_active:
                 self.visualize_attention_loop(model, action, num_visualizations, data_loader)
         self.evaluation_finished = True
@@ -840,7 +841,8 @@ class EvaluationEngine:
         model: torch.nn.Module,
         action: str,
         num: int,
-        data_loader: torch.utils.data.DataLoader):
+        data_loader: torch.utils.data.DataLoader,
+        permute_dim: List[int] = [0,1,2]):
         if num == 0:
             return
         model.eval()
@@ -900,14 +902,13 @@ class EvaluationEngine:
 
         parent_ids = self._get_skeleton_parents()
         logger = LOGGER
-        adjust_dim = [0,1,2]
-        seed_data = seed_data[...,adjust_dim]
+        seed_data = seed_data[...,permute_dim]
         # Detach seed_data
         seed_data = seed_data.detach().cpu()
         for i in range(num):
-            cur_pred = predictions[i,...,adjust_dim].numpy()
+            cur_pred = predictions[i,...,permute_dim].numpy()
             cur_pred = np.concatenate([seed_data[i].numpy(), cur_pred], axis=0)
-            cur_target = targets[i,...,adjust_dim].numpy()
+            cur_target = targets[i,...,permute_dim].numpy()
             cur_target = np.concatenate([seed_data[i].numpy(), cur_target], axis=0)
             if not self.interactive_visualization:
                 save_dir = logger.get_path('visualization')

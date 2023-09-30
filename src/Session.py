@@ -102,12 +102,19 @@ class Session:
         self.evaluation_engine.log_results(self.iteration)
         self._print_epoch_results()
     
-    def visualize(self, num_visualization: Optional[int] = 1, action: Optional[str] = None) -> None:
+    def visualize(self, 
+                  num_visualization: Optional[int] = 1,
+                   action: Optional[str] = None,
+                    permute_dim: List[int] = [0,1,2]) -> None:
         """ Visualize the model. """
         if not self.visualize_model:
             print_('Visualization was not properly initialized!', 'error')
             return
-        self.evaluation_engine.visualize(self.model, num_visualization, self.data_augmentor, action)
+        self.evaluation_engine.visualize(self.model,
+                                          num_visualization, 
+                                          self.data_augmentor, 
+                                          action,
+                                          permute_dim)
 
     ###=== Initialization Functions ===###
 
