@@ -67,13 +67,20 @@ def main():
     baselines = load_baselines(dataset=dataset)
 
     # Create plot of distribution metrics
-    fig = create_plots(data_overall, exp_ids, baselines=baselines)
+    fig, axs = create_plots(data_overall, exp_ids, baselines=baselines)
 
     # Create list of experiment names concatenated with respective checkpoint names
     exp_runs = [f'{exp_id}.{checkpoint}' for exp_id, checkpoint in zip(exp_ids, checkpoint_names)]
 
     # Save the plot
     fig.savefig(os.path.join(vis_path, f'distribution_metrics_{exp_runs}_{dataset}.png'))
+
+    # Create plot containing only the figures legend
+    fig_legend = plt.figure(figsize=(9, 9))
+    ax = fig_legend.add_subplot(111)
+    ax.axis('off')
+    ax.legend(*axs[0].get_legend_handles_labels(), loc='center', fontsize=44)
+    fig_legend.savefig(os.path.join(vis_path, f'distribution_metrics_legend_{exp_runs}_{dataset}.png'))
 
     print_('Visualization of distribution metrics finished.')
     
@@ -150,21 +157,25 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     exp_ids = [re.sub(r'_', ' ', exp_id) for exp_id in exp_ids]
     exp_ids = [re.sub(r'model', '', exp_id) for exp_id in exp_ids]
 
+    # Label curves
+    labels = ['Global', 'Local']
+
     # Create a plot for each metric pair
-    for i, (result, exp_id) in enumerate(zip(data, exp_ids)):
+    for i, (result, exp_id) in enumerate(reversed(list(zip(data, exp_ids)))):
         exp_name, run_name = exp_id.split('.')
         run_name = run_name.strip()
         # Extract the data
         entropy = result['entropy']
         kld = result['kld']
         # Create the plots
-        axs[1].plot(range(len(kld)),kld, label=f'{run_name}', color=palette[i], linewidth=line_width)
-        axs[0].plot(entropy, label=f'{run_name}', color=palette[i], linewidth=line_width)
+        axs[0].plot(entropy, label=labels[i], color=palette[i], linewidth=line_width)
+        axs[1].plot(range(len(kld)),kld, label=labels[i], color=palette[i], linewidth=line_width)
+        
     
-    axs[0].plot(entropy_baseline, '--', label='baseline', color=palette[0], linewidth=line_width)
-    axs[1].plot(kld_baseline, '--', label='baseline', color=palette[0], linewidth=line_width)
-    axs[0].plot(entropy_norm_true, '--', label='baseline (norm)', color=palette[-1], linewidth=line_width)
-    axs[1].plot(kld_norm_true, '--', label='baseline (norm)', color=palette[-1], linewidth=line_width)
+    axs[0].plot(entropy_baseline, '--', label='Baseline global', color=palette[0], linewidth=line_width)
+    axs[1].plot(kld_baseline, '--', label='Baseline global', color=palette[0], linewidth=line_width)
+    axs[0].plot(entropy_norm_true, '--', label='Baseline local', color=palette[-1], linewidth=line_width)
+    axs[1].plot(kld_norm_true, '--', label='Baseline local', color=palette[-1], linewidth=line_width)
 
     # Convert xaxis of entropy plot from frame number to seconds (with a framerate of 25fps)
     axs[0].set_xlabel('Time (s)', fontsize=fontsize)
@@ -183,7 +194,7 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     for ax in axs:
         ax.tick_params(axis='both', which='major', labelsize=fontsize)
         ax.tick_params(axis='both', which='minor', labelsize=fontsize)
-        ax.legend(fontsize=fontsize).set_visible(False)
+        #ax.legend(fontsize=fontsize).set_visible(False)
         # Also for titles
         ax.title.set_size(fontsize)
         # Add grid to the plots
@@ -196,7 +207,7 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     fig.subplots_adjust(bottom=0.15, left = 0.07, right = 0.99)
 
     # Return the figure
-    return fig
+    return fig, axs
 
         
 
