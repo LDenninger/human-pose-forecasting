@@ -24,8 +24,18 @@ class Session:
                   log_process_external: Optional[bool] = True,
                   num_threads: int = 2,
                   debug: Optional[bool] = False) -> None:
+        """
+            Initialize a session.
+
+            Arguments:
+                experiment_name (str): The name of the experiment.
+                run_name (str): The name of the run.
+                log_process_internal (Optional[bool], optional): Whether to save metrics in RAM. Default: False.
+                log_process_external (Optional[bool], optional): Whether to save metrics to WandB. Default: True.
+                num_threads (int, optional): The number of threads to use for data loading. Default: 2.
+                debug (Optional[bool], optional): Whether to run in debug mode, this limits the number of data loaded to RAM. Default: False.
+        """
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
         # Run meta information
         self.exp_name = experiment_name
         self.run_name = run_name
@@ -39,8 +49,6 @@ class Session:
             run_name=self.run_name,
             log_internal=log_process_internal,
         )
-
-        
 
         self.metric_tracker = MetricTracker()
         # Load the config for the run
@@ -106,7 +114,15 @@ class Session:
                   num_visualization: Optional[int] = 1,
                    action: Optional[str] = None,
                     permute_dim: List[int] = [0,1,2]) -> None:
-        """ Visualize the model. """
+        """ 
+            Visualize the model. 
+
+            Arguments:
+                num_visualization (Optional[int]): Number of visualizations to produce. Default: 1
+                action (Optional[str]): Action to visualize. Default: All
+                permute_dim (Optional[List[int]]): Permutation to apply to the last dimension for upright poses. Default: [0,1,2]
+        
+        """
         if not self.visualize_model:
             print_('Visualization was not properly initialized!', 'error')
             return
@@ -182,6 +198,18 @@ class Session:
                                  split_actions: Optional[bool]=False,
                                  notebook: Optional[bool] = False,
                                  ):
+        """
+            Initialize the session to produce visualizations.
+
+            Arguments:
+                visualization_type (List[str]): List of visualization types to perform (2d/3d/attn). Default: ['2d']
+                prediction_timesteps (Optional[List[int]]): List of prediction timesteps to include in the visualization. Default: Take timesteps from config.
+                interactive (Optional[bool]): Whether to run the interactive visualizer for 3D visualizations. Default: False
+                overlay_visualization (Optional[bool]): Whether to overlay different skeletons. Default: False
+                dataset (Literal['h36m','ais']): Dataset to visualize. Default: 'h36m'
+                split_actions (Optional[bool]): Whether to perform separate visualizations for each action. Default: False
+                notebook (Optional[bool]): Whether to return animation to be used within a notebook. Default: False
+        """
         if prediction_timesteps is None:
             prediction_timesteps = self.config['evaluation']['timesteps']
 
@@ -215,6 +243,9 @@ class Session:
     def initialize_model(self, return_attn: Optional[bool] = False):
         """
             Initialize the PosePredictor model using the loaded config.
+
+            Arguments:
+                return_attn (Optional[bool]): Whether to return to initialize models that return attention weights. Default: False
 
         """
         self.model = getModel(self.config, self.device, return_attn)
@@ -265,6 +296,12 @@ class Session:
 
     @log_function
     def load_checkpoint(self, checkpoint: str):
+        """
+            Load weights from a checkpoint for the model.
+
+            Arguments:
+                checkpoint (str): Checkpoint to load.
+        """
         load_model_from_checkpoint(
             exp_name=self.exp_name,
             run_name=self.run_name,
@@ -335,7 +372,7 @@ class Session:
     @log_function
     def train_epoch_single_step(self) -> None:
         """
-            A single epoch of training.
+            A single epoch of training using only a single prediction step.
             The training results are saved through the MetricTracker and later retrieved.
         """
         self.model.train()
@@ -380,7 +417,7 @@ class Session:
     
     def train_epoch_auto_regressive(self) -> None:
         """
-            A single epoch of training.
+            A single epoch of training using an auto-regressive training scheme.
             The training results are saved through the MetricTracker and later retrieved.
         """
         self.model.train()
@@ -475,6 +512,9 @@ class Session:
                               dataset: Literal['h36m','ais'], 
                               split_actions: Optional[bool]=False, 
                               prediction_length: Optional[int]=None):
+        """
+            Load the test data within the evaluation engine.
+        """
         if "absolute" in self.config['joint_representation']:
             absolute_position = self.config['joint_representation']['absolute']
         else:
