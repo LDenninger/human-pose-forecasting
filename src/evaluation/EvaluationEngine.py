@@ -15,6 +15,7 @@ from typing import Optional, Dict, Any, List, Union, Literal
 from PIL import Image
 from matplotlib import pyplot as plt
 from pathlib import Path as P
+from IPython.display import HTML, display, clear_output
 
 from ..utils import print_, log_function, LOGGER
 from ..data_utils import (
@@ -228,6 +229,7 @@ class EvaluationEngine:
                                     max_length: int,
                                     overlay: Optional[bool]=False,
                                     variable_window: Optional[bool] = False,
+                                    notebook: Optional[bool] = False,
                                     ):
         """
             Initialize the 2d visualization
@@ -246,6 +248,7 @@ class EvaluationEngine:
         self.visualization_3d_active = True
         self.interactive_visualization = interactive
         self.overlay_visualization = overlay 
+        self.notebook_visualization = notebook
         self.variable_window = variable_window
     
     def initialize_visualization_attention(self,
@@ -686,16 +689,30 @@ class EvaluationEngine:
         pass
 
     ###=== Visualization Functions ===###
-    def visualize(self, model: torch.nn.Module, num_visualizations: int = 1, data_augmentor: DataAugmentor = None) -> None:
+    def visualize(self, 
+                  model: torch.nn.Module, 
+                  num_visualizations: int = 1, 
+                  data_augmentor: DataAugmentor = None,
+                  action: Optional[str] = None) -> None:
         model.eval()
         if self.h36m_evaluation:
             print_(f"Start visualization on H3.6M dataset using actions: {self.actions}")
         else:
             print_(f"Start visualization on the AIS dataset")
         self.data_augmentor = data_augmentor
-        for action, dataset in self.datasets.items():
+        if action is None:
+            for action, dataset in self.datasets.items():
+                data_loader = torch.utils.data.DataLoader(
+                    dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
+                )
+                if self.visualization_2d_active:
+                    self.visualization_2d_loop(model, action, num_visualizations, data_loader)
+                if self.visualization_3d_active:
+                    self.visualization_3d_loop(model, action, num_visualizations, data_loader)
+        else:
+            dataset = self.datasets[action]
             data_loader = torch.utils.data.DataLoader(
-                dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
+                    dataset, batch_size=self.batch_size, shuffle=True, num_workers=2
             )
             if self.visualization_2d_active:
                 self.visualization_2d_loop(model, action, num_visualizations, data_loader)
@@ -893,7 +910,7 @@ class EvaluationEngine:
             else:
                 save_dir = None
                 fname = None
-            animate_pose_matplotlib(
+            anim = animate_pose_matplotlib(
                 positions = (cur_pred, cur_target),
                 titles = ('Predicted', 'Ground Truth'),
                 fig_title = 'Model Evaluation',
@@ -905,10 +922,14 @@ class EvaluationEngine:
                 fname = fname,
                 color_after_change='r',
                 overlay=self.overlay_visualization,
+                notebook=self.notebook_visualization,
                 fps=5,
                 show_axis=True,
                 constant_limits=True
             )
+            if self.notebook_visualization:
+                self._notebook_display(anim)
+                break
 
     def visualize_attention_loop(
         self,
@@ -1085,3 +1106,6 @@ class EvaluationEngine:
             raise ValueError(f"Unknown skeleton model: {self.skeleton_representation}")
 
 
+    def _notebook_display(self, animation):
+        clear_output(wait=True)  # Remove the previous frame
+        display(HTML(animation.to_jshtml()))
