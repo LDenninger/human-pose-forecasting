@@ -73,14 +73,14 @@ def main():
     exp_runs = [f'{exp_id}.{checkpoint}' for exp_id, checkpoint in zip(exp_ids, checkpoint_names)]
 
     # Save the plot
-    fig.savefig(os.path.join(vis_path, f'distribution_metrics_{exp_runs}_{dataset}.png'))
+    fig.savefig(os.path.join(vis_path, f'distribution_metrics_{exp_runs}_{dataset}.eps'), format='eps')
 
     # Create plot containing only the figures legend
-    fig_legend = plt.figure(figsize=(9, 9))
+    fig_legend = plt.figure(figsize=(36, 3))
     ax = fig_legend.add_subplot(111)
     ax.axis('off')
-    ax.legend(*axs[0].get_legend_handles_labels(), loc='center', fontsize=44)
-    fig_legend.savefig(os.path.join(vis_path, f'distribution_metrics_legend_{exp_runs}_{dataset}.png'))
+    ax.legend(*axs[0].get_legend_handles_labels(), loc='center', fontsize=76, ncol=4, columnspacing=0.8)
+    fig_legend.savefig(os.path.join(vis_path, f'distribution_metrics_legend_{exp_runs}_{dataset}.eps'), format='eps')
 
     print_('Visualization of distribution metrics finished.')
     
@@ -135,7 +135,7 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     entropy_norm_true = baselines[2]
     kld_norm_true = baselines[3]
 
-    fontsize = 56
+    fontsize = 76
     line_width = 8
 
     
@@ -204,7 +204,7 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     fig.subplots_adjust(wspace=0.2)
 
     # Add whitespace below the plots
-    fig.subplots_adjust(bottom=0.15, left = 0.07, right = 0.99)
+    fig.subplots_adjust(bottom=0.22, left = 0.10, right = 0.99)
 
     # Return the figure
     return fig, axs
