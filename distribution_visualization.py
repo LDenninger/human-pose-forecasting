@@ -53,16 +53,18 @@ def main():
     for i, exp_id in enumerate(exp_ids):    
         exp_name, run_name = exp_id.split('.')
         # Set up logging (only for getting the path to the log folder and visualization folder)
-        logger = logging.Logger(exp_name=exp_name, run_name=run_name)
-        log_path = logger.get_path('log')
-        vis_path = logger.get_path('visualization')
         try:
-            data = load_data(log_path, checkpoint=checkpoint_names[i], dataset=dataset)
+            data = load_data(exp_id, checkpoint=checkpoint_names[i], dataset=dataset)
         except (IOError, ValueError) as e:
             print_(e.message)
             return
         data_overall.append(data)
     
+    # Set up visualization path
+    vis_path = os.path.join(os.getcwd(), 'distr_visualizations')
+    if not os.path.exists(vis_path):
+        os.makedirs(vis_path)
+
     # Load baselines
     baselines = load_baselines(dataset=dataset)
 
@@ -84,6 +86,7 @@ def main():
 
     print_('Visualization of distribution metrics finished.')
     
+    
 def load_baselines(dataset: str='h36m'):
     """
     Load the baseline distribution metrics from file.
@@ -101,10 +104,13 @@ def load_baselines(dataset: str='h36m'):
     return baselines
     
 
-def load_data(path: str, action: str='overall', checkpoint: str='final', dataset: str='h36m'):
+def load_data(exp_id: str, action: str='overall', checkpoint: str='final', dataset: str='h36m'):
     """
     Load the distribution metrics from file.
     """
+    exp_name, run_name = exp_id.split('.')
+    logger = logging.Logger(exp_name=exp_name, run_name=run_name)
+    path = os.path.join(os.getcwd(), logger.get_path('log'))
     try:
         # Load the data
         with open(os.path.join(path, f'eval_results_distribution_{checkpoint}_{dataset}.json'), 'r') as f:
@@ -148,17 +154,20 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     entropy_norm_true = np.linspace(entropy_norm_true, entropy_norm_true, length_entropy)
     kld_norm_true = np.linspace(kld_norm_true, kld_norm_true, length_kld)
 
-    # Get crest color palette for plotting
-    palette = [(0.34509803921568627, 0.4666666666666667, 0.5725490196078431), (0.9254901960784314, 0.3058823529411765, 0.12549019607843137)]
-
     # Nicer less technical legend names
     # (remove all the numbers and underscores and the word model)
     exp_ids = [re.sub(r'[0-9]+', '', exp_id) for exp_id in exp_ids]
     exp_ids = [re.sub(r'_', ' ', exp_id) for exp_id in exp_ids]
     exp_ids = [re.sub(r'model', '', exp_id) for exp_id in exp_ids]
 
-    # Label curves
-    labels = ['Global', 'Local']
+    if len(exp_ids) == 2 and any('final' in exp_id for exp_id in exp_ids) and any('global' in exp_id for exp_id in exp_ids):
+        # Get two colors for plotting the exact report visualization
+        palette = [(0.34509803921568627, 0.4666666666666667, 0.5725490196078431), (0.9254901960784314, 0.3058823529411765, 0.12549019607843137)]
+        # Label curves
+        labels = ['Global', 'Local']
+    else:
+        palette = sns.color_palette("colorblind", len(exp_ids) + 2)
+        labels = [exp_id.split('.')[1].strip() for exp_id in exp_ids]
 
     # Create a plot for each metric pair
     for i, (result, exp_id) in enumerate(reversed(list(zip(data, exp_ids)))):
@@ -172,8 +181,8 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
         axs[1].plot(range(len(kld)),kld, label=labels[i], color=palette[i], linewidth=line_width)
         
     
-    axs[0].plot(entropy_baseline, '--', label='Baseline global', color=palette[0], linewidth=line_width)
-    axs[1].plot(kld_baseline, '--', label='Baseline global', color=palette[0], linewidth=line_width)
+    axs[0].plot(entropy_baseline, '--', label='Baseline global', color=palette[-2], linewidth=line_width)
+    axs[1].plot(kld_baseline, '--', label='Baseline global', color=palette[-2], linewidth=line_width)
     axs[0].plot(entropy_norm_true, '--', label='Baseline local', color=palette[-1], linewidth=line_width)
     axs[1].plot(kld_norm_true, '--', label='Baseline local', color=palette[-1], linewidth=line_width)
 

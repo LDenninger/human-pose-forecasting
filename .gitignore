@@ -15,6 +15,7 @@ wandb/*
 *.pth
 *.pt
 *.png
+*.eps
 
 
 !mean.pt
@@ -23,7 +24,9 @@ wandb/*
 !kld.pt
 !test_ps.pt
 
+/distr_visualizations/
 *eval_results*.json
+!*eval_results*example*.json
 
 compare_sequences_plotly_*
 
