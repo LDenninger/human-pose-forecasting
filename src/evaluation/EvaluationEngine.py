@@ -589,7 +589,7 @@ class EvaluationEngine:
         model: torch.nn.Module,
         data_loader: torch.utils.data.DataLoader) -> None:
         """
-        A single evaluation loop for an action.
+            A single evaluation loop for an action using the distribution metrics.
 
         """
 

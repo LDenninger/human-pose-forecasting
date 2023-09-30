@@ -122,7 +122,17 @@ class Session:
                               dataset: Literal['h36m','ais'] = 'h36m',
                               distr_pred_sec: int = 15) -> bool:
         """
-            Initialize the evaluation procedure and load the corresponding data
+            Initialize the evaluation procedure and load the corresponding data.
+
+            Arguments:
+                evaluation_type (List[str]): List of evaluation types to perform (distance/distribution). Default: ['distance']
+                num_iterations (Optional[int]): Number of iterations to perform evaluation. Default: Take iterations from config.
+                distance_metrics (Optional[List[str]]): List of metrics to perform distance evaluation. Default: Take metrics from config.
+                distribution_metrics (Optional[List[str]]): List of metrics to perform distribution evaluation. Default: Take metrics from config.
+                split_actions (Optional[bool]): Whether to perform separater evaluations for each action. Default: False
+                prediction_timesteps (Optional[List[int]]): List of prediction timesteps to evaluate. Default: Take timesteps from config.
+                dataset (Literal['h36m','ais']): Dataset to use for evaluation. Default: 'h36m'
+                distr_pred_sec (Optional[int]): Maximal prediction timestep for distribution evaluation. Default: 15
         """
         self.evaluate_model = True
         # Perform an exhaustive evaluation that includes the evaluation of separate actions for different prediction lengths
