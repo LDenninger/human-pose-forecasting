@@ -53,16 +53,18 @@ def main():
     for i, exp_id in enumerate(exp_ids):    
         exp_name, run_name = exp_id.split('.')
         # Set up logging (only for getting the path to the log folder and visualization folder)
-        logger = logging.Logger(exp_name=exp_name, run_name=run_name)
-        log_path = logger.get_path('log')
-        vis_path = logger.get_path('visualization')
         try:
-            data = load_data(log_path, checkpoint=checkpoint_names[i], dataset=dataset)
+            data = load_data(exp_id, checkpoint=checkpoint_names[i], dataset=dataset)
         except (IOError, ValueError) as e:
             print_(e.message)
             return
         data_overall.append(data)
     
+    # Set up visualization path
+    vis_path = os.path.join(os.getcwd(), 'distr_visualizations')
+    if not os.path.exists(vis_path):
+        os.makedirs(vis_path)
+
     # Load baselines
     baselines = load_baselines(dataset=dataset)
 
@@ -73,16 +75,17 @@ def main():
     exp_runs = [f'{exp_id}.{checkpoint}' for exp_id, checkpoint in zip(exp_ids, checkpoint_names)]
 
     # Save the plot
-    fig.savefig(os.path.join(vis_path, f'distribution_metrics_{exp_runs}_{dataset}.png'))
+    fig.savefig(os.path.join(vis_path, f'distribution_metrics_{exp_runs}_{dataset}.eps'), format='eps')
 
     # Create plot containing only the figures legend
-    fig_legend = plt.figure(figsize=(9, 9))
+    fig_legend = plt.figure(figsize=(36, 3))
     ax = fig_legend.add_subplot(111)
     ax.axis('off')
-    ax.legend(*axs[0].get_legend_handles_labels(), loc='center', fontsize=44)
-    fig_legend.savefig(os.path.join(vis_path, f'distribution_metrics_legend_{exp_runs}_{dataset}.png'))
+    ax.legend(*axs[0].get_legend_handles_labels(), loc='center', fontsize=76, ncol=4, columnspacing=0.8)
+    fig_legend.savefig(os.path.join(vis_path, f'distribution_metrics_legend_{exp_runs}_{dataset}.eps'), format='eps')
 
     print_('Visualization of distribution metrics finished.')
+    
     
 def load_baselines(dataset: str='h36m'):
     """
@@ -101,10 +104,13 @@ def load_baselines(dataset: str='h36m'):
     return baselines
     
 
-def load_data(path: str, action: str='overall', checkpoint: str='final', dataset: str='h36m'):
+def load_data(exp_id: str, action: str='overall', checkpoint: str='final', dataset: str='h36m'):
     """
     Load the distribution metrics from file.
     """
+    exp_name, run_name = exp_id.split('.')
+    logger = logging.Logger(exp_name=exp_name, run_name=run_name)
+    path = os.path.join(os.getcwd(), logger.get_path('log'))
     try:
         # Load the data
         with open(os.path.join(path, f'eval_results_distribution_{checkpoint}_{dataset}.json'), 'r') as f:
@@ -135,7 +141,7 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     entropy_norm_true = baselines[2]
     kld_norm_true = baselines[3]
 
-    fontsize = 56
+    fontsize = 76
     line_width = 8
 
     
@@ -148,17 +154,20 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     entropy_norm_true = np.linspace(entropy_norm_true, entropy_norm_true, length_entropy)
     kld_norm_true = np.linspace(kld_norm_true, kld_norm_true, length_kld)
 
-    # Get crest color palette for plotting
-    palette = [(0.34509803921568627, 0.4666666666666667, 0.5725490196078431), (0.9254901960784314, 0.3058823529411765, 0.12549019607843137)]
-
     # Nicer less technical legend names
     # (remove all the numbers and underscores and the word model)
     exp_ids = [re.sub(r'[0-9]+', '', exp_id) for exp_id in exp_ids]
     exp_ids = [re.sub(r'_', ' ', exp_id) for exp_id in exp_ids]
     exp_ids = [re.sub(r'model', '', exp_id) for exp_id in exp_ids]
 
-    # Label curves
-    labels = ['Global', 'Local']
+    if len(exp_ids) == 2 and any('final' in exp_id for exp_id in exp_ids) and any('global' in exp_id for exp_id in exp_ids):
+        # Get two colors for plotting the exact report visualization
+        palette = [(0.34509803921568627, 0.4666666666666667, 0.5725490196078431), (0.9254901960784314, 0.3058823529411765, 0.12549019607843137)]
+        # Label curves
+        labels = ['Global', 'Local']
+    else:
+        palette = sns.color_palette("colorblind", len(exp_ids) + 2)
+        labels = [exp_id.split('.')[1].strip() for exp_id in exp_ids]
 
     # Create a plot for each metric pair
     for i, (result, exp_id) in enumerate(reversed(list(zip(data, exp_ids)))):
@@ -172,8 +181,8 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
         axs[1].plot(range(len(kld)),kld, label=labels[i], color=palette[i], linewidth=line_width)
         
     
-    axs[0].plot(entropy_baseline, '--', label='Baseline global', color=palette[0], linewidth=line_width)
-    axs[1].plot(kld_baseline, '--', label='Baseline global', color=palette[0], linewidth=line_width)
+    axs[0].plot(entropy_baseline, '--', label='Baseline global', color=palette[-2], linewidth=line_width)
+    axs[1].plot(kld_baseline, '--', label='Baseline global', color=palette[-2], linewidth=line_width)
     axs[0].plot(entropy_norm_true, '--', label='Baseline local', color=palette[-1], linewidth=line_width)
     axs[1].plot(kld_norm_true, '--', label='Baseline local', color=palette[-1], linewidth=line_width)
 
@@ -204,7 +213,7 @@ def create_plots(data: Union[dict, List[dict]], exp_ids: List[str], baselines:Li
     fig.subplots_adjust(wspace=0.2)
 
     # Add whitespace below the plots
-    fig.subplots_adjust(bottom=0.15, left = 0.07, right = 0.99)
+    fig.subplots_adjust(bottom=0.22, left = 0.10, right = 0.99)
 
     # Return the figure
     return fig, axs

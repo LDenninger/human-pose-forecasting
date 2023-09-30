@@ -1,27 +1,27 @@
-2023-09-30-10:16:19   [info]: Initialized trainer for run: example_experiment/example_run
-2023-09-30-10:16:19   [info]: Using device: cuda
-2023-09-30-10:16:19   [info]: Calling: initialize_model...
-2023-09-30-10:16:19   [warn]: Cannot watch model without WandB
-2023-09-30-10:16:19   [info]: Initialized model
-2023-09-30-10:16:19   [info]: Calling: initialize_optimization...
-2023-09-30-10:16:19   [info]: Initialized optimizer
-2023-09-30-10:16:19   [info]: Calling: load_train_data...
-2023-09-30-10:16:30   [info]: Loaded training data: Length: 77447, Batched length: 2420, Iterations per epoch: 200
-2023-09-30-10:16:30   [info]: Calling: initialize_evaluation...
-2023-09-30-10:16:30   [info]: Load the evaluation data for each action
-2023-09-30-10:16:33   [info]: Initialized an evaluation for joint distances with 100
-2023-09-30-10:16:33   [info]: Calling: train...
-2023-09-30-10:16:33   [info]: Calling: training_loop...
-2023-09-30-10:16:33   [info]: Start training for run example_experiment/example_run
-2023-09-30-10:16:33   [info]: Calling: evaluate...
-2023-09-30-10:16:33   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
-2023-09-30-10:16:40   [info]: Evaluation finished!
-2023-09-30-10:16:40   [info]: Iterations completed: 0 Results:
+2023-09-30-16:06:07   [info]: Initialized trainer for run: example_experiment/example_run
+2023-09-30-16:06:07   [info]: Using device: cuda
+2023-09-30-16:06:07   [info]: Calling: initialize_model...
+2023-09-30-16:06:07   [warn]: Cannot watch model without WandB
+2023-09-30-16:06:07   [info]: Initialized model
+2023-09-30-16:06:07   [info]: Calling: initialize_optimization...
+2023-09-30-16:06:07   [info]: Initialized optimizer
+2023-09-30-16:06:07   [info]: Calling: load_train_data...
+2023-09-30-16:06:28   [info]: Loaded training data: Length: 77447, Batched length: 2420, Iterations per epoch: 200
+2023-09-30-16:06:28   [info]: Calling: initialize_evaluation...
+2023-09-30-16:06:28   [info]: Load the evaluation data for each action
+2023-09-30-16:06:35   [info]: Initialized an evaluation for joint distances with 100
+2023-09-30-16:06:35   [info]: Calling: train...
+2023-09-30-16:06:35   [info]: Calling: training_loop...
+2023-09-30-16:06:35   [info]: Start training for run example_experiment/example_run
+2023-09-30-16:06:35   [info]: Calling: evaluate...
+2023-09-30-16:06:35   [info]: Start evaluation on H3.6M dataset using actions: ['directions', 'discussion', 'eating', 'greeting', 'posing', 'phoning', 'purchases', 'sitting', 'sittingdown', 'smoking', 'takingphoto', 'waiting', 'walking', 'walkingdog', 'walkingtogether']
+2023-09-30-16:06:57   [info]: Evaluation finished!
+2023-09-30-16:06:57   [info]: Iterations completed: 0 Results:
  
-2023-09-30-10:16:40   [info]: Evaluation Results:
+2023-09-30-16:06:57   [info]: Evaluation Results:
 
-2023-09-30-10:16:40   [info]: Average over all actions:
-2023-09-30-10:16:40   [info]: +--------------+---------------------+--------------------+
+2023-09-30-16:06:57   [info]: Average over all actions:
+2023-09-30-16:06:57   [info]: +--------------+---------------------+--------------------+
 | Pred. length |    positional_mse   |        auc         |
 +--------------+---------------------+--------------------+
 |      80      |  0.1138441264629364 | 47.35177887810601  |
@@ -32,5 +32,4 @@
 |     280      |  0.4034663438796997 | 27.860677242279053 |
 |     320      | 0.46195557713508606 | 26.712239782015484 |
 +--------------+---------------------+--------------------+
-2023-09-30-10:16:40   [info]: Epoch 1/10
-2023-09-30-10:17:11   [info]: Calling: __init__...
+2023-09-30-16:06:57   [info]: Epoch 1/10
