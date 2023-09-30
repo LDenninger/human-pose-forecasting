@@ -102,7 +102,7 @@ class Session:
         self.evaluation_engine.log_results(self.iteration)
         self._print_epoch_results()
     
-    def visualize(self, num_visualization: Optional[int] = 1) -> None:
+    def visualize(self, num_visualization: Optional[int] = 1, action: Optional[str] = None) -> None:
         """ Visualize the model. """
         if not self.visualize_model:
             print_('Visualization was not properly initialized!', 'error')
@@ -161,6 +161,7 @@ class Session:
                                  overlay_visualization: Optional[bool] = False,
                                  dataset: Literal['h36m','ais'] = 'h36m',
                                  split_actions: Optional[bool]=False,
+                                 notebook: Optional[bool] = False,
                                  ):
         if prediction_timesteps is None:
             prediction_timesteps = self.config['evaluation']['timesteps']
@@ -179,7 +180,8 @@ class Session:
                 max_length=prediction_timesteps[-1],
                 interactive=interactive,
                 overlay=overlay_visualization,
-                variable_window=self.variable_window
+                variable_window=self.variable_window,
+                notebook=notebook
             )
             self.visualize_model = True
         if 'attn' in visualization_type:
